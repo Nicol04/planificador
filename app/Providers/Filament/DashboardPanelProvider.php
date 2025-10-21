@@ -7,6 +7,7 @@ use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -18,7 +19,9 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Joaopaulolndev\FilamentEditProfile\FilamentEditProfilePlugin;
 
 class DashboardPanelProvider extends PanelProvider
 {
@@ -60,9 +63,27 @@ class DashboardPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 SpatieLaravelTranslatablePlugin::make()
-                ->defaultLocales(['es'])                
+                    ->defaultLocales(['es']),
+                FilamentShieldPlugin::make(),
+                FilamentEditProfilePlugin::make()
+                    ->slug('my-profile')
+                    ->setTitle('Mi perfil')
+                    ->setNavigationLabel('Mi perfil')
+                    ->setNavigationGroup('Configuración')
+                    ->setIcon('heroicon-o-user')
+                    ->customProfileComponents([
+                    \App\Livewire\CustomProfileComponent::class,
+                ])->shouldShowDeleteAccountForm(false),
+            ])
+            ->userMenuItems([
+                'profile' => MenuItem::make()
+                    ->label(fn() => Auth::user()->name)
+                    ->url(fn(): string => url('/docente/my-profile')) // URL estática
+                    ->icon('heroicon-m-user-circle')
+                    ->visible(function (): bool {
+                        return Auth::user()->exists();
+                    }),
             ])
             ->authMiddleware([
                 Authenticate::class,

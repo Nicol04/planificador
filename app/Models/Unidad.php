@@ -34,4 +34,27 @@ class Unidad extends Model
     {
         return $this->hasMany(UnidadDetalle::class, 'unidad_id');
     }
+    /** 👥 Obtener profesores responsables como colección de usuarios */
+    public function getProfesoresAttribute()
+    {
+        if (empty($this->profesores_responsables)) {
+            return collect();
+        }
+
+        // Convertir strings a enteros para la consulta
+        $profesorIds = array_map('intval', $this->profesores_responsables);
+
+        return User::whereIn('id', $profesorIds)
+            ->with('persona')
+            ->get();
+    }
+
+    /** 📝 Obtener nombres de profesores responsables */
+    public function getNombresProfesoresAttribute()
+    {
+        return $this->profesores->map(function ($user) {
+            $persona = $user->persona;
+            return trim(($persona?->nombre ?? '') . ' ' . ($persona?->apellido ?? '')) ?: 'Docente sin nombre';
+        })->join(', ');
+    }
 }

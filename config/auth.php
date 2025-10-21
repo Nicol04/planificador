@@ -12,7 +12,7 @@ return [
         ],
         'docente' => [
             'driver' => 'session',
-            'provider' => 'users', // o 'docentes' si tienes una tabla separada
+            'provider' => 'users',
         ],
     ],
     'providers' => [

@@ -9,12 +9,13 @@
         "php": "^8.2",
         "bezhansalleh/filament-shield": "^3.9",
         "filament/filament": "3.3",
+        "filament/spatie-laravel-translatable-plugin": "*",
+        "joaopaulolndev/filament-edit-profile": "^1.0",
         "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
         "phpoffice/phpspreadsheet": "*",
-        "filament/spatie-laravel-translatable-plugin": "*",
-        "phpoffice/phpword": "^1.4",
-        "laravel/tinker": "^2.10.1"
+        "phpoffice/phpword": "^1.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

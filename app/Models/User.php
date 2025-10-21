@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Tables\Columns\Layout\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasAvatar
 {
     use HasFactory, Notifiable, HasRoles;
 
@@ -19,6 +21,7 @@ class User extends Authenticatable
         'estado',
         'password_plano',
         'persona_id',
+        'avatar_url',
     ];
 
     protected $hidden = [
@@ -47,8 +50,9 @@ class User extends Authenticatable
             ->withTimestamps()
             ->withPivot('año_id');
     }
-    public function canAccessPanel(Panel $panel): bool
+    public function getFilamentAvatarUrl(): ?string
     {
-        return $this->hasRole('super_admin') || $this->can('panel_user');
+        $avatarColumn = config('filament-edit-profile.avatar_column', 'avatar_url');
+        return $this->$avatarColumn ? Storage::url($this->$avatarColumn) : null;
     }
 }
