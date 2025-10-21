@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Admin\Resources\AulaResource\RelationManagers\CursosRelationManager;
+use App\Filament\Admin\Resources\AulaResource\RelationManagers\UsersRelationManager;
+use App\Filament\Resources\AulaResource\Pages;
+use App\Filament\Resources\AulaResource\RelationManagers;
+use App\Models\Aula;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class AulaResource extends Resource
+{
+    protected static ?string $model = Aula::class;
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    use Translatable;
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Select::make('grado')
+                    ->required()
+                    ->options([
+                        '1' => '1',
+                        '2' => '2',
+                        '3' => '3',
+                        '4' => '4',
+                        '5' => '5',
+                        '6' => '6',
+                    ])
+                    ->label('Grado'),
+                Forms\Components\Radio::make('nivel')
+                    ->required()
+                    ->options([
+                        'Primaria' => 'Primaria',
+                        'Inicial' => 'Inicial',
+                    ])
+                    ->label('Nivel'),
+                Forms\Components\TextInput::make('nombre')
+                    ->required()
+                    ->label('Nombre'),
+                Forms\Components\Select::make('seccion')
+                    ->required()
+                    ->options([
+                        'A' => 'A',
+                        'B' => 'B',
+                        'C' => 'C',
+                        'D' => 'D',
+                        'E' => 'E',
+                    ])
+                    ->label('Sección'),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('grado'),
+                Tables\Columns\TextColumn::make('seccion'),
+                Tables\Columns\TextColumn::make('nivel'),
+                Tables\Columns\TextColumn::make('cantidad_usuarios')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                SelectFilter::make('grado')
+                    ->label('Grado')
+                    ->options([
+                        '1' => '1',
+                        '2' => '2',
+                        '3' => '3',
+                        '4' => '4',
+                        '5' => '5',
+                        '6' => '6',
+                    ])
+                    ->placeholder('Todos'),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+            ])
+            ->bulkActions([
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            UsersRelationManager::class,
+            CursosRelationManager::class,
+        ];
+    }
+    public static function relationManagers(): array
+    {
+        return [
+            UsersRelationManager::class,
+            CursosRelationManager::class,
+        ];
+    }
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListAulas::route('/'),
+            'create' => Pages\CreateAula::route('/create'),
+            'view' => Pages\ViewAula::route('/{record}'),
+        ];
+    }
+}

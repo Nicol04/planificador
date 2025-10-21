@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\CursoResource\Pages;
+use App\Filament\Resources\CursoResource\RelationManagers;
+use App\Models\Aula;
+use App\Models\Curso;
+use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Form;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class CursoResource extends Resource
+{
+    protected static ?string $model = Curso::class;
+    protected static ?string $navigationIcon = 'heroicon-o-square-3-stack-3d';
+    use Translatable;
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Información General')
+                    ->columns(3)
+                    ->description('Cursos.')
+                    ->schema([
+                        Forms\Components\TextInput::make('curso')
+                            ->required()
+                            ->maxLength(60),
+
+                        Forms\Components\Textarea::make('descripcion')
+                            ->columnSpan(2),
+                        Forms\Components\FileUpload::make('image_url')
+                            ->image()
+                            ->imageEditor()
+                            ->required()
+                            ->directory('cursos')
+                            ->disk('public')
+                            ->label('Imagen del curso'),
+                    ]),
+
+                    Select::make('aulas')
+                    ->multiple()
+                    ->relationship('aulas', 'grado_seccion')
+                    ->getOptionLabelFromRecordUsing(fn (Aula $record) => $record->grado_seccion)
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Selecciona aulas'),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('curso')
+                    ->searchable(),
+                Tables\Columns\ImageColumn::make('image_url')
+                    ->size(150)
+                    ->label('Imagen del curso'),
+                Tables\Columns\TextColumn::make('descripcion')
+                    ->searchable()
+                    ->limit(50)
+                    ->label('Descripción'),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListCursos::route('/'),
+            'create' => Pages\CreateCurso::route('/create'),
+            'edit' => Pages\EditCurso::route('/{record}/edit'),
+        ];
+    }
+}
