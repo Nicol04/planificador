@@ -45,8 +45,8 @@ class DocentePanelProvider extends PanelProvider
             ->brandLogo(asset('assets/img/logo_colegio.png'))
             ->brandLogoHeight('60px')
             ->renderHook('panels::head.end', fn() => '
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-')
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            ')
             ->renderHook('panels::body.start', fn() => '
                 <style>
                     .fi-sidebar{
@@ -95,7 +95,10 @@ class DocentePanelProvider extends PanelProvider
             </script> 
             ')
             ->favicon(asset('assets/img/logo_colegio.png'))
-            ->login(\Filament\Pages\Auth\Login::class)
+            
+            //->login(\Filament\Pages\Auth\Login::class)
+            ->login()
+            ->topNavigation()
             ->discoverResources(in: app_path('Filament/Docente/Resources'), for: 'App\\Filament\\Docente\\Resources')
             ->discoverPages(in: app_path('Filament/Docente/Pages'), for: 'App\\Filament\\Docente\\Pages')
             ->pages([
@@ -121,7 +124,7 @@ class DocentePanelProvider extends PanelProvider
             ->plugins([
                 SpatieLaravelTranslatablePlugin::make()
                     ->defaultLocales(['es']),
-                FilamentShieldPlugin::make(),
+                //FilamentShieldPlugin::make(),
                 FilamentEditProfilePlugin::make()
                     ->slug('my-profile')
                     ->setTitle('Mi perfil')

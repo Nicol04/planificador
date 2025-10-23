@@ -177,7 +177,7 @@ class UnidadResource extends Resource
                             Forms\Components\Builder\Block::make('curso')
                                 ->label('Curso')
                                 ->schema([
-                                    // 📘 Selecciona curso según el grado elegido
+                                    // Selecciona curso según el grado elegido
                                     Forms\Components\Select::make('curso_id')
                                         ->label('Curso')
                                         ->options(
@@ -190,7 +190,7 @@ class UnidadResource extends Resource
                                         ->required()
                                         ->helperText('Selecciona un curso.'),
 
-                                    // 🧠 Competencias del curso
+                                    // Competencias del curso
                                     Forms\Components\Repeater::make('competencias')
                                         ->label('Competencias del curso')
                                         ->schema([
@@ -224,7 +224,7 @@ class UnidadResource extends Resource
                                                     $set('desempenos', []);
                                                 }),
 
-                                            // 🟦 Capacidades dependientes de la competencia
+                                            // Capacidades dependientes de la competencia
                                             Forms\Components\Select::make('capacidades')
                                                 ->label('Capacidades')
                                                 ->multiple()
@@ -306,7 +306,7 @@ class UnidadResource extends Resource
                         ->columnSpanFull(),
                 ])
                 ->collapsible(),
-            // 🟧 SECCIÓN 3: ENFOQUES TRANSVERSALES
+            // SECCIÓN 3: ENFOQUES TRANSVERSALES
             Forms\Components\Section::make('Enfoques Transversales')
                 ->schema([
                     Forms\Components\Repeater::make('enfoques')
@@ -361,7 +361,6 @@ class UnidadResource extends Resource
                                                 ->required(),
                                         ])
                                         ->createOptionUsing(function (array $data, callable $set, callable $get) {
-                                            // 🔹 Agregar el nuevo valor al listado actual
                                             $nuevoValor = $data['nuevo_valor'];
                                             $enfoqueId = $get('../../enfoque_id');
 
@@ -380,7 +379,7 @@ class UnidadResource extends Resource
                                                 }
                                             }
 
-                                            return $nuevoValor; // lo devuelve como opción seleccionada
+                                            return $nuevoValor;
                                         }),
 
                                     Forms\Components\Textarea::make('actitud')
@@ -398,7 +397,7 @@ class UnidadResource extends Resource
                 ])
                 ->collapsed(false)
                 ->collapsible(),
-            // 🟩 SECCIÓN 4: MATERIALES Y RECURSOS
+            // SECCIÓN 4: MATERIALES Y RECURSOS
             Forms\Components\Section::make('Materiales y Recursos')
                 ->schema([
                     Forms\Components\Textarea::make('materiales_basicos')
@@ -444,7 +443,7 @@ class UnidadResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
 
-                // 📄 ACCIÓN DE PREVISUALIZACIÓN CON MODAL NATIVO
+                // ACCIÓN DE PREVISUALIZACIÓN CON MODAL NATIVO
                 Action::make('previsualizar')
                     ->label('Previsualizar')
                     ->icon('heroicon-o-eye')
@@ -455,7 +454,6 @@ class UnidadResource extends Resource
                     ->modalSubmitActionLabel('Vista Previa Vertical')
                     ->modalCancelActionLabel('Vista Previa Horizontal')
                     ->action(function ($record) {
-                        // Redirigir en la misma pestaña
                         return redirect()->to(route('unidades.vista.previa', ['id' => $record->id, 'orientacion' => 'vertical']));
                     })
                     ->cancelParentActions()
@@ -484,6 +482,10 @@ class UnidadResource extends Resource
         ];
     }
 
+    public static function canEdit($record): bool
+    {
+        return Auth::check();
+    }
     public static function getPages(): array
     {
         return [

@@ -79,7 +79,7 @@ class DashboardPanelProvider extends PanelProvider
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label(fn() => Auth::user()->name)
-                    ->url(fn(): string => url('/docente/my-profile')) // URL estática
+                    ->url(fn(): string => url('/dashboard/my-profile')) // URL estática
                     ->icon('heroicon-m-user-circle')
                     ->visible(function (): bool {
                         return Auth::user()->exists();

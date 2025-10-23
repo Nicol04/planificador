@@ -39,8 +39,8 @@ class ListUnidads extends ListRecords
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('nombre', 'like', '%' . $this->search . '%')
-                  ->orWhere('situacion_significativa', 'like', '%' . $this->search . '%')
-                  ->orWhere('productos', 'like', '%' . $this->search . '%');
+                    ->orWhere('situacion_significativa', 'like', '%' . $this->search . '%')
+                    ->orWhere('productos', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -55,7 +55,7 @@ class ListUnidads extends ListRecords
             switch ($this->filterEstado) {
                 case 'activa':
                     $query->where('fecha_inicio', '<=', $now)
-                          ->where('fecha_fin', '>=', $now);
+                        ->where('fecha_fin', '>=', $now);
                     break;
                 case 'finalizada':
                     $query->where('fecha_fin', '<', $now);
@@ -81,7 +81,7 @@ class ListUnidads extends ListRecords
     public function getEstadoTexto($unidad)
     {
         $now = Carbon::now();
-        
+
         if ($unidad->fecha_inicio <= $now && $unidad->fecha_fin >= $now) {
             return '🟢 Activa';
         } elseif ($unidad->fecha_fin < $now) {
@@ -94,7 +94,7 @@ class ListUnidads extends ListRecords
     public function getEstadoColor($unidad)
     {
         $now = Carbon::now();
-        
+
         if ($unidad->fecha_inicio <= $now && $unidad->fecha_fin >= $now) {
             return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
         } elseif ($unidad->fecha_fin < $now) {
@@ -107,41 +107,56 @@ class ListUnidads extends ListRecords
     public function duplicateUnidad($id)
     {
         try {
+            // Buscar la unidad original
             $unidad = Unidad::findOrFail($id);
-            
-            $nuevaUnidad = $unidad->replicate();
-            $nuevaUnidad->nombre = $unidad->nombre . ' (Copia)';
-            $nuevaUnidad->save();
 
-            // Duplicar detalles si existen
-            foreach ($unidad->detalles as $detalle) {
-                $nuevoDetalle = $detalle->replicate();
-                $nuevoDetalle->unidad_id = $nuevaUnidad->id;
-                $nuevoDetalle->save();
+            // Duplicar la unidad
+            try {
+                $nuevaUnidad = $unidad->replicate();
+                $nuevaUnidad->nombre = $unidad->nombre . ' (Copia)';
+                $nuevaUnidad->save();
+            } catch (\Exception $e) {
+                throw new \Exception('Error al duplicar la unidad: ' . $e->getMessage());
             }
 
-            \Filament\Notifications\Notification::make()
-                ->title('📋 ¡Unidad duplicada exitosamente!')
-                ->body("Se ha creado una copia de \"" . $unidad->nombre . "\" con todos sus detalles curriculares.")
-                ->success()
-                ->duration(5000)
-                ->actions([
-                    \Filament\Notifications\Actions\Action::make('editar')
-                        ->label('✏️ Editar ahora')
-                        ->url(route('filament.docente.resources.unidads.edit', $nuevaUnidad))
-                        ->button(),
-                    \Filament\Notifications\Actions\Action::make('ver')
-                        ->label('👁️ Ver unidad')
-                        ->url(route('filament.docente.resources.unidads.view', $nuevaUnidad))
-                        ->button()
-                        ->color('gray'),
-                ])
-                ->send();
-                
+            // Duplicar los detalles relacionados
+            try {
+                foreach ($unidad->detalles as $detalle) {
+                    $nuevoDetalle = $detalle->replicate();
+                    $nuevoDetalle->unidad_id = $nuevaUnidad->id;
+                    $nuevoDetalle->save();
+                }
+            } catch (\Exception $e) {
+                throw new \Exception('Error al duplicar los detalles: ' . $e->getMessage());
+            }
+
+            // Enviar notificación de éxito
+            try {
+                \Filament\Notifications\Notification::make()
+                    ->title('📋 ¡Unidad duplicada exitosamente!')
+                    ->body("Se ha creado una copia de \"" . $unidad->nombre . "\" con todos sus detalles curriculares.")
+                    ->success()
+                    ->duration(5000)
+                    ->actions([
+                        \Filament\Notifications\Actions\Action::make('editar')
+                            ->label('✏️ Editar ahora')
+                            ->url(route('filament.docente.resources.unidads.edit', $nuevaUnidad))
+                            ->button(),
+                        \Filament\Notifications\Actions\Action::make('ver')
+                            ->label('👁️ Ver unidad')
+                            //->url(route('filament.docente.resources.unidads.view', $nuevaUnidad))
+                            ->button()
+                            ->color('gray'),
+                    ])
+                    ->send();
+            } catch (\Exception $e) {
+                throw new \Exception('Error al enviar la notificación: ' . $e->getMessage());
+            }
         } catch (\Exception $e) {
+            // Manejo de errores generales
             \Filament\Notifications\Notification::make()
                 ->title('❌ Error al duplicar la unidad')
-                ->body('No se pudo crear la copia de la unidad. Por favor, inténtalo nuevamente.')
+                ->body($e->getMessage())
                 ->danger()
                 ->duration(5000)
                 ->send();
@@ -153,20 +168,19 @@ class ListUnidads extends ListRecords
         try {
             $unidad = Unidad::findOrFail($id);
             $nombreUnidad = $unidad->nombre;
-            
+
             // Contar elementos relacionados
             $detallesCount = $unidad->detalles->count();
-            
+
             $unidad->delete();
 
             \Filament\Notifications\Notification::make()
                 ->title('🗑️ Unidad eliminada exitosamente')
-                ->body("\"" . $nombreUnidad . "\" ha sido eliminada" . 
-                       ($detallesCount > 0 ? " junto con {$detallesCount} detalles curriculares." : "."))
+                ->body("\"" . $nombreUnidad . "\" ha sido eliminada" .
+                    ($detallesCount > 0 ? " junto con {$detallesCount} detalles curriculares." : "."))
                 ->success()
                 ->duration(4000)
                 ->send();
-                
         } catch (\Exception $e) {
             \Filament\Notifications\Notification::make()
                 ->title('❌ Error al eliminar la unidad')

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Documents\UnidadDocumentController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -20,3 +21,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/unidades/{id}/debug', [UnidadDocumentController::class, 'debug'])
         ->name('unidades.debug');
 });
+Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
+Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');
+Route::post('/docente/logout', [App\Http\Controllers\Auth\CustomLoginController::class, 'logout'])->name('filament.docente.auth.logout');
