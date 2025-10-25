@@ -11,25 +11,15 @@ class SesionDetalle extends Model
     protected $table = 'sesion_detalles';
     protected $fillable = [
         'sesion_id',
-        'competencias',
-        'capacidades',
-        'desempenos',
-        'criterio_id',
+        'propositos_aprendizaje',
+        'transversalidad',
         'evidencia',
-        'instrumento',
-        'competencia_transversal',
-        'capacidad_transversal',
-        'desempeno_transversal'
     ];
 
     // Esto convierte automáticamente JSON ↔ Array
     protected $casts = [
-        'competencias' => 'array',
-        'capacidades' => 'array',
-        'desempenos' => 'array',
-        'competencia_transversal' => 'array',
-        'capacidad_transversal' => 'array',
-        'desempeno_transversal' => 'array',
+        'propositos_aprendizaje' => 'array',
+        'transversalidad' => 'array',
     ];
 
     public function sesion()

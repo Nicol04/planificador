@@ -218,6 +218,7 @@ class UnidadResource extends Resource
                                                 })
                                                 ->reactive()
                                                 ->required()
+                                                
                                                 ->searchable()
                                                 ->afterStateUpdated(function (callable $set) {
                                                     $set('capacidades', []);
@@ -246,21 +247,25 @@ class UnidadResource extends Resource
                                             Forms\Components\Select::make('desempenos')
                                                 ->label('Desempeños')
                                                 ->multiple()
-                                                ->options(function (callable $get, $state) {
-                                                    $capacidadesIds = $get('capacidades');
+                                                ->options(function (callable $get) {
+                                                    $competenciaId = $get('competencia_id');
                                                     $grado = $get('../../../../../grado');
 
-                                                    if (!$capacidadesIds || empty($capacidadesIds)) {
+                                                    if (!$competenciaId || !$grado) {
                                                         return [];
                                                     }
+
                                                     $gradoLimpio = preg_replace('/[^0-9]/', '', $grado);
-                                                    return \App\Models\Desempeno::whereIn('capacidad_id', (array) $capacidadesIds)
-                                                        ->where('grado', 'LIKE', "%{$gradoLimpio}%") // 🔍 filtra por grado
+
+                                                    return \App\Models\Desempeno::whereHas('capacidad', function ($q) use ($competenciaId) {
+                                                            $q->where('competencia_id', $competenciaId);
+                                                        })
+                                                        ->where('grado', 'LIKE', "%{$gradoLimpio}%")
                                                         ->pluck('descripcion', 'id');
                                                 })
                                                 ->reactive()
                                                 ->searchable()
-                                                ->placeholder('Selecciona antes un grado y una capacidad para cargar los desempeños relacionados')
+                                                ->placeholder('Selecciona una competencia para cargar los desempeños relacionados')
                                                 ->preload(),
 
                                             Forms\Components\Textarea::make('criterios')
@@ -314,16 +319,50 @@ class UnidadResource extends Resource
                         ->schema([
                             Forms\Components\Select::make('enfoque_id')
                                 ->label('Seleccionar Enfoque')
-                                ->options(\App\Models\EnfoqueTransversal::pluck('nombre', 'id'))
+                                ->options(function (callable $get) {
+                                    // Todas las opciones disponibles
+                                    $todas = \App\Models\EnfoqueTransversal::pluck('nombre', 'id')->toArray();
+
+                                    // Obtener los enfoques ya seleccionados en el mismo repeater (si existen)
+                                    // Intentamos varias rutas por compatibilidad con la estructura del form
+                                    $enfoquesEnRepeater = $get('../../enfoques') ?? $get('../enfoques') ?? $get('enfoques') ?? [];
+
+                                    $seleccionados = collect($enfoquesEnRepeater)
+                                        ->pluck('enfoque_id')
+                                        ->filter()
+                                        ->map(fn($v) => (string) $v) // normalizar a string para comparar claves
+                                        ->values()
+                                        ->toArray();
+
+                                    // Permitir que el valor actualmente seleccionado en este ítem siga apareciendo
+                                    $valorActual = $get('enfoque_id');
+                                    if ($valorActual) {
+                                        $seleccionados = array_filter($seleccionados, fn($id) => (string) $id !== (string) $valorActual);
+                                    }
+
+                                    // Filtrar las opciones para quitar las ya seleccionadas en otros ítems
+                                    if (!empty($seleccionados)) {
+                                        $todas = array_filter($todas, fn($v, $k) => !in_array((string) $k, $seleccionados), ARRAY_FILTER_USE_BOTH);
+                                    }
+
+                                    return $todas;
+                                })
                                 ->searchable()
                                 ->placeholder('Seleccione un enfoque')
                                 ->required()
                                 ->reactive()
-                                ->afterStateUpdated(fn($state, callable $set) => $set('valores', [])),
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    $valores = $get('valores') ?? [];
+
+                                    if (empty($valores) && $state) {
+                                        $set('valores', [
+                                            ['valor' => null, 'actitud' => '']
+                                        ]);
+                                    }
+                                }),
 
                             Forms\Components\Repeater::make('valores')
                                 ->label('Valores y Actitudes')
-                                ->helperText('Selecciona un valor para autocompletar su actitud o agrega nuevos.')
                                 ->schema([
                                     Forms\Components\Select::make('valor')
                                         ->label('Valor')
@@ -334,9 +373,25 @@ class UnidadResource extends Resource
                                             $enfoque = \App\Models\EnfoqueTransversal::find($enfoqueId);
                                             if (!$enfoque || empty($enfoque->valores_actitudes)) return [];
 
-                                            return collect($enfoque->valores_actitudes)
+                                            // Opciones disponibles del enfoque
+                                            $opciones = collect($enfoque->valores_actitudes)
                                                 ->pluck('data.Valores', 'data.Valores')
                                                 ->toArray();
+
+                                            // Obtener los valores ya seleccionados en este mismo repeater "valores"
+                                            $valoresEnRepeater = $get('../../valores') ?? [];
+                                            $seleccionados = collect($valoresEnRepeater)
+                                                ->pluck('valor')
+                                                ->filter()
+                                                ->values()
+                                                ->toArray();
+
+                                            if (!empty($seleccionados)) {
+                                                // Filtrar las opciones para no mostrar las ya seleccionadas
+                                                $opciones = array_filter($opciones, fn($v, $k) => !in_array($k, $seleccionados), ARRAY_FILTER_USE_BOTH);
+                                            }
+
+                                            return $opciones;
                                         })
                                         ->reactive()
                                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -353,39 +408,14 @@ class UnidadResource extends Resource
                                                 }
                                             }
                                         })
-                                        ->placeholder('Seleccione o escriba un valor')
-                                        ->searchable()
-                                        ->createOptionForm([
-                                            Forms\Components\TextInput::make('nuevo_valor')
-                                                ->label('Nuevo valor')
-                                                ->required(),
-                                        ])
-                                        ->createOptionUsing(function (array $data, callable $set, callable $get) {
-                                            $nuevoValor = $data['nuevo_valor'];
-                                            $enfoqueId = $get('../../enfoque_id');
-
-                                            if ($enfoqueId && $nuevoValor) {
-                                                $enfoque = \App\Models\EnfoqueTransversal::find($enfoqueId);
-                                                if ($enfoque) {
-                                                    $valoresActitudes = $enfoque->valores_actitudes ?? [];
-                                                    $valoresActitudes[] = [
-                                                        'data' => [
-                                                            'Valores' => $nuevoValor,
-                                                            'Actitudes' => '',
-                                                        ],
-                                                    ];
-                                                    $enfoque->valores_actitudes = $valoresActitudes;
-                                                    $enfoque->save();
-                                                }
-                                            }
-
-                                            return $nuevoValor;
-                                        }),
+                                        ->placeholder('Seleccione un valor')
+                                        ->searchable(),
 
                                     Forms\Components\Textarea::make('actitud')
                                         ->label('Actitud')
                                         ->rows(2)
-                                        ->placeholder('Se completará automáticamente o puede editarla.'),
+                                        ->placeholder('Se completará automáticamente.')
+                                        ->disabled(),
                                 ])
                                 ->columns(2)
                                 ->collapsed(false)

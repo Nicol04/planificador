@@ -10,7 +10,7 @@ class SesionMomento extends Model
     use HasFactory;
     protected $table = 'sesion_momentos';
 
-    protected $fillable = ['sesion_id', 'momento', 'estrategia', 'descripcion_actividad'];
+    protected $fillable = ['sesion_id', 'nombre_momento', 'descripcion', 'actividades'];
 
     public function sesion()
     {

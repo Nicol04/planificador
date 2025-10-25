@@ -42,4 +42,10 @@ class Sesion extends Model
     {
         return $this->hasOne(SesionDetalle::class);
     }
+
+    // Nueva relación para guardar momentos (sesion_momentos)
+    public function momentos()
+    {
+        return $this->hasMany(SesionMomento::class);
+    }
 }
