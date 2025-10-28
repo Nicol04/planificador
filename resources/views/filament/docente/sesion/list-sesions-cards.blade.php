@@ -48,7 +48,7 @@
                                 class="pl-10 block w-full rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white p-2.5"
                                 wire:model.live="filterCurso">
                                 <option value="">Todos los cursos</option>
-                                @foreach($this->getCursos(true) as $id => $nombre)
+                                @foreach ($this->getCursos(true) as $id => $nombre)
                                     <option value="{{ $id }}">{{ $nombre }}</option>
                                 @endforeach
                             </select>
@@ -61,10 +61,12 @@
         {{-- Cards de sesiones --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
             @forelse($this->getFilteredSesiones() as $sesion)
-                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden group">
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden group">
                     <div class="p-6">
                         {{-- Título --}}
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        <h3
+                            class="text-lg font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
                             {{ $sesion->titulo }}
                         </h3>
 
@@ -117,7 +119,8 @@
                                 </x-slot>
 
                                 <x-filament::dropdown.list>
-                                    <x-filament::dropdown.list.item onclick="abrirModalPreviaSesion({{ $sesion->id }})"
+                                    <x-filament::dropdown.list.item
+                                        onclick="abrirModalPreviaSesion({{ $sesion->id }})"
                                         icon="heroicon-o-document-text">
                                         📄 Vista Previa
                                     </x-filament::dropdown.list.item>
@@ -152,10 +155,12 @@
                 </div>
             @empty
                 <div class="col-span-full">
-                    <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+                    <div
+                        class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
                         <div class="mx-auto w-24 h-24 mb-6 text-gray-400">
                             <svg fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                                <path
+                                    d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                             </svg>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -165,7 +170,7 @@
                             Comienza creando tu primera sesión para organizar tu clase.
                         </p>
                         <a href="{{ route('filament.docente.resources.sesions.create') }}"
-                           class="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition text-lg">
+                            class="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition text-lg">
                             <x-heroicon-o-plus class="w-5 h-5 inline-block mr-2" />
                             Crear Sesión
                         </a>
@@ -186,7 +191,17 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
         <div style="background: white; border-radius: 10px; padding: 30px; max-width: 500px; text-align: center;">
             <h3 style="margin-bottom: 20px; color: #0066cc;">📄 Vista Previa de la Sesión</h3>
-            <p style="margin-bottom: 30px; color: #666;">(Función pendiente de implementar)</p>
+            <p style="margin-bottom: 30px; color: #666;">Seleccione el formato para previsualizar:</p>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px;">
+                <button onclick="abrirVistaPreviaSesion('vertical')"
+                    style="background: #0066cc; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    📄 Vista Previa Vertical
+                </button>
+                <button onclick="abrirVistaPreviaSesion('horizontal')"
+                    style="background: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    📄 Vista Previa Horizontal
+                </button>
+            </div>
             <button onclick="cerrarModalPreviaSesion()"
                 style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">
                 ❌ Cancelar
@@ -248,11 +263,86 @@
             }
 
             function confirmarDuplicacionSesion(sesionId, tituloSesion) {
-                // Función pendiente de implementar
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '📋 Duplicar Sesión',
+                        html: `<div style="text-align: left; padding: 20px;">
+                    <p><strong>¿Estás seguro de que quieres duplicar esta sesión?</strong></p>
+                    <br>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #0066cc;">
+                        <p><strong>📅 Sesión:</strong> ${tituloSesion}</p>
+                        <p><strong>📋 Se creará:</strong> "${tituloSesion} (Copia)"</p>
+                        <p><strong>📊 Se incluirán:</strong> Todos los detalles curriculares</p>
+                    </div>
+                    <br>
+                    <p style="color: #666; font-size: 14px;">
+                        <i class="fas fa-info-circle"></i> 
+                        La nueva sesión se creará como una copia exacta y podrás editarla inmediatamente.
+                    </p>
+                </div>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-copy"></i> Sí, duplicar',
+                        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+                        confirmButtonColor: '#0066cc',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true,
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return new Promise((resolve) => {
+                                @this.call('duplicateSesion', sesionId).then(() => {
+                                    resolve();
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    if (confirm(`¿Estás seguro de que quieres duplicar "${tituloSesion}"?`)) {
+                        @this.call('duplicateSesion', sesionId);
+                    }
+                }
             }
 
             function confirmarEliminacionSesion(sesionId, tituloSesion) {
-                // Función pendiente de implementar
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '🗑️ Eliminar Sesión',
+                        html: `<div style="text-align: left; padding: 20px;">
+                    <p><strong>⚠️ ¿Estás seguro de que quieres eliminar esta sesión?</strong></p>
+                    <br>
+                    <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                        <p><strong>📅 Sesión:</strong> ${tituloSesion}</p>
+                        <p><strong>❌ Se eliminará:</strong> La sesión y todos sus datos</p>
+                        <p><strong>📊 Incluye:</strong> Detalles curriculares, competencias, etc.</p>
+                    </div>
+                    <br>
+                    <p style="color: #dc3545; font-size: 14px; font-weight: bold;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+                        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true,
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return new Promise((resolve) => {
+                                @this.call('deleteSesion', sesionId).then(() => {
+                                    resolve();
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    if (confirm(
+                        `⚠️ ¿Estás seguro de que quieres eliminar "${tituloSesion}"? Esta acción no se puede deshacer.`)) {
+                        @this.call('deleteSesion', sesionId);
+                    }
+                }
             }
 
             document.addEventListener('keydown', function(event) {

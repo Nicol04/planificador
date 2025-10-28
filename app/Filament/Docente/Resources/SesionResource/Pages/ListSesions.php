@@ -108,4 +108,93 @@ class ListSesions extends ListRecords
         // Cargar relación curso a través de aulaCurso
         return $query->with(['aulaCurso.curso'])->simplePaginate(12);
     }
+    public function deleteSesion($id)
+    {
+        try {
+            $sesion = Sesion::findOrFail($id);
+            $tituloSesion = $sesion->titulo;
+
+            // Contar elementos relacionados
+            $detallesCount = $sesion->detalle ? 1 : 0;
+            $momentosCount = $sesion->momentos()->count();
+
+            // Eliminar detalles y momentos relacionados
+            if ($sesion->detalle) {
+                $sesion->detalle->delete();
+            }
+            foreach ($sesion->momentos as $momento) {
+                $momento->delete();
+            }
+
+            $sesion->delete();
+
+            \Filament\Notifications\Notification::make()
+                ->title('🗑️ Sesión eliminada exitosamente')
+                ->body("\"" . $tituloSesion . "\" ha sido eliminada" .
+                    ($detallesCount > 0 ? " junto con {$detallesCount} detalle curricular" : "") .
+                    ($momentosCount > 0 ? " y {$momentosCount} momentos." : "."))
+                ->success()
+                ->duration(4000)
+                ->send();
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('❌ Error al eliminar la sesión')
+                ->body('No se pudo eliminar la sesión. Verifica que no tenga dependencias o inténtalo nuevamente.')
+                ->danger()
+                ->duration(5000)
+                ->send();
+        }
+    }
+
+    public function duplicateSesion($id)
+    {
+        try {
+            // Buscar la sesión original
+            $sesion = Sesion::findOrFail($id);
+
+            // Duplicar la sesión principal
+            $nuevaSesion = $sesion->replicate();
+            $nuevaSesion->titulo = $sesion->titulo . ' (Copia)';
+            $nuevaSesion->save();
+
+            // Duplicar el detalle (si existe)
+            if ($sesion->detalle) {
+                $nuevoDetalle = $sesion->detalle->replicate();
+                $nuevoDetalle->sesion_id = $nuevaSesion->id;
+                $nuevoDetalle->save();
+            }
+
+            // Duplicar los momentos (si existen)
+            foreach ($sesion->momentos as $momento) {
+                $nuevoMomento = $momento->replicate();
+                $nuevoMomento->sesion_id = $nuevaSesion->id;
+                $nuevoMomento->save();
+            }
+
+            // Notificación Filament
+            \Filament\Notifications\Notification::make()
+                ->title('📋 ¡Sesión duplicada exitosamente!')
+                ->body("Se ha creado una copia de \"" . $sesion->titulo . "\" con todos sus detalles y momentos.")
+                ->success()
+                ->duration(5000)
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('editar')
+                        ->label('✏️ Editar ahora')
+                        ->url(route('filament.docente.resources.sesions.edit', $nuevaSesion))
+                        ->button(),
+                    \Filament\Notifications\Actions\Action::make('ver')
+                        ->label('👁️ Ver sesión')
+                        ->button()
+                        ->color('gray'),
+                ])
+                ->send();
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('❌ Error al duplicar la sesión')
+                ->body($e->getMessage())
+                ->danger()
+                ->duration(5000)
+                ->send();
+        }
+    }
 }

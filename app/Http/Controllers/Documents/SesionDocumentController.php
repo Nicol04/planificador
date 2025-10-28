@@ -56,6 +56,80 @@ class SesionDocumentController extends DocumentController
         }
     }
 
+    public function vistaPreviaHtml($id, Request $request)
+{
+    $sesion = Sesion::findOrFail($id);
+    $detalle = $sesion->detalle;
+    $unidad = $sesion->unidad; // Si tienes relación con unidad
+    $orientacion = $request->get('orientacion', 'vertical');
+
+    // Procesar propósitos
+    $propositos = [];
+    foreach ($detalle?->propositos_aprendizaje ?? [] as $prop) {
+        $competencia = !empty($prop['competencia_id']) ? \App\Models\Competencia::find($prop['competencia_id'])?->nombre : null;
+        $capacidades = !empty($prop['capacidades']) ? \App\Models\Capacidad::whereIn('id', $prop['capacidades'])->pluck('nombre')->toArray() : [];
+        $desempenos = !empty($prop['desempenos']) ? \App\Models\Desempeno::whereIn('id', $prop['desempenos'])->pluck('descripcion')->toArray() : [];
+        $criterios = $prop['criterios'] ?? '';
+        $instrumentos = [];
+        if (!empty($prop['instrumentos_predefinidos'])) $instrumentos = array_merge($instrumentos, $prop['instrumentos_predefinidos']);
+        if (!empty($prop['instrumentos_personalizados'])) $instrumentos = array_merge($instrumentos, $prop['instrumentos_personalizados']);
+            $evidencia = $prop['evidencia'] ?? $detalle?->evidencia ?? null; // <-- Agrega esto
+
+        $propositos[] = [
+            'competencia' => $competencia,
+            'capacidades' => $capacidades,
+            'desempenos' => $desempenos,
+            'criterios' => $criterios,
+            'instrumentos' => $instrumentos,
+            'evidencia' => $evidencia,
+        ];
+    }
+
+    // Procesar transversalidad
+    $trans = $detalle?->transversalidad ?? [];
+    $instrumentosMap = [
+        'rubrica' => 'Rúbrica',
+        'lista_cotejo' => 'Lista de cotejo',
+        'prueba' => 'Prueba',
+        'observacion' => 'Observación',
+        'portafolio' => 'Portafolio',
+        'proyecto' => 'Proyecto',
+        'entrevista' => 'Entrevista',
+        'otro_personalizado' => 'Personalizado',
+    ];
+    $instrumentosTransversales = [];
+    foreach ($trans['instrumentos_transversales_ids'] ?? [] as $key) {
+        if (isset($instrumentosMap[$key]) && $key !== 'otro_personalizado') {
+            $instrumentosTransversales[] = $instrumentosMap[$key];
+        }
+    }
+    if (!empty($trans['instrumentos_transversales_ids']) && in_array('otro_personalizado', $trans['instrumentos_transversales_ids'])) {
+        $personalizado = $trans['instrumentos_transversales_personalizados'] ?? '';
+        if ($personalizado) $instrumentosTransversales[] = $personalizado;
+    }
+    $enfoquesTransversales = !empty($trans['enfoque_transversal_ids']) ? \App\Models\EnfoqueTransversal::whereIn('id', $trans['enfoque_transversal_ids'])->pluck('nombre')->toArray() : [];
+    $competenciasTransversales = !empty($trans['competencias_transversales_ids']) ? \App\Models\Competencia::whereIn('id', $trans['competencias_transversales_ids'])->pluck('nombre')->toArray() : [];
+    $capacidadesTransversales = !empty($trans['capacidades_transversales_ids']) ? \App\Models\Capacidad::whereIn('id', $trans['capacidades_transversales_ids'])->pluck('nombre')->toArray() : [];
+    $desempenosTransversales = !empty($trans['desempeno_transversal_ids']) ? \App\Models\Desempeno::whereIn('id', $trans['desempeno_transversal_ids'])->pluck('descripcion')->toArray() : [];
+    $criteriosTransversales = $trans['criterios_transversales'] ?? '';
+
+    // Renderizar vista
+    return view('filament.docente.documentos.sesiones.vista-previa-sesion-vertical', [
+        'sesion' => $sesion,
+        'unidad' => $unidad,
+        'orientacion' => $orientacion,
+        'sesionInfo' => [
+            'propositos' => $propositos,
+        ],
+        'enfoquesTransversales' => $enfoquesTransversales,
+        'competenciasTransversales' => $competenciasTransversales,
+        'capacidadesTransversales' => $capacidadesTransversales,
+        'desempenosTransversales' => $desempenosTransversales,
+        'criteriosTransversales' => $criteriosTransversales,
+        'instrumentosTransversales' => $instrumentosTransversales,
+    ]);
+}
+
     private function generarDocumento($sesion, $datosGenerales, $propositos, $transversalidad, $orientacion)
     {
         $plantillaFile = $orientacion === 'horizontal' ? 'plantilla_horizontal.docx' : 'plantilla_vertical.docx';
