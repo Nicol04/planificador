@@ -3,48 +3,62 @@
 namespace App\Filament\Docente\Resources;
 
 use App\Filament\Docente\Resources\SesionResource\Pages;
-use App\Filament\Docente\Resources\SesionResource\RelationManagers;
 use App\Filament\Docente\Resources\SesionResource\Schemas\DatosSesionSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\EnfoquesSchema;
+use App\Filament\Docente\Resources\SesionResource\Schemas\MomentosSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\ProposAprSchema;
-use App\Models\Capacidad;
-use App\Models\CapacidadTransversal;
-use App\Models\Competencia;
-use App\Models\CompetenciaTransversal;
-use App\Models\Desempeno;
-use App\Models\EnfoqueTransversal;
 use App\Models\Sesion;
 use Filament\Forms;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\View;
-use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Components\Hidden;
+
 class SesionResource extends Resource
 {
     protected static ?string $model = Sesion::class;
     protected static ?string $label = 'Sesiones';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    //public static function form(Form $form): Form
+    //{
+    //  return $form
+    //        ->schema([
+    //DatosSesionSchema::schema(),
+    //  ProposAprSchema::schema(),
+    //    Forms\Components\Section::make('Enfoques Transversales')
+    //          ->schema(EnfoquesSchema::schema()),
+
+    //        ]);
+    //}
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                DatosSesionSchema::schema(),
-                ProposAprSchema::schema(),
-                Forms\Components\Section::make('Enfoques Transversales')
-                    ->schema(EnfoquesSchema::schema()),
-                
+                Wizard::make([
+                    Step::make('Datos de la Sesión')
+                        ->schema([
+                            DatosSesionSchema::schema(),
+                            ProposAprSchema::schema(),
+                            Forms\Components\Section::make('Enfoques Transversales')
+                                ->schema(EnfoquesSchema::schema())
+                                ->description('Enfoques transversales aplicados')
+                                ->icon('heroicon-o-light-bulb')
+                                ->collapsible(),
+                        ])
+                        ->description('Información básica de la sesión')
+                        ->icon('heroicon-o-document-text'),
+
+                    Step::make('Momentos de la Sesión')
+                        ->schema(MomentosSchema::schema())
+                        ->description('Inicio, desarrollo y cierre de la sesión')
+                        ->icon('heroicon-o-academic-cap'),
+                ])
+                    ->columnSpanFull()
+                    ->persistStepInQueryString()
             ]);
     }
 

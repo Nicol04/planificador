@@ -83,8 +83,5 @@ class CreateSesion extends CreateRecord
             'evidencia' => $this->data['evidencias'] ?? '',
         ]);
     }
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('momentos', ['record' => $this->getRecord()]);
-    }
+    
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Documents\SesionDocumentController;
 use App\Http\Controllers\Documents\UnidadDocumentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/exportar', [UserController::class, 'exportarUsuarios'])->name('users.exportarUsuarios');
     //Reporte de usuarios por aula
     Route::get('/aulas/{aulaId}/exportar-usuarios', [UserController::class, 'exportarUsuariosPorAula'])->name('aulas.exportarUsuarios');
+    // Rutas para la generación de documentos de unidades
     Route::get('/unidades/{id}/vista-previa', [UnidadDocumentController::class, 'vistaPreviaHtml'])
         ->name('unidades.vista.previa');
     Route::get('/unidades/{id}/previsualizar', [UnidadDocumentController::class, 'previsualizar'])
@@ -20,6 +22,11 @@ Route::middleware(['auth'])->group(function () {
     // 🔍 RUTA DE DEBUG TEMPORAL
     Route::get('/unidades/{id}/debug', [UnidadDocumentController::class, 'debug'])
         ->name('unidades.debug');
+    // Rutas para la generación de documentos de sesiones
+    Route::get('/sesiones/{id}/vista-previa', [SesionDocumentController::class, 'vistaPreviaHtml'])
+        ->name('sesiones.vista.previa');
+    Route::get('/sesiones/{id}/previsualizar', [SesionDocumentController::class, 'previsualizar'])
+        ->name('sesiones.previsualizar');
 });
 Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
 Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');

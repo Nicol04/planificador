@@ -2,7 +2,7 @@
 
 namespace App\Filament\Docente\Resources\UnidadResource\Pages;
 
-use App\Filament\Resources\UnidadResource;
+use App\Filament\Docente\Resources\UnidadResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -13,14 +13,10 @@ class EditUnidad extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            // Elimina la acción de borrar
+            // Actions\DeleteAction::make(),
         ];
     }
-
-    /**
-     * 🔹 Antes de cargar el formulario, rellenamos los campos
-     * con los valores que están en la tabla unidad_detalles.
-     */
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $detalle = $this->record->detalles()->first();
@@ -35,9 +31,6 @@ class EditUnidad extends EditRecord
         return $data;
     }
 
-    /**
-     * 🔹 Después de guardar los cambios, actualizamos o creamos el detalle.
-     */
     protected function afterSave(): void
     {
         $unidad = $this->record;
@@ -51,5 +44,40 @@ class EditUnidad extends EditRecord
                 'recursos' => $this->data['recursos'] ?? '',
             ]
         );
+    }
+
+    protected function getFormSchema(): array
+    {
+        return [
+            \Filament\Forms\Components\Wizard::make([
+                \Filament\Forms\Components\Wizard\Step::make('Datos Generales')
+                    ->schema(\App\Filament\Docente\Resources\UnidadResource\Schemas\DatosUnidadSchema::schema())
+                    ->description('📋 Información básica de la unidad')
+                    ->icon('heroicon-o-document-text')
+                    ->completedIcon('heroicon-o-check-circle'),
+
+                \Filament\Forms\Components\Wizard\Step::make('Contenido Curricular')
+                    ->schema(\App\Filament\Docente\Resources\UnidadResource\Schemas\ContenidoCurricularSchema::schema())
+                    ->description('📚 Cursos, competencias y desempeños')
+                    ->icon('heroicon-o-academic-cap')
+                    ->completedIcon('heroicon-o-check-circle'),
+
+                \Filament\Forms\Components\Wizard\Step::make('Enfoques Transversales')
+                    ->schema(\App\Filament\Docente\Resources\UnidadResource\Schemas\EnfoquesSchema::schema())
+                    ->description('🌟 Valores y actitudes a promover')
+                    ->icon('heroicon-o-light-bulb')
+                    ->completedIcon('heroicon-o-check-circle'),
+
+                \Filament\Forms\Components\Wizard\Step::make('Materiales y Recursos')
+                    ->schema(\App\Filament\Docente\Resources\UnidadResource\Schemas\MaterialesSchema::schema())
+                    ->description('🎨 Recursos necesarios para la unidad')
+                    ->icon('heroicon-o-cube')
+                    ->completedIcon('heroicon-o-check-circle'),
+            ])
+            ->columnSpanFull()
+            ->persistStepInQueryString()
+            ->startOnStep(1)
+            ->skippable()
+        ];
     }
 }
