@@ -2,22 +2,18 @@ export class Aprendizaje {
   constructor({
     titulo = '',
     tema = '',
-    proposito = '',
-    competencia = '',
-    capacidades = '',
-    desempenos = '',
-    criterios = '',
-    evidencias = '',
-    instrumentos = ''
+    proposito_sesion = '',
+    aula_curso_id = '',
+    curso = '',
+    aula = '',
+    nivel = '',
   } = {}) {
     this.titulo = titulo;
     this.tema = tema;
-    this.proposito = proposito;
-    this.competencia = competencia;
-    this.capacidades = capacidades;
-    this.desempenos = desempenos;
-    this.criterios = criterios;
-    this.evidencias = evidencias;
-    this.instrumentos = instrumentos;
+    this.proposito_sesion = proposito_sesion;
+    this.aula_curso_id = aula_curso_id;
+    this.curso = curso;
+    this.aula = aula;
+    this.nivel = nivel;
   }
 }

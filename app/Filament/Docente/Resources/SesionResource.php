@@ -22,18 +22,6 @@ class SesionResource extends Resource
     protected static ?string $label = 'Sesiones';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    //public static function form(Form $form): Form
-    //{
-    //  return $form
-    //        ->schema([
-    //DatosSesionSchema::schema(),
-    //  ProposAprSchema::schema(),
-    //    Forms\Components\Section::make('Enfoques Transversales')
-    //          ->schema(EnfoquesSchema::schema()),
-
-    //        ]);
-    //}
-
     public static function form(Form $form): Form
     {
         return $form
@@ -57,6 +45,7 @@ class SesionResource extends Resource
                         ->description('Inicio, desarrollo y cierre de la sesión')
                         ->icon('heroicon-o-academic-cap'),
                 ])
+                
                     ->columnSpanFull()
                     ->persistStepInQueryString()
             ]);

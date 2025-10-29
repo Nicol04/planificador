@@ -10,52 +10,112 @@ const quillManager = new QuillEditorManager();
 const wordExportService = new WordExportService(quillManager);
 
 // ✅ ACTUALIZADO: Selecciona inputs del panel izquierdo usando un selector más específico
-function leerAprendizajeDeFormulario() {
-  // Seleccionar el contenedor del formulario (panel izquierdo)
-  const formContainer = document.querySelector('.lg\\:col-span-2');
-  const inputs = formContainer.querySelectorAll('input');
-  const textareas = formContainer.querySelectorAll('textarea');
-  
+function leerSesionCompletaDeFormulario({ temaModal = "" } = {}) {
+  // DATOS DE LA SESIÓN
+  const datos = {
+    titulo: document.querySelector('input[name="titulo"]')?.value || "",
+    proposito_sesion: document.querySelector('textarea[name="proposito_sesion"]')?.value || "",
+    aula_curso_id: document.querySelector('input[name="aula_curso_id"]')?.value || "",
+    curso: document.querySelector('input[name="curso"]')?.value || "",
+    aula: document.querySelector('input[name="aula"]')?.value || "",
+    nivel: document.querySelector('input[name="nivel"]')?.value || "",
+    tema: temaModal || document.querySelector('input[name="tema"]')?.value || "",
+    // Otros campos si necesitas...
+  };
+
+  // PROPÓSITOS DE APRENDIZAJE
+  const propositos = {
+    competencia: document.querySelector('input[name="competencia"]')?.value || "",
+    capacidades: document.querySelector('input[name="capacidades"]')?.value || "",
+    desempenos: document.querySelector('input[name="desempenos"]')?.value || "",
+    criterios: document.querySelector('textarea[name="criterios"]')?.value || "",
+    evidencias: document.querySelector('textarea[name="evidencias"]')?.value || "",
+    instrumentos: document.querySelector('input[name="instrumentos"]')?.value || "",
+  };
+
+  // ENFOQUES TRANSVERSALES
+  const enfoques = {
+    enfoques: document.querySelector('select[name="enfoque_transversal_ids"]')?.value || "",
+    competencias: document.querySelector('select[name="competencias_transversales_ids"]')?.value || "",
+    capacidades: document.querySelector('select[name="capacidades_transversales_ids"]')?.value || "",
+    desempenos: document.querySelector('select[name="desempeno_transversal_ids"]')?.value || "",
+    criterios: document.querySelector('textarea[name="criterios_transversales"]')?.value || "",
+    instrumentos: document.querySelector('select[name="instrumentos_transversales_ids"]')?.value || "",
+    instrumentos_personalizados: document.querySelector('textarea[name="instrumentos_transversales_personalizados"]')?.value || "",
+  };
+
+  // MOMENTOS DE LA SESIÓN
+  const momentos = {
+    inicio: document.getElementById('inicio')?.value || "",
+    desarrollo: document.getElementById('desarrollo')?.value || "",
+    conclusion: document.getElementById('cierre')?.value || "",
+  };
+
   return {
-    titulo: inputs[0].value,
-    tema: inputs[1].value,
-    proposito: textareas[0].value,
-    competencia: inputs[2].value,
-    capacidades: inputs[3].value,
-    desempenos: inputs[4].value,
-    criterios: textareas[1].value,
-    evidencias: textareas[2].value,
-    instrumentos: inputs[5].value
+    datos,
+    propositos,
+    enfoques,
+    momentos
   };
 }
 
+
 // Guardar aprendizaje y actualizar contexto
 function guardarAprendizaje() {
-  const data = leerAprendizajeDeFormulario();
-  aprendizajeController.aprendizajes = []; // Solo uno por ahora
+  const data = leerSesionCompletaDeFormulario();
+  console.log("Datos recogidos del formulario:", data); // 👈 Prueba aquí
+  aprendizajeController.aprendizajes = [];
   aprendizajeController.agregarAprendizaje(data);
   fichaController.setAprendizajes(aprendizajeController.obtenerAprendizajes());
 }
 
 // Cargar ficha al iniciar
-document.addEventListener("DOMContentLoaded", async () => {
-  // Initialize Quill editors
-  quillManager.initializeEditor('#inicio-editor', 'bubble');
-  quillManager.initializeEditor('#desarrollo-editor', 'bubble');
-  quillManager.initializeEditor('#conclusion-editor', 'bubble');
-  
-  // No generar automáticamente, esperar al usuario
-  renderFicha();
-  
-  // ✅ ACTUALIZADO: Agregar listeners a los inputs del formulario
-  const formContainer = document.querySelector('.lg\\:col-span-2');
-  const inputs = formContainer.querySelectorAll('input, textarea');
-  
-  inputs.forEach(el => {
-    el.addEventListener('change', () => {
-      guardarAprendizaje();
+document.addEventListener('DOMContentLoaded', function() {
+  // Abrir modal al hacer clic en el botón
+  const btnGenerarMomentos = document.getElementById('btn-generar-momentos');
+  if (btnGenerarMomentos) {
+    btnGenerarMomentos.addEventListener('click', function() {
+      document.getElementById('modal-generar-momentos').classList.remove('hidden');
     });
-  });
+  }
+
+  // Exponer funciones globales para el modal
+  window.cerrarModalGenerarMomentos = function() {
+    document.getElementById('modal-generar-momentos').classList.add('hidden');
+    document.getElementById('momentos-error').classList.add('hidden');
+  };
+
+  window.generarMomentos = async function() {
+    const tema = document.getElementById('tema-momentos').value.trim();
+    if (!tema) {
+      document.getElementById('momentos-error').textContent = 'Por favor ingrese el tema.';
+      document.getElementById('momentos-error').classList.remove('hidden');
+      return;
+    }
+
+    // Obtén todos los datos de la sesión, incluyendo el tema del modal
+    const sesionCompleta = leerSesionCompletaDeFormulario({ temaModal: tema });
+
+    // Prueba: muestra los datos en consola
+    console.log("Datos para IA:", sesionCompleta);
+
+    // Si tienes la función en fichaController:
+    // const momentosGenerados = await fichaController.generarMomentos(sesionCompleta);
+
+    // Simulación para pruebas (elimina esto cuando uses la IA real)
+    const momentosGenerados = {
+      inicio: "Texto generado para el inicio...",
+      desarrollo: "Texto generado para el desarrollo...",
+      conclusion: "Texto generado para el cierre..."
+    };
+
+    // Llena los campos del formulario con los textos generados
+    document.getElementById('inicio').value = momentosGenerados.inicio || "";
+    document.getElementById('desarrollo').value = momentosGenerados.desarrollo || "";
+    document.getElementById('cierre').value = momentosGenerados.conclusion || "";
+
+    cerrarModalGenerarMomentos();
+  };
 });
 
 // ✅ ACTUALIZADO: Usar QuillEditorManager para renderizar Markdown
