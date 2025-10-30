@@ -1,0 +1,285 @@
+/* Reset / base */
+body {
+  background: #f6f7fb;
+  font-family: Inter, "proxima-nova-soft", Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container */
+.container {
+  max-width: 1100px;
+  padding: 30px 20px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Container específico para esta vista: usar todo el ancho disponible */
+.container--full {
+  /* Full-bleed: extender el contenedor a todo el ancho de la ventana,
+     evitando que herede márgenes/paddings del layout padre. */
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  width: 100vw;
+  max-width: none;
+  padding: 18px 28px; /* ajusta el espaciado lateral según prefieras */
+  box-sizing: border-box;
+}
+
+/* Info */
+.info {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.info h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  color: #222;
+}
+.info span { color: #666; font-size: 13px; }
+
+/* Grid de tarjetas */
+.grid {
+  width: 100%;
+  display: grid;
+  gap: 20px;
+  align-items: stretch;
+  /* Asegurar columnas flexibles; veremos breakpoints abajo */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Forzar 5 columnas en pantallas >= 1000px (antes 1200px) */
+@media (min-width: 1000px) {
+  .grid {
+    /* forzar 5 columnas en pantallas anchas para maximizar uso de espacio */
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Tarjeta */
+.card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(24,24,24,0.06);
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease;
+  min-height: 360px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  /* permitir que las tarjetas ocupen el alto completo del grid track */
+  align-self: stretch;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(22,22,22,0.10);
+}
+
+/* Thumb */
+.card-thumb {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+  background: #e9eef6;
+}
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
+}
+.card:hover .card-thumb img {
+  transform: scale(1.06);
+}
+
+/* Círculo de fecha: variantes por tipo */
+.card-thumb .date {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  box-sizing: border-box;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+/* Sesiones: rojo (mantener estilo anterior) */
+.card-thumb .date--sesion {
+  background: #ff6b6b;
+}
+.card-thumb .date--sesion .day { font-size: 16px; line-height: 1; }
+.card-thumb .date--sesion .month { font-size: 10px; text-transform: uppercase; }
+
+/* Unidades: color distinto (teal) */
+.card-thumb .date--unidad {
+  background: linear-gradient(90deg,#06b6d4,#0ea5a4);
+}
+.card-thumb .date--unidad .label {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Badge de tipo en esquina (sesión / unidad / futuro) */
+.card-thumb .badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4; /* por encima del date (z-index:2) */
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+/* Colores por tipo */
+.card-thumb .badge--sesion {
+  background: #ff6b6b; /* rojo */
+}
+.card-thumb .badge--unidad {
+  background: linear-gradient(90deg,#06b6d4,#0ea5a4); /* teal */
+}
+
+/* Opción para futuros tipos */
+.card-thumb .badge--plantilla { background: #6c5ce7; } /* ejemplo morado */
+
+/* Body */
+.card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #8b8b95;
+  margin-bottom: 6px;
+}
+.title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #1f2937;
+}
+.subtitle {
+  margin: 0 0 8px;
+  color: #ff6b6b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Description hidden by default on small screens; shown in card area */
+.description {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  max-height: 5.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Acciones */
+.card-actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+  color: #fff;
+}
+.btn-duplicate { background: linear-gradient(90deg,#0ea5a4,#06b6d4); }
+.btn-download { background: #2563eb; }
+.btn:hover { opacity: .95; transform: translateY(-1px); }
+.time { margin-left: auto; font-size: 12px; color: #9aa0ad; }
+
+/* Botón de edición */
+.btn-edit {
+  background: linear-gradient(90deg,#f97316,#fb923c); /* naranja */
+  color: #fff;
+}
+
+/* Panel de botones (navegación rápida) */
+.panel {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 12px 0 18px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.panel::-webkit-scrollbar { height: 6px; }
+.panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 6px; }
+
+.panel-btn {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid rgba(15,23,42,0.04);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.panel-btn.active {
+  background: linear-gradient(90deg,#06b6d4,#0ea5a4);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(6,182,212,0.12);
+}
+
+/* Etiqueta para indicar que el docente es el usuario autenticado */
+.you-label {
+  color: #ef4444; /* rojo */
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .card-thumb { height: 140px; }
+  .description { max-height: 4.2em; }
+}
+
+@media (max-width: 420px) {
+  .card-thumb .date { width: 48px; height: 48px; top: 10px; right: 10px; }
+  .card-thumb .date--sesion .day { font-size: 14px; }
+  .card-thumb .date--unidad .label { font-size: 14px; }
+  .card-thumb .badge {
+    top: 10px;
+    left: 10px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}

@@ -40,10 +40,10 @@ class SesionResource extends Resource
                         ->description('Información básica de la sesión')
                         ->icon('heroicon-o-document-text'),
 
-                    Step::make('Momentos de la Sesión')
-                        ->schema(MomentosSchema::schema())
-                        ->description('Inicio, desarrollo y cierre de la sesión')
-                        ->icon('heroicon-o-academic-cap'),
+                    //Step::make('Momentos de la Sesión')
+                      //  ->schema(MomentosSchema::schema())
+                       // ->description('Inicio, desarrollo y cierre de la sesión')
+                      //  ->icon('heroicon-o-academic-cap'),
                 ])
                 
                     ->columnSpanFull()

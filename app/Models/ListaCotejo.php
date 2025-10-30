@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class ListaCotejo extends Model
 {
     use HasFactory;
-
-    protected $fillable = ['sesion_id', 'criterio_id', 'indicador'];
+    protected $table = 'listas_cotejo';
+    protected $fillable = [
+        'sesion_id',
+        'titulo',
+        'descripcion',
+        'niveles',
+    ];
 
     public function sesion()
     {

@@ -12,6 +12,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\SpatieLaravelTranslatablePlugin;
+use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -40,6 +41,9 @@ class DocentePanelProvider extends PanelProvider
                 'success' => '#b6cf4d',
                 'info' => '#03a9f4',
                 'warning' => '#ffc326',
+            ])
+            ->assets([
+                Js::make('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.0/flowbite.min.js'),
             ])
             ->darkmode(false)
             ->brandLogo(asset('assets/img/logo_colegio.png'))

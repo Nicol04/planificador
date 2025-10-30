@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Documents\ListasCotejoDocumentController;
 use App\Http\Controllers\Documents\SesionDocumentController;
 use App\Http\Controllers\Documents\UnidadDocumentController;
 use App\Http\Controllers\UserController;
@@ -27,7 +28,16 @@ Route::middleware(['auth'])->group(function () {
         ->name('sesiones.vista.previa');
     Route::get('/sesiones/{id}/previsualizar', [SesionDocumentController::class, 'previsualizar'])
         ->name('sesiones.previsualizar');
+
+    //Ruta para listas de cotejo
+
+    Route::get('/listas-cotejo/{id}/vista-previa', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'vistaPreviaHtml'])
+        ->name('listas-cotejo.vista.previa');
+
+    Route::get('/listas-cotejo/{id}/previsualizar', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'previsualizar'])
+        ->name('listas-cotejo.previsualizar');
 });
 Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
 Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');
 Route::post('/docente/logout', [App\Http\Controllers\Auth\CustomLoginController::class, 'logout'])->name('filament.docente.auth.logout');
+Route::get('/filament/docente/auth/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('filament.docente.auth.login');

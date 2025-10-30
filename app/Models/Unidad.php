@@ -20,6 +20,7 @@ class Unidad extends Model
         'profesores_responsables',
         'situacion_significativa',
         'productos',
+        'public',
     ];
 
     protected $casts = [
@@ -27,7 +28,12 @@ class Unidad extends Model
         'profesores_responsables' => 'array',
         'fecha_inicio' => 'date',
         'fecha_fin' => 'date',
+        'public' => 'boolean',
     ];
+    public function scopePublic($query)
+    {
+        return $query->where('public', true);
+    }
 
     /** 🔗 Relación con detalles */
     public function detalles()
