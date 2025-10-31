@@ -168,7 +168,7 @@ class EditSesion extends EditRecord
                 $propositos[] = [
                     'competencia_id' => $comp['competencia_id'] ?? null,
                     'capacidades' => $comp['capacidades'] ?? [],
-                    'desempenos' => $comp['desempenos'] ?? [],
+                    'estandares' => $comp['estandares'] ?? [],
                     'criterios' => $criteriosArr,
                     'instrumentos_predefinidos' => $instPreArr,
                     'instrumentos_personalizados' => $instPersArr,

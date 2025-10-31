@@ -80,10 +80,30 @@ class CreateSesion extends CreateRecord
                         ]);
                     }
                 }
+
+                // NORMALIZAR estándares -> garantizar array de IDs
+                $estRaw = $comp['estandares'] ?? [];
+                if (!is_array($estRaw)) {
+                    $estRaw = $estRaw === '' ? [] : (array) $estRaw;
+                }
+                $estIds = [];
+                foreach ($estRaw as $e) {
+                    if (is_numeric($e)) {
+                        $estIds[] = (int) $e;
+                    } elseif (is_string($e) && trim($e) !== '') {
+                        // intentar buscar por descripción -> obtener id
+                        $foundId = \App\Models\Estandar::where('descripcion', trim($e))->value('id');
+                        if ($foundId) {
+                            $estIds[] = (int) $foundId;
+                        }
+                    }
+                }
+                $estIds = array_values(array_unique(array_filter($estIds)));
+
                 $propositos[] = [
                     'competencia_id' => $comp['competencia_id'] ?? null,
                     'capacidades' => $comp['capacidades'] ?? [],
-                    'desempenos' => $comp['desempenos'] ?? [],
+                    'estandares' => $estIds,
                     'criterios' => $criteriosArr,
                     'instrumentos_predefinidos' => $instPreArr,
                     'instrumentos_personalizados' => $instPersArr,

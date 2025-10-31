@@ -5,6 +5,7 @@ namespace App\Filament\Docente\Resources\SesionResource\Schemas;
 use App\Models\Capacidad;
 use App\Models\Competencia;
 use App\Models\Desempeno;
+use App\Models\Estandar;
 use Filament\Forms;
 use Filament\Forms\Components\TagsInput;
 use Illuminate\Support\Facades\Auth;
@@ -119,11 +120,11 @@ class ProposAprSchema
                 })
                 ->afterStateUpdated(function (callable $set) {
                     $set('capacidades', []);
-                    $set('desempenos', []);
+                    $set('estandares', []);
                 })
                 ->columnSpan('full'),
 
-            // Fila 2: Capacidades y Desempeños
+            // Fila 2: Capacidades y Estándares
             Forms\Components\Grid::make(2)
                 ->schema([
                     Forms\Components\Select::make('capacidades')
@@ -143,35 +144,55 @@ class ProposAprSchema
                         ->placeholder('Seleccione capacidades')
                         ->columnSpan(1),
 
-                    Forms\Components\Select::make('desempenos')
-                        ->label('Desempeños esperados')
-                        ->multiple()
-                        ->options(function (callable $get) {
-                            $competenciaId = $get('competencia_id');
-                            if (!$competenciaId) return [];
+                    Forms\Components\Select::make('estandares')
+    ->label('Estándares (descripción)')
+    ->multiple()
+    ->preload() // precargar opciones para evitar que el campo quede sin valores al guardar
+    ->options(function (callable $get) {
+        $competenciaId = $get('competencia_id');
+        if (!$competenciaId) return [];
 
-                            $user = Auth::user();
-                            $grado = null;
-                            if ($user) {
-                                $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
-                                $grado = $usuarioAula?->aula?->grado;
-                            }
-                            if (!$grado) return [];
+        $user = Auth::user();
+        if (!$user) return [];
 
-                            $gradoLimpio = preg_replace('/[^0-9]/', '', $grado);
-                            $capIds = Capacidad::where('competencia_id', $competenciaId)->pluck('id')->toArray();
-                            if (empty($capIds)) return [];
+        $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
+        $grado = $usuarioAula?->aula?->grado;
+        if (!$grado) return [];
 
-                            return Desempeno::whereIn('capacidad_id', $capIds)
-                                ->where('grado', 'LIKE', "%{$gradoLimpio}%")
-                                ->orderBy('descripcion')
-                                ->pluck('descripcion', 'id')
-                                ->toArray();
-                        })
-                        ->reactive()
-                        ->searchable()
-                        ->placeholder('Se filtran por grado')
-                        ->columnSpan(1),
+        $gradoNum = (int) preg_replace('/[^0-9]/', '', $grado);
+        if ($gradoNum <= 0) return [];
+
+        // Mapear grado al ciclo requerido
+        $ciclo = null;
+        if (in_array($gradoNum, [1, 2], true)) {
+            $ciclo = 'III';
+        } elseif (in_array($gradoNum, [3, 4], true)) {
+            $ciclo = 'IV';
+        } elseif (in_array($gradoNum, [5, 6], true)) {
+            $ciclo = 'V';
+        }
+
+        $query = Estandar::where('competencia_id', $competenciaId);
+        if ($ciclo) {
+            $query->where('ciclo', 'LIKE', "%{$ciclo}%");
+        }
+
+        $result = $query->orderBy('descripcion')->pluck('descripcion', 'id')->toArray();
+
+        // Fallback: si no hay resultados por ciclo, devolver todos los estándares de la competencia
+        if (empty($result)) {
+            $result = Estandar::where('competencia_id', $competenciaId)
+                ->orderBy('descripcion')
+                ->pluck('descripcion', 'id')
+                ->toArray();
+        }
+
+        return $result;
+    })
+    ->reactive()
+    ->searchable()
+    ->placeholder('Se filtran por ciclo según el grado del aula')
+    ->columnSpan(1),
                 ])
                 ->columnSpan('full'),
 

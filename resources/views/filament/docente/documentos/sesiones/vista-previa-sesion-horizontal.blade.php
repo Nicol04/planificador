@@ -128,23 +128,42 @@
         .table {
             border: 1px solid #ddd;
             margin-bottom: 20px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
         }
 
-        .table th {
-            background: #0066cc !important;
-            color: white !important;
-            padding: 12px 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
+        .table th,
         .table td {
-            padding: 8px;
+            padding: 6px 8px;
             vertical-align: top;
             border: 1px solid #ddd;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.35;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        /* Estilo específico para la etiqueta ESTÁNDARES */
+        .label-estandares {
+            background: #f0f7ff;
+            color: #003366;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 6px 8px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .estandares-valor {
+            padding: 6px 10px;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .estandares-valor .est-item {
+            margin: 0 0 4px 0;
+            display: block;
         }
 
         .table .bg-light {
@@ -248,151 +267,181 @@
 </div>
 
             <!-- 3. PROPÓSITOS DE APRENDIZAJE -->
-<div class="section-title">3. PROPÓSITOS DE APRENDIZAJE:</div>
+            <div class="section-title">3. PROPÓSITOS DE APRENDIZAJE:</div>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th style="width: 20%;">COMPETENCIA / CAPACIDADES</th>
-            <th style="width: 20%;">DESEMPEÑOS</th>
-            <th style="width: 20%;">CRITERIOS DE EVALUACIÓN</th>
-            <th style="width: 20%;">EVIDENCIAS</th>
-            <th style="width: 20%;">INSTRUMENTO DE EVALUACIÓN</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (count($sesionInfo['propositos']) > 0)
-            @foreach ($sesionInfo['propositos'] as $proposito)
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 20%;">COMPETENCIA / CAPACIDADES</th>
+                        <th style="width: 20%;">DESEMPEÑOS</th>
+                        <th style="width: 20%;">CRITERIOS DE EVALUACIÓN</th>
+                        <th style="width: 20%;">EVIDENCIAS</th>
+                        <th style="width: 20%;">INSTRUMENTO DE EVALUACIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (count($sesionInfo['propositos']) > 0)
+                        @foreach ($sesionInfo['propositos'] as $proposito)
+
+                            <!-- FILA A: ESTÁNDARES (etiqueta + valor ocupando el resto) -->
+                            <tr>
+                                <th class="label-estandares" colspan="1">ESTÁNDARES</th>
+                                <td class="estandares-valor" colspan="4">
+                                    @if (!empty($proposito['estandares']) && is_array($proposito['estandares']))
+                                        @foreach ($proposito['estandares'] as $est)
+                                            <span class="est-item small">{{ $est }}</span>
+                                        @endforeach
+                                    @elseif (!empty($proposito['estandares']))
+                                        <span class="est-item small">{{ $proposito['estandares'] }}</span>
+                                    @else
+                                        <span class="text-muted small">No especificado</span>
+                                    @endif
+                                </td>
+                            </tr>
+
+                            <!-- FILA B: datos habituales -->
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-primary mb-2" style="font-size: 11px;">
+                                        <i class="fas fa-target me-1"></i>
+                                        {{ $proposito['competencia'] ?? 'No especificado' }}
+                            </div>
+                            @if (!empty($proposito['capacidades']))
+                                @foreach ($proposito['capacidades'] as $capacidad)
+                                    <div class="small text-muted mt-1" style="font-size: 9px;">
+                                        <i class="fas fa-arrow-right me-1" style="font-size: 7px;"></i>
+                                        {{ $capacidad }}
+                                    </div>
+                                @endforeach
+                            @else
+                                <span class="text-muted small">No especificado</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @if (!empty($proposito['desempenos']))
+                                @foreach ($proposito['desempenos'] as $desempeno)
+                                    <div class="small mb-2" style="font-size: 9px;">
+                                        <i class="fas fa-check-circle text-success me-1" style="font-size: 7px;"></i>
+                                        {{ $desempeno }}
+                                    </div>
+                                @endforeach
+                            @else
+                                <span class="text-muted small">No especificado</span>
+                            @endif
+                        </td>
+
+                        <td class="small" style="font-size: 9px;">
+                            {{ $proposito['criterios'] ?? 'No especificado' }}
+                        </td>
+
+                        <!-- Evidencias: usar el campo del propósito o fallback al detalle de sesión -->
+                        <td class="small" style="font-size: 9px;">
+                            @php
+                                $evidHoriz = $proposito['evidencia'] ?? ($sesion->detalle?->evidencia ?? null);
+                            @endphp
+                            @if (!empty($evidHoriz) || $evidHoriz === '0')
+                                {!! nl2br(e((string) $evidHoriz)) !!}
+                            @else
+                                <span class="text-muted small">No especificado</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @if (!empty($proposito['instrumentos']))
+                                @foreach ($proposito['instrumentos'] as $instrumento)
+                                    <span class="badge bg-secondary small d-block mb-1" style="font-size: 8px;">
+                                        {{ $instrumento }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="text-muted small">No especificado</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            @else
                 <tr>
-                    <td>
-                        <div class="fw-bold text-primary mb-2" style="font-size: 11px;">
-                            <i class="fas fa-target me-1"></i>
-                            {{ $proposito['competencia'] ?? 'No especificado' }}
-                        </div>
-                        @if (!empty($proposito['capacidades']))
-                            @foreach ($proposito['capacidades'] as $capacidad)
-                                <div class="small text-muted mt-1" style="font-size: 9px;">
-                                    <i class="fas fa-arrow-right me-1" style="font-size: 7px;"></i>
-                                    {{ $capacidad }}
-                                </div>
-                            @endforeach
-                        @else
-                            <span class="text-muted small">No especificado</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if (!empty($proposito['desempenos']))
-                            @foreach ($proposito['desempenos'] as $desempeno)
-                                <div class="small mb-2" style="font-size: 9px;">
-                                    <i class="fas fa-check-circle text-success me-1" style="font-size: 7px;"></i>
-                                    {{ $desempeno }}
-                                </div>
-                            @endforeach
-                        @else
-                            <span class="text-muted small">No especificado</span>
-                        @endif
-                    </td>
-                    <td class="small" style="font-size: 9px;">
-                        {{ $proposito['criterios'] ?? 'No especificado' }}
-                    </td>
-                    <td class="small" style="font-size: 9px;">
-                        {{ $proposito['evidencia'] ?? ($datosGenerales['evidencia'] ?? 'No especificado') }}
-                    </td>
-                    <td>
-                        @if (!empty($proposito['instrumentos']))
-                            @foreach ($proposito['instrumentos'] as $instrumento)
-                                <span class="badge bg-secondary small d-block mb-1" style="font-size: 8px;">
-                                    {{ $instrumento }}
-                                </span>
-                            @endforeach
-                        @else
-                            <span class="text-muted small">No especificado</span>
-                        @endif
+                    <td colspan="5">
+                        <div class="content-text">No se han definido propósitos de aprendizaje para esta sesión.</div>
                     </td>
                 </tr>
-            @endforeach
-        @else
-            <tr>
-                <td colspan="5">
-                    <div class="content-text">No se han definido propósitos de aprendizaje para esta sesión.</div>
-                </td>
-            </tr>
-        @endif
-    </tbody>
-</table>
-<!-- 4. ENFOQUES TRANSVERSALES -->
-<div class="section-title">4. ENFOQUES TRANSVERSALES</div>
+            @endif
+        </tbody>
+    </table>
+    <!-- 4. ENFOQUES TRANSVERSALES -->
+    @if (!empty($sesion->detalle?->transversalidad))
+    <div class="section-title">4. ENFOQUES TRANSVERSALES</div>
 
-<table class="table table-bordered">
-    <tr>
-        <th style="background:#e3f2fd; color:#0066cc;" colspan="4">
-            <i class="fas fa-lightbulb"></i>
-            Enfoques transversales:
-            <span class="fw-bold">{{ implode(', ', $enfoquesTransversales ?? []) }}</span>
-        </th>
-    </tr>
-    <tr>
-        <th style="width: 25%;">Competencias y capacidades</th>
-        <th style="width: 25%;">Desempeños</th>
-        <th style="width: 25%;">Criterios</th>
-        <th style="width: 25%;">Instrumento de evaluación</th>
-    </tr>
-    <tr>
-        <td>
-            <div class="mb-2">
-                <span class="fw-bold">
-                @if (!empty($competenciasTransversales))
-                    <ul class="mb-1">
-                        @foreach ($competenciasTransversales as $comp)
-                            <li>{{ $comp }}</li>
-                        @endforeach
-                    </ul>
-                @else
-                    <span class="text-muted">No especificado</span>
-                @endif
-                </span>
-            </div>
-            <div>
-                <span class="fw-bold">Capacidades:</span>
-                @if (!empty($capacidadesTransversales))
+    <table class="table table-bordered">
+        <tr>
+            <th style="background:#e3f2fd; color:#0066cc;" colspan="4">
+                <i class="fas fa-lightbulb"></i>
+                Enfoques transversales:
+                <span class="fw-bold">{{ implode(', ', $enfoquesTransversales ?? []) }}</span>
+            </th>
+        </tr>
+        <tr>
+            <th style="width: 25%;">Competencias y capacidades</th>
+            <th style="width: 25%;">Desempeños</th>
+            <th style="width: 25%;">Criterios</th>
+            <th style="width: 25%;">Instrumento de evaluación</th>
+        </tr>
+        <tr>
+            <td>
+                <div class="mb-2">
+                    <span class="fw-bold">
+                    @if (!empty($competenciasTransversales))
+                        <ul class="mb-1">
+                            @foreach ($competenciasTransversales as $comp)
+                                <li>{{ $comp }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <span class="text-muted">No especificado</span>
+                    @endif
+                    </span>
+                </div>
+                <div>
+                    @if (!empty($capacidadesTransversales))
+                        <ul>
+                            @foreach ($capacidadesTransversales as $cap)
+                                <li>{{ $cap }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <span class="text-muted">No especificado</span>
+                    @endif
+                </div>
+            </td>
+            <td>
+                @if (!empty($desempenosTransversales))
                     <ul>
-                        @foreach ($capacidadesTransversales as $cap)
-                            <li>{{ $cap }}</li>
+                        @foreach ($desempenosTransversales as $des)
+                            <li>{{ $des }}</li>
                         @endforeach
                     </ul>
                 @else
                     <span class="text-muted">No especificado</span>
                 @endif
-            </div>
-        </td>
-        <td>
-            @if (!empty($desempenosTransversales))
-                <ul>
-                    @foreach ($desempenosTransversales as $des)
-                        <li>{{ $des }}</li>
-                    @endforeach
-                </ul>
-            @else
-                <span class="text-muted">No especificado</span>
-            @endif
-        </td>
-        <td>
-            {{ $criteriosTransversales ?? 'No especificado' }}
-        </td>
-        <td>
-            @if (!empty($instrumentosTransversales))
-                <ul>
-                    @foreach ($instrumentosTransversales as $inst)
-                        <li>{{ $inst }}</li>
-                    @endforeach
-                </ul>
-            @else
-                <span class="text-muted">No especificado</span>
-            @endif
-        </td>
-    </tr>
-</table>
-
+            </td>
+            <td>
+                {{ $criteriosTransversales ?? 'No especificado' }}
+            </td>
+            <td>
+                @if (!empty($instrumentosTransversales))
+                    <ul>
+                        @foreach ($instrumentosTransversales as $inst)
+                            <li>{{ $inst }}</li>
+                        @endforeach
+                    </ul>
+                @else
+                    <span class="text-muted">No especificado</span>
+                @endif
+            </td>
+        </tr>
+    </table>
+    @endif
 
         </div>
     </div>
