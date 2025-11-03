@@ -125,6 +125,69 @@
                                         📄 Vista Previa
                                     </x-filament::dropdown.list.item>
 
+                                    @php
+                                        // Determinar si la sesión tiene lista de cotejo:
+                                        $hasLista = false;
+                                        try {
+                                            if (
+                                                method_exists($sesion, 'listasCotejos') &&
+                                                $sesion->listasCotejos()->exists()
+                                            ) {
+                                                $hasLista = true;
+                                            } else {
+                                                $detalleTmp = $sesion->detalle ?? null;
+                                                if (
+                                                    !empty($detalleTmp->propositos_aprendizaje) &&
+                                                    is_array($detalleTmp->propositos_aprendizaje)
+                                                ) {
+                                                    foreach ($detalleTmp->propositos_aprendizaje as $propTmp) {
+                                                        $instPreTmp = $propTmp['instrumentos_predefinidos'] ?? null;
+                                                        $instTmp = $propTmp['instrumentos'] ?? null;
+                                                        if (
+                                                            is_array($instPreTmp) &&
+                                                            in_array('Lista de cotejo', $instPreTmp, true)
+                                                        ) {
+                                                            $hasLista = true;
+                                                            break;
+                                                        }
+                                                        if (
+                                                            is_string($instPreTmp) &&
+                                                            stripos($instPreTmp, 'lista de cotejo') !== false
+                                                        ) {
+                                                            $hasLista = true;
+                                                            break;
+                                                        }
+                                                        if (
+                                                            is_array($instTmp) &&
+                                                            in_array('Lista de cotejo', $instTmp, true)
+                                                        ) {
+                                                            $hasLista = true;
+                                                            break;
+                                                        }
+                                                        if (
+                                                            is_string($instTmp) &&
+                                                            stripos($instTmp, 'lista de cotejo') !== false
+                                                        ) {
+                                                            $hasLista = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } catch (\Throwable $e) {
+                                            $hasLista = false;
+                                        }
+                                    @endphp
+
+                                    <!-- Mostrar solo si existe lista de cotejo -->
+                                    @if ($hasLista)
+                                        <x-filament::dropdown.list.item
+                                            onclick="abrirModalPreviaListas({{ $sesion->id }})"
+                                            icon="heroicon-o-document-text">
+                                            📄 Listas de cotejo
+                                        </x-filament::dropdown.list.item>
+                                    @endif
+
                                     <x-filament::dropdown.list.item
                                         onclick="descargarWordSesion({{ $sesion->id }}, 'vertical')"
                                         icon="heroicon-o-arrow-down-tray">
@@ -138,13 +201,13 @@
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
-                                        onclick="confirmarDuplicacionSesion({{ $sesion->id }}, '{{ $sesion->titulo }}')"
+                                        onclick="confirmarDuplicacionSesion({{ $sesion->id }}, '{{ addslashes($sesion->titulo) }}')"
                                         icon="heroicon-o-document-duplicate">
                                         📋 Duplicar
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
-                                        onclick="confirmarEliminacionSesion({{ $sesion->id }}, '{{ $sesion->titulo }}')"
+                                        onclick="confirmarEliminacionSesion({{ $sesion->id }}, '{{ addslashes($sesion->titulo) }}')"
                                         icon="heroicon-o-trash" color="danger">
                                         🗑️ Eliminar
                                     </x-filament::dropdown.list.item>
@@ -209,6 +272,35 @@
         </div>
     </div>
 
+    {{-- Modal personalizado para vista previa de lista de cotejo --}}
+    <div id="modalPreviaListas"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 10px; padding: 24px; max-width: 420px; text-align: center;">
+            <h3 style="margin-bottom: 16px; color: #0066cc;">📄 Vista previa - Lista de cotejo</h3>
+            <p style="margin-bottom: 18px; color: #666;">Seleccione la orientación para previsualizar la lista:</p>
+            <div style="display:flex; gap:12px; justify-content:center; margin-bottom:18px;">
+                <button onclick="abrirVistaPreviaListasConOrientacion('vertical')"
+                    style="background:#0066cc; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer;">
+                    Vertical
+                </button>
+                <button onclick="abrirVistaPreviaListasConOrientacion('horizontal')"
+                    style="background:#28a745; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer;">
+                    Horizontal
+                </button>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:center; margin-bottom:8px;">
+                <button onclick="imprimirDesdeModalListas()"
+                    style="background:#17a2b8; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer;">
+                    🖨️ Imprimir
+                </button>
+                <button onclick="cerrarModalPreviaListas()"
+                    style="background:#6c757d; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer;">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
     @push('styles')
         <style>
             .line-clamp-2 {
@@ -223,10 +315,38 @@
     @push('scripts')
         <script>
             let sesionIdActual = null;
+            let sesionIdListasActual = null;
 
             function abrirModalPreviaSesion(sesionId) {
                 sesionIdActual = sesionId;
                 document.getElementById('modalPreviaSesion').style.display = 'flex';
+            }
+
+            // Modal para listas de cotejo
+            function abrirModalPreviaListas(sesionId) {
+                sesionIdListasActual = sesionId;
+                document.getElementById('modalPreviaListas').style.display = 'flex';
+            }
+
+            function cerrarModalPreviaListas() {
+                sesionIdListasActual = null;
+                document.getElementById('modalPreviaListas').style.display = 'none';
+            }
+
+            // Abrir vista previa con orientación (desde modal)
+            function abrirVistaPreviaListasConOrientacion(orientacion) {
+                if (!sesionIdListasActual) return;
+                const url = `/listas-cotejo/${sesionIdListasActual}/vista-previa?orientacion=${orientacion}`;
+                window.open(url, 'vistaPreviaListas', 'width=1100,height=800,scrollbars=yes,resizable=yes');
+                cerrarModalPreviaListas();
+            }
+
+            // Imprimir directamente (abre vista con autoPrint)
+            function imprimirDesdeModalListas() {
+                if (!sesionIdListasActual) return;
+                const url = `/listas-cotejo/${sesionIdListasActual}/vista-previa?autoPrint=1`;
+                window.open(url, 'vistaPreviaListasPrint', 'width=1100,height=800,scrollbars=yes,resizable=yes');
+                cerrarModalPreviaListas();
             }
 
             function cerrarModalPreviaSesion() {
@@ -290,7 +410,10 @@
                         showLoaderOnConfirm: true,
                         preConfirm: () => {
                             return new Promise((resolve) => {
-                                @this.call('duplicateSesion', sesionId).then(() => {
+                                // Pasar un objeto con la clave sesion_id
+                                @this.call('duplicateSesion', {
+                                    sesion_id: sesionId
+                                }).then(() => {
                                     resolve();
                                 });
                             });
@@ -298,7 +421,9 @@
                     });
                 } else {
                     if (confirm(`¿Estás seguro de que quieres duplicar "${tituloSesion}"?`)) {
-                        @this.call('duplicateSesion', sesionId);
+                        @this.call('duplicateSesion', {
+                            sesion_id: sesionId
+                        });
                     }
                 }
             }
@@ -331,7 +456,10 @@
                         showLoaderOnConfirm: true,
                         preConfirm: () => {
                             return new Promise((resolve) => {
-                                @this.call('deleteSesion', sesionId).then(() => {
+                                // Pasar un objeto con la clave sesion_id
+                                @this.call('deleteSesion', {
+                                    sesion_id: sesionId
+                                }).then(() => {
                                     resolve();
                                 });
                             });
@@ -339,21 +467,41 @@
                     });
                 } else {
                     if (confirm(
-                        `⚠️ ¿Estás seguro de que quieres eliminar "${tituloSesion}"? Esta acción no se puede deshacer.`)) {
-                        @this.call('deleteSesion', sesionId);
+                            `⚠️ ¿Estás seguro de que quieres eliminar "${tituloSesion}"? Esta acción no se puede deshacer.`)) {
+                        @this.call('deleteSesion', {
+                            sesion_id: sesionId
+                        });
                     }
                 }
+            }
+
+            // Reemplazamos la función previa de abrirVistaPreviaListas (si existía) para permitir uso directo con 1 parámetro
+            function abrirVistaPreviaListas(sesionId) {
+                const url = `/listas-cotejo/${sesionId}/vista-previa`;
+                window.open(url, 'vistaPreviaListas', 'width=1100,height=800,scrollbars=yes,resizable=yes');
+            }
+
+            function imprimirVistaPreviaListas(sesionId) {
+                // Abre la vista previa y solicita impresión automática
+                const url = `/listas-cotejo/${sesionId}/vista-previa?autoPrint=1`;
+                window.open(url, 'vistaPreviaListasPrint', 'width=1100,height=800,scrollbars=yes,resizable=yes');
             }
 
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
                     cerrarModalPreviaSesion();
+                    cerrarModalPreviaListas();
                 }
             });
 
             document.getElementById('modalPreviaSesion').addEventListener('click', function(event) {
                 if (event.target === this) {
                     cerrarModalPreviaSesion();
+                }
+            });
+            document.getElementById('modalPreviaListas').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    cerrarModalPreviaListas();
                 }
             });
         </script>

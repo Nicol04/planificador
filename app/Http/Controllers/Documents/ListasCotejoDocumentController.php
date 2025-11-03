@@ -9,43 +9,89 @@ use App\Models\Competencia;
 use App\Models\Curso;
 use App\Models\ListaCotejo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpWord\TemplateProcessor;
+use App\Models\Año;
+use App\Models\usuario_aula;
+use App\Models\Estudiante;
 
 class ListasCotejoDocumentController extends DocumentController
 {
     // Descargar / generar docx
     public function previsualizar($id, Request $request)
     {
-        $lista = ListaCotejo::findOrFail($id);
-        $orientacion = $request->get('orientacion', 'vertical');
+        try {
+            $lista = ListaCotejo::findOrFail($id);
+            $orientacion = $request->get('orientacion', 'vertical');
 
-        $competencia = $lista->competencia_id ? Competencia::find($lista->competencia_id)?->nombre : '';
-        $titulo = $lista->titulo ?? '';
-        $criteriosText = $lista->descripcion ?? '';
-        $criterios = $criteriosText !== '' ? array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $criteriosText)), fn($v) => $v !== '')) : [];
+            $competencia = $lista->competencia_id ? Competencia::find($lista->competencia_id)?->nombre : '';
+            $titulo = $lista->titulo ?? '';
+            $criterios = $lista->descripcion ?? '';
+            $niveles = $lista->niveles ?? '';
 
-        // Ruta a la plantilla .docx (ajusta si es necesario)
-        $templatePath = storage_path('app/templates/lista_cotejo_template.docx');
-        if (!file_exists($templatePath)) {
-            abort(404, 'Plantilla no encontrada: ' . $templatePath);
+            // Obtener los estudiantes relacionados al aula del curso de la sesión
+            $sesion = Sesion::find($lista->sesion_id);
+            $aulaId = $sesion?->aulaCurso?->aula_id;
+            $estudiantes = $aulaId
+                ? \App\Models\Estudiante::where('aula_id', $aulaId)
+                ->orderBy('apellidos')
+                ->orderBy('nombres')
+                ->get(['nombres', 'apellidos'])
+                ->map(fn($e) => [
+                    'nombre' => trim(($e->apellidos ?? '') . ' ' . ($e->nombres ?? ''))
+                ])->toArray()
+                : [];
+
+            $competenciaNombre = $lista->competencia_id
+                ? Competencia::find($lista->competencia_id)?->nombre
+                : null;
+
+            // Si no se encontró, buscar en propositos_aprendizaje del detalle
+            if (!$competenciaNombre && $lista->sesion_id) {
+                $sesion = Sesion::find($lista->sesion_id);
+                $propositos = $sesion?->detalle?->propositos_aprendizaje ?? [];
+
+                foreach ($propositos as $prop) {
+                    $propCompetenciaId = $prop['competencia_id'] ?? null;
+                    if (!$propCompetenciaId) continue;
+
+                    if (!empty($lista->competencia_id) && ((int)$propCompetenciaId === (int)$lista->competencia_id)) {
+                        $competenciaNombre = Competencia::find($propCompetenciaId)?->nombre;
+                        break;
+                    }
+                    if (empty($lista->competencia_id)) {
+                        $competenciaNombre = Competencia::find($propCompetenciaId)?->nombre;
+                        break;
+                    }
+                }
+            }
+            $datosGenerales = [
+                'competencia' => $competenciaNombre ?? '',
+                'titulo' => $titulo,
+                'criterios' => $criterios,
+                'niveles' => $niveles,
+                'estudiantes' => $estudiantes,
+            ];
+
+            $rutaArchivo = $this->generarDocumento($lista, $datosGenerales, $orientacion);
+            $nombreDescarga = 'ListaCotejo_' . ($titulo ? str_replace(' ', '_', $titulo) : 'lista_' . $lista->id) . '_' . date('Y-m-d') . '.docx';
+
+            return $this->downloadResponse($rutaArchivo, $nombreDescarga);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Error al generar documento: ' . $e->getMessage()
+            ], 500);
         }
-
-        $templateProcessor = new TemplateProcessor($templatePath);
-        // Variables simples: competencia, titulo, criterios (texto con saltos)
-        $templateProcessor->setValue('competencia', htmlentities($competencia));
-        $templateProcessor->setValue('titulo', htmlentities($titulo));
-        // Si tu plantilla espera salto de línea, dejamos texto con saltos
-        $templateProcessor->setValue('criterios', htmlentities(implode("\n", $criterios)));
-
-        $tempFile = tempnam(sys_get_temp_dir(), 'lista_cotejo_') . '.docx';
-        $templateProcessor->saveAs($tempFile);
-
-        return response()->download($tempFile, ($titulo ?: 'lista_cotejo') . '.docx')->deleteFileAfterSend(true);
     }
+
     public function vistaPreviaHtml($sesionId, Request $request)
     {
         $sesion = Sesion::with(['aulaCurso.aula', 'aulaCurso.curso', 'docente.persona'])->findOrFail($sesionId);
         $detalle = $sesion->detalle;
+
+        // obtener orientación (vertical por defecto)
+        $orientacion = $request->get('orientacion', 'vertical');
 
         // obtener listas guardadas en BD
         $listas = ListaCotejo::where('sesion_id', $sesion->id)->get();
@@ -79,27 +125,65 @@ class ListasCotejoDocumentController extends DocumentController
             $listas->transform(fn($l) => tap($l, fn($x) => $x->is_generated = false));
         }
 
-        // obtener estudiantes de la sesión (varios fallback)
+        // ---------------------------
+        // OBTENER ESTUDIANTES (REEMPLAZADO)
+        // Priorizar estudiantes cuya aula_id == aula_id del usuario autenticado
+        // Si no se encuentran, usar los fallbacks anteriores
+        // ---------------------------
         $estudiantes = collect();
+
         try {
-            if ($sesion->aulaCurso) {
-                // intento modelos comunes: matrciculas, alumnos, estudiantes
-                if (method_exists($sesion->aulaCurso, 'matriculas')) {
-                    $estudiantes = $sesion->aulaCurso->matriculas()->with(['alumno.persona'])->get()->map(function($m) {
-                        $nombre = $m->alumno?->persona ? trim(($m->alumno->persona->nombre ?? '') . ' ' . ($m->alumno->persona->apellido ?? '')) : ($m->nombre ?? null);
-                        return ['id' => $m->id, 'nombre' => $nombre];
-                    });
-                }
-                // fallback: aula->alumnos
-                if ($estudiantes->isEmpty() && $sesion->aulaCurso->aula && method_exists($sesion->aulaCurso->aula, 'alumnos')) {
-                    $estudiantes = $sesion->aulaCurso->aula->alumnos()->with('persona')->get()->map(function($a) {
-                        $nombre = $a->persona ? trim(($a->persona->nombre ?? '') . ' ' . ($a->persona->apellido ?? '')) : ($a->nombre ?? null);
-                        return ['id' => $a->id, 'nombre' => $nombre];
+            // buscar año vigente y usuario_aula como en AsistenciaResource
+            $año = Año::whereDate('fecha_inicio', '<=', now())
+                ->whereDate('fecha_fin', '>=', now())
+                ->first();
+
+            $ua = usuario_aula::where('user_id', Auth::id())
+                ->when($año, fn($q) => $q->where('año_id', $año->id))
+                ->first();
+
+            // 1) Intentar por aula del usuario autenticado
+            if ($ua?->aula_id) {
+                $estCollection = Estudiante::where('aula_id', $ua->aula_id)
+                    ->orderBy('apellidos')
+                    ->orderBy('nombres')
+                    ->get();
+
+                if ($estCollection->isNotEmpty()) {
+                    $estudiantes = $estCollection->map(function ($e) {
+                        return [
+                            'id' => $e->id,
+                            'nombres' => $e->nombres,
+                            'apellidos' => $e->apellidos,
+                            'nombre' => trim(($e->apellidos ?? '') . ' ' . ($e->nombres ?? '')),
+                        ];
                     });
                 }
             }
+
+            // 2) Fallback: usar aula vinculada a la sesión (aulaCurso)
+            if ($estudiantes->isEmpty() && $sesion->aulaCurso) {
+                $aulaId = $sesion->aulaCurso->aula_id ?? $sesion->aulaCurso->aula?->id ?? null;
+                if ($aulaId) {
+                    $estCollection = Estudiante::where('aula_id', $aulaId)
+                        ->orderBy('apellidos')
+                        ->orderBy('nombres')
+                        ->get();
+
+                    if ($estCollection->isNotEmpty()) {
+                        $estudiantes = $estCollection->map(function ($e) {
+                            return [
+                                'id' => $e->id,
+                                'nombres' => $e->nombres,
+                                'apellidos' => $e->apellidos,
+                                'nombre' => trim(($e->apellidos ?? '') . ' ' . ($e->nombres ?? '')),
+                            ];
+                        });
+                    }
+                }
+            }
         } catch (\Throwable $e) {
-            // si falla, dejamos la colección vacía
+            // en caso de error mantener colección vacía
             $estudiantes = collect();
         }
 
@@ -109,13 +193,13 @@ class ListasCotejoDocumentController extends DocumentController
         }
 
         // preparar arrays de criterios por lista
-        $listas->transform(function($l) {
+        $listas->transform(function ($l) {
             $criteriosText = $l->descripcion ?? '';
             $criterios = $criteriosText !== '' ? array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $criteriosText)), fn($v) => $v !== '')) : [];
             // niveles: intentar obtener 3 niveles separados por comas o saltos
             $nivelesText = $l->niveles ?? '';
             $niveles = $nivelesText !== '' ? array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|,/', $nivelesText)), fn($v) => $v !== '')) : [];
-            if (count($niveles) < 3) $niveles = ['Bajo','Medio','Alto']; // default
+            if (count($niveles) < 3) $niveles = ['Bajo', 'Medio', 'Alto']; // default
             $l->criterios_array = $criterios;
             $l->niveles_array = array_slice($niveles, 0, 3);
             // nombre de competencia
@@ -123,19 +207,69 @@ class ListasCotejoDocumentController extends DocumentController
             return $l;
         });
 
-        return view('filament.docente.documentos.listas_cotejo.vista-previa-listas-cotejo', [
+        // Retornar la vista según la orientación solicitada
+        $viewName = $orientacion === 'horizontal'
+            ? 'filament.docente.documentos.listas_cotejo.vista-previa-listas-cotejo-horizontal'
+            : 'filament.docente.documentos.listas_cotejo.vista-previa-listas-cotejo';
+
+        return view($viewName, [
             'sesion' => $sesion,
             'listas' => $listas,
             'estudiantes' => $estudiantes,
+            'orientacion' => $orientacion, // pasar también la orientacion a la vista
         ]);
     }
     private function generarDocumento($lista_cotejo, $datosGenerales, $orientacion)
     {
-        
+        // Elegir plantilla según orientación y si transversalidad está ausente (null)
+        if ($orientacion === 'horizontal') {
+            $plantillaFile = 'plantilla_horizontal.docx';
+        } else {
+            $plantillaFile = 'plantilla_vertical.docx';
+        }
+        $plantilla = $this->templatesPath . 'Lista_Cotejo/' . $plantillaFile;
+
+        if (!file_exists($plantilla)) {
+            throw new \Exception('Plantilla no encontrada: ' . $plantilla);
+        }
+        $templateProcessor = new TemplateProcessor($plantilla);
+        $this->procesarVariablesGenerales($templateProcessor, $datosGenerales);
+        $this->processLogos($templateProcessor);
+        $rutaTemp = $this->generateTempFile('lista_cotejo_' . $lista_cotejo->id);
+        $templateProcessor->saveAs($rutaTemp);
+
+        return $rutaTemp;
     }
 
     private function procesarVariablesGenerales($templateProcessor, $datosGenerales)
     {
-        
+        $competencia = $datosGenerales['competencia'] ?? '';
+        $titulo = $datosGenerales['titulo'] ?? '';
+        $criterios = $datosGenerales['criterios'] ?? '';
+        $niveles = $datosGenerales['niveles'] ?? '';
+        $estudiantes = $datosGenerales['estudiantes'] ?? [];
+
+        // Variables básicas
+        $templateProcessor->setValue('COMPETENCIA', htmlspecialchars($competencia));
+        $templateProcessor->setValue('TITULO', htmlspecialchars($titulo));
+        $templateProcessor->setValue('CRITERIOS', htmlspecialchars($criterios));
+        $templateProcessor->setValue('NIVELES', htmlspecialchars($niveles));
+
+        // Si hay estudiantes, clonar filas
+        if (!empty($estudiantes)) {
+            $templateProcessor->cloneRow('N', count($estudiantes));
+
+            foreach ($estudiantes as $index => $est) {
+                $num = $index + 1;
+                $nombre = $est['nombre'] ?? trim(($est['apellidos'] ?? '') . ' ' . ($est['nombres'] ?? ''));
+                $templateProcessor->setValue("N#{$num}", $num);
+                $templateProcessor->setValue("NOMBRE#{$num}", htmlspecialchars($nombre));
+            }
+        } else {
+            // Si no hay estudiantes, clona 1 fila vacía
+            $templateProcessor->cloneRow('N', 1);
+            $templateProcessor->setValue('N#1', '');
+            $templateProcessor->setValue('NOMBRE#1', '');
+        }
     }
 }

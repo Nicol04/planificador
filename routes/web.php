@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/listas-cotejo/{id}/previsualizar', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'previsualizar'])
         ->name('listas-cotejo.previsualizar');
         
+        
 Route::get('/documentos/asistencias/vista-previa-html', [AsistenciaDocumentController::class, 'vistaPreviaHtml'])
     ->name('asistencias.vista.previa');
 

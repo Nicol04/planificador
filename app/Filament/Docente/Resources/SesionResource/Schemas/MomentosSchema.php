@@ -2,6 +2,7 @@
 namespace App\Filament\Docente\Resources\SesionResource\Schemas;
 
 use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 
 class MomentosSchema
 {
@@ -9,7 +10,7 @@ class MomentosSchema
     {
         return [
             Forms\Components\View::make('filament.docente.sesion.momentos')
-                ->columnSpan('full'),
+                ->columnSpanFull(),            
         ];
     }
 }

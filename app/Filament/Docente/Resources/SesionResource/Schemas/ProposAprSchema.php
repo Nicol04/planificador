@@ -145,54 +145,54 @@ class ProposAprSchema
                         ->columnSpan(1),
 
                     Forms\Components\Select::make('estandares')
-    ->label('Estándares (descripción)')
-    ->multiple()
-    ->preload() // precargar opciones para evitar que el campo quede sin valores al guardar
-    ->options(function (callable $get) {
-        $competenciaId = $get('competencia_id');
-        if (!$competenciaId) return [];
+                        ->label('Estándares (descripción)')
+                        ->multiple()
+                        ->preload() // precargar opciones para evitar que el campo quede sin valores al guardar
+                        ->options(function (callable $get) {
+                            $competenciaId = $get('competencia_id');
+                            if (!$competenciaId) return [];
 
-        $user = Auth::user();
-        if (!$user) return [];
+                            $user = Auth::user();
+                            if (!$user) return [];
 
-        $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
-        $grado = $usuarioAula?->aula?->grado;
-        if (!$grado) return [];
+                            $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
+                            $grado = $usuarioAula?->aula?->grado;
+                            if (!$grado) return [];
 
-        $gradoNum = (int) preg_replace('/[^0-9]/', '', $grado);
-        if ($gradoNum <= 0) return [];
+                            $gradoNum = (int) preg_replace('/[^0-9]/', '', $grado);
+                            if ($gradoNum <= 0) return [];
 
-        // Mapear grado al ciclo requerido
-        $ciclo = null;
-        if (in_array($gradoNum, [1, 2], true)) {
-            $ciclo = 'III';
-        } elseif (in_array($gradoNum, [3, 4], true)) {
-            $ciclo = 'IV';
-        } elseif (in_array($gradoNum, [5, 6], true)) {
-            $ciclo = 'V';
-        }
+                            // Mapear grado al ciclo requerido
+                            $ciclo = null;
+                            if (in_array($gradoNum, [1, 2], true)) {
+                                $ciclo = 'III';
+                            } elseif (in_array($gradoNum, [3, 4], true)) {
+                                $ciclo = 'IV';
+                            } elseif (in_array($gradoNum, [5, 6], true)) {
+                                $ciclo = 'V';
+                            }
 
-        $query = Estandar::where('competencia_id', $competenciaId);
-        if ($ciclo) {
-            $query->where('ciclo', 'LIKE', "%{$ciclo}%");
-        }
+                            $query = Estandar::where('competencia_id', $competenciaId);
+                            if ($ciclo) {
+                                $query->where('ciclo', 'LIKE', "%{$ciclo}%");
+                            }
 
-        $result = $query->orderBy('descripcion')->pluck('descripcion', 'id')->toArray();
+                            $result = $query->orderBy('descripcion')->pluck('descripcion', 'id')->toArray();
 
-        // Fallback: si no hay resultados por ciclo, devolver todos los estándares de la competencia
-        if (empty($result)) {
-            $result = Estandar::where('competencia_id', $competenciaId)
-                ->orderBy('descripcion')
-                ->pluck('descripcion', 'id')
-                ->toArray();
-        }
+                            // Fallback: si no hay resultados por ciclo, devolver todos los estándares de la competencia
+                            if (empty($result)) {
+                                $result = Estandar::where('competencia_id', $competenciaId)
+                                    ->orderBy('descripcion')
+                                    ->pluck('descripcion', 'id')
+                                    ->toArray();
+                            }
 
-        return $result;
-    })
-    ->reactive()
-    ->searchable()
-    ->placeholder('Se filtran por ciclo según el grado del aula')
-    ->columnSpan(1),
+                            return $result;
+                        })
+                        ->reactive()
+                        ->searchable()
+                        ->placeholder('Se filtran por ciclo según el grado del aula')
+                        ->columnSpan(1),
                 ])
                 ->columnSpan('full'),
 
@@ -279,7 +279,14 @@ class ProposAprSchema
                         ->label('¿Deseas generar la lista de cotejo?')
                         ->reactive()
                         ->default(false)
-                        ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Lista de cotejo')
+                        ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Lista de cotejo'
+                            || !empty($get('lista_cotejo_titulo'))
+                            || !empty($get('lista_cotejo_niveles')))
+                        ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                            if (!$state && (!empty($get('lista_cotejo_titulo')) || !empty($get('lista_cotejo_niveles')))) {
+                                $set('generar_lista_cotejo', true);
+                            }
+                        })
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             if ($state) {
                                 // si se activa, asegurar que título y niveles existen
@@ -300,21 +307,40 @@ class ProposAprSchema
                         ->label('Título para la Lista de cotejo')
                         ->placeholder('Ej: Lista de cotejo - Actividad 1')
                         ->reactive()
-                        ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Lista de cotejo')
+                        ->visible(function ($get) {
+                            $inst = $get('instrumentos_predefinidos');
+                            $isArray = is_array($inst) && in_array('Lista de cotejo', $inst, true);
+                            return $inst === 'Lista de cotejo' || $isArray || !empty($get('lista_cotejo_titulo')) || !empty($get('lista_cotejo_niveles'));
+                        })
                         ->disabled(fn($get) => ! (bool) ($get('generar_lista_cotejo') ?? false))
                         ->default(null)
+                        ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                            // Si al hidratar no trae valor, intentar tomar el valor que vino en el estado (seguridad adicional)
+                            if (($state === null || $state === '') && !empty($get('lista_cotejo_titulo'))) {
+                                $set('lista_cotejo_titulo', $get('lista_cotejo_titulo'));
+                            }
+                        })
                         ->columnSpan('full'),
 
                     // Niveles: precargados desde el inicio y no editables
                     Forms\Components\TextInput::make('lista_cotejo_niveles')
                         ->label('Niveles (separados por coma)')
                         ->placeholder('Ej: Logrado, En proceso, No logrado')
-                        ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Lista de cotejo')
-                        ->helperText('Valores por defecto: Logrado, En proceso, Destacado')
-                        ->default('Logrado, En proceso, Destacado')
+                        ->visible(function ($get) {
+                            $inst = $get('instrumentos_predefinidos');
+                            $isArray = is_array($inst) && in_array('Lista de cotejo', $inst, true);
+                            return $inst === 'Lista de cotejo' || $isArray || !empty($get('lista_cotejo_titulo')) || !empty($get('lista_cotejo_niveles'));
+                        })
+                        ->helperText('Valores por defecto: Logrado, En proceso, No logrado')
+                        ->default('Logrado, En proceso, No logrado')
                         ->reactive()
                         ->disabled() // no editable desde el inicio
                         ->required(fn($get) => (bool) ($get('generar_lista_cotejo') ?? false))
+                        ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                            if (($state === null || $state === '') && !empty($get('lista_cotejo_niveles'))) {
+                                $set('lista_cotejo_niveles', $get('lista_cotejo_niveles'));
+                            }
+                        })
                         ->columnSpan('full'),
                 ])
                 ->columns(1)

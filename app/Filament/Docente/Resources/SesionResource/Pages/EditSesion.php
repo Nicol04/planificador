@@ -203,6 +203,10 @@ class EditSesion extends EditRecord
 
     protected function getHeaderActions(): array
     {
+        if (! $this->sessionHasListaCotejo()) {
+            return [];
+        }
+
         return [
             Actions\Action::make('previsualizar_listas')
                 ->label('Listas de cotejo')
@@ -210,5 +214,37 @@ class EditSesion extends EditRecord
                 ->url(route('listas-cotejo.vista.previa', $this->record->id))
                 ->openUrlInNewTab(),
         ];
+    }
+    protected function sessionHasListaCotejo(): bool
+    {
+        try {
+            $sesion = $this->record;
+            if ($sesion && method_exists($sesion, 'listasCotejos') && $sesion->listasCotejos()->exists()) {
+                return true;
+            }
+            $detalle = $sesion->detalle ?? null;
+            if (empty($detalle) || empty($detalle->propositos_aprendizaje)) {
+                return false;
+            }
+            foreach ($detalle->propositos_aprendizaje as $prop) {
+                $instPre = $prop['instrumentos_predefinidos'] ?? null;
+                if (is_array($instPre) && in_array('Lista de cotejo', $instPre, true)) {
+                    return true;
+                }
+                if (is_string($instPre) && stripos($instPre, 'lista de cotejo') !== false) {
+                    return true;
+                }
+                $inst = $prop['instrumentos'] ?? null;
+                if (is_array($inst) && in_array('Lista de cotejo', $inst, true)) {
+                    return true;
+                }
+                if (is_string($inst) && stripos($inst, 'lista de cotejo') !== false) {
+                    return true;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error comprobando listas de cotejo: '.$e->getMessage(), ['sesion_id' => $this->record->id ?? null]);
+        }
+        return false;
     }
 }

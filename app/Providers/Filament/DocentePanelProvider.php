@@ -32,6 +32,8 @@ class DocentePanelProvider extends PanelProvider
         return $panel
             ->assets([
                 Js::make('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.0/flowbite.min.js'),
+                Js::make('quill', 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js'),
+                
             ])
             ->id('docente')
             ->path('docente')
