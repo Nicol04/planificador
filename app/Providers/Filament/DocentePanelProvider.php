@@ -30,6 +30,9 @@ class DocentePanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->assets([
+                Js::make('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.0/flowbite.min.js'),
+            ])
             ->id('docente')
             ->path('docente')
             ->sidebarCollapsibleOnDesktop()
@@ -99,7 +102,7 @@ class DocentePanelProvider extends PanelProvider
             </script> 
             ')
             ->favicon(asset('assets/img/logo_colegio.png'))
-            
+
             //->login(\Filament\Pages\Auth\Login::class)
             ->login()
             ->topNavigation()

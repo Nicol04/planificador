@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Documents\AsistenciaDocumentController;
 use App\Http\Controllers\Documents\ListasCotejoDocumentController;
 use App\Http\Controllers\Documents\SesionDocumentController;
 use App\Http\Controllers\Documents\UnidadDocumentController;
@@ -36,6 +37,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/listas-cotejo/{id}/previsualizar', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'previsualizar'])
         ->name('listas-cotejo.previsualizar');
+        
+Route::get('/documentos/asistencias/vista-previa-html', [AsistenciaDocumentController::class, 'vistaPreviaHtml'])
+    ->name('asistencias.vista.previa');
+
+Route::get('/documentos/asistencias/previsualizar/{id?}', [AsistenciaDocumentController::class, 'previsualizar'])
+    ->name('asistencias.previsualizar');
 });
 Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
 Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');

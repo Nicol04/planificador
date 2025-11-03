@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\AulaResource\RelationManagers;
 
 use App\Models\Año;
+use App\Models\Estudiante;
 use App\Models\User;
 use App\Models\usuario_aula;
 use Filament\Forms;
@@ -66,61 +67,70 @@ class UsersRelationManager extends RelationManager
                     })
             ])
             ->headerActions([
-                Action::make('agregarUsuarios')
-                    ->label('Agregar Estudiantes o Docente')
+                Action::make('agregarEstudiantes')
+                    ->label('Agregar / Vincular Estudiantes')
                     ->icon('heroicon-m-user-plus')
                     ->form([
-                        Forms\Components\Select::make('user_ids')
-                            ->label('Seleccionar usuarios')
+                        Forms\Components\Select::make('existing_estudiante_ids')
+                            ->label('Estudiantes existentes (sin aula)')
                             ->multiple()
-                            ->searchable()
-                            ->options(function (RelationManager $livewire) {
-                                $aula = $livewire->getOwnerRecord();
-
-                                // Verificar si ya hay un docente en el aula
-                                $yaTieneDocente = $aula->users()
-                                    ->whereHas('roles', fn($q) => $q->where('name', 'docente'))
-                                    ->exists();
-
-                                return User::whereDoesntHave('usuario_aulas') // no tiene aulas
-                                    ->whereHas('roles', function ($query) use ($yaTieneDocente) {
-                                        $query->whereIn('name', $yaTieneDocente ? ['estudiante'] : ['estudiante', 'docente']);
-                                    })
-                                    ->with('persona')
-                                    ->get()
-                                    ->mapWithKeys(fn($user) => [
-                                        $user->id => "{$user->persona?->nombre} {$user->persona?->apellido}",
-                                    ]);
-                            })
-                            ->required(),
+                            ->options(fn() => \App\Models\Estudiante::whereNull('aula_id')
+                                ->orderBy('nombres')
+                                ->get()
+                                ->mapWithKeys(fn($e) => [$e->id => "{$e->nombres} {$e->apellidos}"])
+                                ->toArray())
+                            ->helperText('Selecciona estudiantes ya registrados que no tengan aula asignada.'),
+                        Forms\Components\TextInput::make('cantidad')
+                            ->label('¿Cuántos quieres agregar?')
+                            ->numeric()
+                            ->reactive()
+                            ->afterStateUpdated(fn($state, callable $set) => $set('registros', array_fill(0, max(0, (int) $state), ['nombres' => '', 'apellidos' => '']))),
+                        Forms\Components\Repeater::make('registros')
+                            ->label('Nuevos Estudiantes')
+                            ->schema([
+                                Forms\Components\TextInput::make('nombres')
+                                    ->label('Nombres')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('apellidos')
+                                    ->label('Apellidos')
+                                    ->required()
+                                    ->maxLength(255),
+                            ])
+                            ->columns(1)
+                            ->minItems(0)
+                            ->dehydrated(true),
                     ])
                     ->action(function (array $data, RelationManager $livewire) {
                         $aula = $livewire->getOwnerRecord();
 
-                        $año = Año::whereDate('fecha_inicio', '<=', now())
-                            ->whereDate('fecha_fin', '>=', now())
-                            ->first();
-
-                        if (! $año) {
-                            Notification::make()
-                                ->title('No hay un año activo definido.')
-                                ->danger()
-                                ->send();
-                            return;
+                        // Vincular estudiantes existentes: asignar aula_id
+                        $existingIds = $data['existing_estudiante_ids'] ?? [];
+                        if (!empty($existingIds)) {
+                            \App\Models\Estudiante::whereIn('id', $existingIds)
+                                ->update(['aula_id' => $aula->id]);
                         }
 
-                        foreach ($data['user_ids'] as $userId) {
-                            usuario_aula::create([
-                                'user_id' => $userId,
-                                'aula_id' => $aula->id,
-                                'año_id' => $año->id,
+                        // Crear nuevos estudiantes y asignar aula_id
+                        foreach ($data['registros'] ?? [] as $item) {
+                            $nombres = trim($item['nombres'] ?? '');
+                            $apellidos = trim($item['apellidos'] ?? '');
+                            if ($nombres === '' && $apellidos === '') {
+                                continue;
+                            }
+
+                            \App\Models\Estudiante::create([
+                                'nombres'  => $nombres,
+                                'apellidos'=> $apellidos,
+                                'aula_id'  => $aula->id,
                             ]);
                         }
 
+                        // actualizar el conteo en el aula
                         $aula->actualizarCantidadUsuarios();
 
                         Notification::make()
-                            ->title('Usuarios vinculados exitosamente.')
+                            ->title('Estudiantes vinculados/creados correctamente.')
                             ->success()
                             ->send();
                     }),

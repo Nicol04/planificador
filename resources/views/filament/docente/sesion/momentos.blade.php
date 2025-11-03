@@ -1,3 +1,4 @@
+<x-filament::page>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap');
 
@@ -218,3 +219,4 @@
         cerrarModalGenerarMomentos();
     }
 </script>
+<x-filament::page>

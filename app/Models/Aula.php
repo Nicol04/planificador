@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Aula extends Model
 {
@@ -24,9 +25,9 @@ class Aula extends Model
             ->withPivot('año_id');
     }
 
-    public function sesiones()
+    public function estudiantes()
     {
-        return $this->hasMany(Sesion::class);
+        return $this->hasMany(Estudiante::class);
     }
     public function cursos()
     {
@@ -44,15 +45,23 @@ class Aula extends Model
             ->first();
     }
     public function actualizarCantidadUsuarios()
-    {
-        $año = \App\Models\Año::whereDate('fecha_inicio', '<=', now())
-            ->whereDate('fecha_fin', '>=', now())
-            ->first();
-
-        $this->cantidad_usuarios = $this->users()
-            ->wherePivot('año_id', $año?->id)
-            ->count();
-
+{
+    // Si la tabla estudiantes tiene aula_id, contamos estudiantes
+    if (Schema::hasColumn('estudiantes', 'aula_id')) {
+        $this->cantidad_usuarios = \App\Models\Estudiante::where('aula_id', $this->id)->count();
         $this->save();
+        return;
     }
+
+    // Si no existe aula_id, se mantiene la lógica por usuario_aulas (por año activo)
+    $año = \App\Models\Año::whereDate('fecha_inicio', '<=', now())
+        ->whereDate('fecha_fin', '>=', now())
+        ->first();
+
+    $this->cantidad_usuarios = $this->users()
+        ->when($año, fn($q) => $q->wherePivot('año_id', $año->id))
+        ->count();
+
+    $this->save();
+}
 }
