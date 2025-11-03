@@ -21,6 +21,7 @@ class SesionResource extends Resource
     protected static ?string $model = Sesion::class;
     protected static ?string $label = 'Sesiones';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Planificación de sesiones';
 
     public static function form(Form $form): Form
     {

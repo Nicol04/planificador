@@ -18,11 +18,23 @@ export class FichaController {
   }
 
   async generarTodo() {
-    await Promise.all([
-      this.generarInicio(),
-      this.generarDesarrollo(),
-      this.generarConclusion(),
-    ]);
+    console.log('🚀 Generando ficha completa con contexto de aprendizaje...');
+    
+    // Construir descripción con todos los datos del aprendizaje
+    const descripcion = this._aprendizajesPrompt();
+    
+    // Llamar al método unificado de GeminiService que genera las 3 secciones en una sola petición
+    const resultado = await this.gemini.generarTodo(descripcion);
+    
+    // Asignar los objetos generados
+    this.inicio = resultado.inicio;
+    this.desarrollo = resultado.desarrollo;
+    this.conclusion = resultado.conclusion;
+    
+    console.log('✅ Ficha completa generada:', { inicio: this.inicio, desarrollo: this.desarrollo, conclusion: this.conclusion });
+    
+    // Actualizar la UI
+    window.renderFicha();
   }
 
 
@@ -33,7 +45,8 @@ export class FichaController {
   }
 
   async generarInicio() {
-    const prompt = `Eres un asistente pedagógico. Genera el texto del "Inicio" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe introducir el tema, motivar al estudiante y conectar con sus conocimientos previos. Usa formato Markdown para estructurar el contenido.${this._aprendizajesPrompt()}`;
+    console.log('🟢 Generando Inicio...');
+    const prompt = `Eres un asistente pedagógico. Genera el texto del "Inicio" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe introducir el tema, motivar al estudiante y conectar con sus conocimientos previos. ${this._aprendizajesPrompt()}`;
     const schema = {
       "type": "OBJECT",
       "properties": {
@@ -41,6 +54,7 @@ export class FichaController {
       }
     };
     const json = await this.gemini.generar(prompt, schema);
+    console.log('✅ Inicio generado:', json);
     this.inicio.fromJson(json);
     window.renderFicha();
     return this.inicio;
@@ -48,7 +62,7 @@ export class FichaController {
 
 
   async generarDesarrollo() {
-    const prompt = `Eres un asistente pedagógico. Genera el texto del "Desarrollo" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe presentar los contenidos principales con lenguaje claro y didáctico. Usa formato Markdown para estructurar el contenido.${this._aprendizajesPrompt()}`;
+    const prompt = `Eres un asistente pedagógico. Genera el texto del "Desarrollo" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe presentar los contenidos principales con lenguaje claro y didáctico. ${this._aprendizajesPrompt()}`;
     const schema = {
       "type": "OBJECT",
       "properties": {
@@ -63,7 +77,7 @@ export class FichaController {
 
 
   async generarConclusion() {
-    const prompt = `Eres un asistente pedagógico. Genera el texto de la "Conclusión" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe resumir lo aprendido y motivar la reflexión del estudiante. Usa formato Markdown para estructurar el contenido.${this._aprendizajesPrompt()}`;
+    const prompt = `Eres un asistente pedagógico. Genera el texto de la "Conclusión" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe resumir lo aprendido y motivar la reflexión del estudiante. ${this._aprendizajesPrompt()}`;
     const schema = {
       "type": "OBJECT",
       "properties": {
