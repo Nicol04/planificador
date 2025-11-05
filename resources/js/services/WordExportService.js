@@ -29,11 +29,11 @@ export class WordExportService {
           <div class="form-data">
             <h2>Datos de la Sesión</h2>
             <table>
-              <tr><td><strong>Nombre de la Sesión:</strong></td><td>${aprendizajeData.nombre || 'N/A'}</td></tr>
+              <tr><td><strong>Nombre de la Sesión:</strong></td><td>${aprendizajeData.titulo || 'N/A'}</td></tr>
               <tr><td><strong>Propósito:</strong></td><td>${aprendizajeData.proposito || 'N/A'}</td></tr>
               <tr><td><strong>Competencia:</strong></td><td>${aprendizajeData.competencia || 'N/A'}</td></tr>
               <tr><td><strong>Capacidades:</strong></td><td>${aprendizajeData.capacidades || 'N/A'}</td></tr>
-              <tr><td><strong>Desempeños:</strong></td><td>${aprendizajeData.desempenos || 'N/A'}</td></tr>
+              <tr><td><strong>Estándares:</strong></td><td>${aprendizajeData.estandares || 'N/A'}</td></tr>
               <tr><td><strong>Criterios de Evaluación:</strong></td><td>${aprendizajeData.criterios || 'N/A'}</td></tr>
               <tr><td><strong>Evidencias de Aprendizaje:</strong></td><td>${aprendizajeData.evidencias || 'N/A'}</td></tr>
               <tr><td><strong>Instrumentos de Evaluación:</strong></td><td>${aprendizajeData.instrumentos || 'N/A'}</td></tr>

@@ -4,7 +4,6 @@ namespace App\Filament\Docente\Resources\SesionResource\Schemas;
 
 use App\Models\Capacidad;
 use App\Models\Competencia;
-use App\Models\Desempeno;
 use App\Models\Estandar;
 use Filament\Forms;
 use Filament\Forms\Components\TagsInput;
@@ -24,9 +23,10 @@ class ProposAprSchema
                     ->options(self::getCursos())
                     ->afterStateUpdated(function ($state, callable $set) {
                         $set('competencias', [
-                            ['competencia_id' => null, 'capacidades' => [], 'desempenos' => [], 'criterios' => [], 'instrumentos_predefinidos' => [], 'instrumentos_personalizados' => []],
+                            ['competencia_id' => null, 'capacidades' => [], 'estandares' => [], 'criterios' => [], 'instrumentos_predefinidos' => [], 'instrumentos_personalizados' => []],
                         ]);
                         $set('aula_curso_id', self::getAulaCursoId($state));
+                        session()->put('curso_id', $state);
                     })
                     ->searchable()
                     ->placeholder('Seleccione curso...')
@@ -50,13 +50,19 @@ class ProposAprSchema
                             return "{$competencia} — «{$tituloLista}»";
                         }
                         return $competencia;
-                    }),
+                    })
+                    ->afterStateUpdated(function ($state) {
+        session()->put('competencias', $state ?? []);
+    }),
                 // Paso 3: Evidencias Generales
                 Forms\Components\Textarea::make('evidencias')
                     ->label('3️⃣ Evidencias de la sesión')
                     ->rows(3)
                     ->placeholder('¿Cómo verificarás que los estudiantes aprendieron?')
                     ->helperText('Describe las evidencias observables del aprendizaje')
+                    ->afterStateUpdated(function ($state) {
+                        session()->put('evidencias', $state);
+                    })
                     ->columnSpan('full'),
             ])
             ->columnSpan('full');
@@ -197,56 +203,19 @@ class ProposAprSchema
                 ->columnSpan('full'),
 
             // Fila 3: Criterios de Evaluación
-            Forms\Components\Grid::make(3)
-                ->schema([
-                    Forms\Components\TextInput::make('criterio_input')
-                        ->label('Añadir criterio')
-                        ->placeholder('Escribe un criterio y pulsa +')
-                        ->columnSpan(2)
-                        ->reactive()
-                        ->suffixAction(
-                            \Filament\Forms\Components\Actions\Action::make('agregar_criterio')
-                                ->label('+')
-                                ->icon('heroicon-o-plus')
-                                ->action(function (callable $get, callable $set) {
-                                    $input = trim($get('criterio_input') ?? '');
-                                    if ($input === '') return;
-                                    $current = (array) ($get('criterios') ?? []);
-                                    // asegurar que current es array incluso si venía como string
-                                    if (!is_array($current)) {
-                                        $current = $current === '' ? [] : array_map('trim', explode("\n", (string) $current));
-                                    }
-                                    if (!in_array($input, $current, true)) {
-                                        $current[] = $input;
-                                    }
-                                    $set('criterios', array_values($current));
-                                    $set('criterios_edit', implode("\n", array_map(fn($s) => '- ' . $s, $current)));
-                                    $set('criterio_input', '');
-                                })
-                        ),
-                ])->columnSpan('full'),
-
-            // TagsInput: inicializar y forzar estado array al hidratar
             Forms\Components\TagsInput::make('criterios')
-                ->label('Criterios (presiona Enter para añadir; eliminar con X)')
-                ->placeholder('Escribe y presiona Enter o usa el campo "Añadir criterio"')
+                ->label('Criterios (Enter para añadir, eliminar con X)')
+                ->placeholder('Escribe y presiona Enter o usa el campo de arriba')
                 ->reactive()
-                ->default([]) // asegurar array por defecto
-                ->visible(fn($get) => !empty($get('criterios'))) // <-- oculto hasta que haya al menos un criterio
-                ->afterStateHydrated(function ($state, callable $set) {
-                    if ($state === null || $state === '') {
-                        $set('criterios', []);
-                    } elseif (!is_array($state)) {
-                        $arr = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $state)), fn($v) => $v !== ''));
-                        $set('criterios', $arr);
-                    }
-                })
+                ->default([])
                 ->afterStateUpdated(function ($state, callable $set) {
-                    $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
-                    $set('criterios', $items);
-                    $set('criterios_edit', implode("\n", array_map(fn($s) => '- ' . $s, $items)));
-                })
+        $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
+        $set('criterios', $items);
+        session()->put('criterios', $items);
+    })
+                ->dehydrated(true)
                 ->columnSpan('full'),
+
 
             // Fila 4: Instrumentos
             Forms\Components\Section::make('Instrumentos de evaluación')
@@ -264,6 +233,9 @@ class ProposAprSchema
                         ])
                         ->searchable()
                         ->reactive()
+                        ->afterStateUpdated(function ($state) {
+        session()->put('instrumentos_predefinidos', $state);
+    })
                         ->placeholder('Selecciona un instrumento...')
                         ->columnSpan('full'),
 
@@ -271,6 +243,10 @@ class ProposAprSchema
                         ->label('Añade tus propios instrumentos')
                         ->placeholder('Escribe y presiona Enter')
                         ->reactive()
+                        ->afterStateUpdated(function ($state) {
+        $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
+        session()->put('instrumentos_personalizados', $items);
+    })
                         ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Personalizado')
                         ->columnSpan('full'),
 

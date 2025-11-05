@@ -6,7 +6,7 @@ export class AprendizajeController {
   }
 
   agregarAprendizaje(data) {
-    const aprendizaje = new Aprendizaje(data);
+    const aprendizaje = data instanceof Aprendizaje ? data : new Aprendizaje(data);
     this.aprendizajes.push(aprendizaje);
     return aprendizaje;
   }

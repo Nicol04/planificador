@@ -9,6 +9,7 @@ use App\Filament\Docente\Resources\SesionResource\Schemas\MomentosSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\ProposAprSchema;
 use App\Models\Sesion;
 use Filament\Forms;
+use Filament\Forms\Components\ViewField;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
@@ -40,13 +41,19 @@ class SesionResource extends Resource
                         ])
                         ->description('Información básica de la sesión')
                         ->icon('heroicon-o-document-text'),
-
                     Step::make('Momentos de la Sesión')
-                        ->schema(MomentosSchema::schema())
-                        ->description('Inicio, desarrollo y cierre de la sesión')
-                        ->icon('heroicon-o-academic-cap'),
+                        ->schema(function (callable $get) {
+                            return [
+                                ViewField::make('momentos')
+                                    ->view('filament.docente.sesion.momentos')
+                                    ->viewData([
+                                        'datosSesion' => $get('data'),
+                                    ]),
+                            ];
+                        })
+
                 ])
-                
+                    ->statePath('data')
                     ->columnSpanFull()
                     ->persistStepInQueryString()
             ]);

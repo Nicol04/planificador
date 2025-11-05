@@ -12,14 +12,12 @@ class DatosSesionSchema
             ->headerActions([
                 Forms\Components\Actions\Action::make('usarHoy')
                     ->label('📅 Usar hoy')
-                    ->action(function ($livewire) {
+                    ->action(function (callable $set) {
                         $hoy = now()->toDateString();
                         $dia = \Carbon\Carbon::parse($hoy)->locale('es')->isoFormat('dddd');
-                        
-                        $livewire->form->fill([
-                            'fecha' => $hoy,
-                            'dia' => ucfirst($dia),
-                        ]);
+
+                        $set('fecha', $hoy);
+                        $set('dia', ucfirst($dia));
                     }),
             ])
             ->description(fn($get) => $get('dia') ? '📅 ' . ucfirst($get('dia')) : '')
@@ -68,16 +66,24 @@ class DatosSesionSchema
                 Forms\Components\TextInput::make('titulo')
                     ->label('Título de la sesión')
                     ->required()
+                    ->reactive()
                     ->maxLength(255)
                     ->placeholder('Ej: Fracciones equivalentes')
+                    ->afterStateUpdated(function ($state) {
+                        session()->put('titulo', $state);
+                    })
                     ->columnSpan('full'),
 
                 // Fila 3: Propósito
                 Forms\Components\Textarea::make('proposito_sesion')
                     ->label('Propósito de la sesión')
                     ->required()
+                    ->reactive()
                     ->rows(3)
                     ->placeholder('¿Qué aprenderán los estudiantes?')
+                    ->afterStateUpdated(function ($state) {
+                        session()->put('proposito_sesion', $state);
+                    })
                     ->columnSpan('full'),
 
                 // Campo oculto para guardar el día
