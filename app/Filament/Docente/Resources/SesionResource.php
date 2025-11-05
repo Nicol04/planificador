@@ -9,6 +9,7 @@ use App\Filament\Docente\Resources\SesionResource\Schemas\MomentosSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\ProposAprSchema;
 use App\Models\Sesion;
 use Filament\Forms;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\ViewField;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Wizard\Step;
@@ -44,6 +45,15 @@ class SesionResource extends Resource
                     Step::make('Momentos de la Sesión')
                         ->schema(function (callable $get) {
                             return [
+
+                                Hidden::make('momentos_data')
+                                    ->default([
+                                        // Pre-llenamos los 3 momentos
+                                        ['nombre_momento' => 'Inicio', 'descripcion' => '', 'actividades' => ''],
+                                        ['nombre_momento' => 'Desarrollo', 'descripcion' => '', 'actividades' => ''],
+                                        ['nombre_momento' => 'Cierre', 'descripcion' => '', 'actividades' => ''],
+                                    ]),
+
                                 ViewField::make('momentos')
                                     ->view('filament.docente.sesion.momentos')
                                     ->viewData([

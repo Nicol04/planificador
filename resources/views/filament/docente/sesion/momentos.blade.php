@@ -183,7 +183,7 @@
         $datosSesion = $datosSesion ?? [
             'titulo' => session('titulo', ''),
             'proposito_sesion' => session('proposito_sesion', ''),
-            'evidencias' => session('evidencias', []),
+            'evidencias' => session('evidencias', ''),
             'competencias' => session('competencias', []),
             'criterios' => session('criterios', []),
             'instrumentos_predefinidos' => session('instrumentos_predefinidos', []),
@@ -252,6 +252,13 @@
     <p id="propositoLabel">Propósito: {{ $datosSesion['proposito_sesion'] ?? '' }}</p>
     <p id="generoLabel">Género: {{ $datosSesion['genero'] ?? 'N/A' }}</p>
     <p id="gradoAulaLabel">Grado del Aula: {{ $datosSesion['grado_aula'] ?? 'N/A' }}</p>
+
+
+    <!-- Hidden fields to store the generated text so it can be submitted or read by other scripts -->
+    <textarea id="inicioInput" name="inicio" style="display:none;">{{ $datosSesion['inicio'] ?? '' }}</textarea>
+    <textarea id="desarrolloInput" name="desarrollo" style="display:none;">{{ $datosSesion['desarrollo'] ?? '' }}</textarea>
+    <textarea id="conclusionInput" name="conclusion" style="display:none;">{{ $datosSesion['conclusion'] ?? '' }}</textarea>
+
 
     @forelse($datosSesion['competencias'] ?? [] as $comp)
         <div class="competencia-item">

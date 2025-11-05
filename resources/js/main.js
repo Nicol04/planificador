@@ -138,6 +138,20 @@ function renderFicha() {
   quillManager.setMarkdown('#inicio-editor', fichaController.inicio.texto || "Pendiente de generación...");
   quillManager.setMarkdown('#desarrollo-editor', fichaController.desarrollo.texto || "Pendiente de generación...");
   quillManager.setMarkdown('#conclusion-editor', fichaController.conclusion.texto || "Pendiente de generación...");
+
+  // Sync generated content into hidden inputs so forms or other scripts can access them
+  try {
+    const setHidden = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.value = value || '';
+    };
+
+    setHidden('inicioInput', fichaController.inicio && fichaController.inicio.texto ? fichaController.inicio.texto : '');
+    setHidden('desarrolloInput', fichaController.desarrollo && fichaController.desarrollo.texto ? fichaController.desarrollo.texto : '');
+    setHidden('conclusionInput', fichaController.conclusion && fichaController.conclusion.texto ? fichaController.conclusion.texto : '');
+  } catch (e) {
+    console.warn('No se pudieron sincronizar los campos ocultos:', e);
+  }
 }
 
 window.renderFicha = renderFicha;
@@ -184,8 +198,8 @@ window.regenerar = async (seccion, e) => {
   const btn = e && e.target
     ? e.target
     : document.querySelector(`button[onclick^="regenerar('${seccion}")`) // intento de fallback
-      || document.querySelector(`button[onclick*="regenerar('${seccion}')"]`)
-      || null;
+    || document.querySelector(`button[onclick*="regenerar('${seccion}')"]`)
+    || null;
 
   if (btn) {
     btn.disabled = true;

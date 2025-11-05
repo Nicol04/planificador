@@ -61,7 +61,6 @@ export class GeminiService {
       const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "Error al generar contenido.";
       console.log('📄 Texto extraído (primeros 200 chars):', texto.substring(0, 200) + '...');
 
-      // Si se solicitó un schema, intentamos devolver un objeto parseado.
       if (schema) {
         // Intentos tolerantes de parseo:
         // 1) JSON.parse directo
@@ -116,15 +115,58 @@ export class GeminiService {
     // Normalizar descripción a texto
     const descripcionTexto = typeof description === 'string' ? description : JSON.stringify(description, null, 2);
 
-    const prompt = `Eres un asistente experto en diseño de unidades de aprendizaje. Dada una descripción del tema o unidad, genera UNIFICADAMENTE el texto completo dividido en tres partes: inicio, desarrollo y conclusion. Responde ÚNICAMENTE con un JSON válido (sin texto adicional) con esta estructura exacta:
+   /* const prompt = `Eres un asistente experto en diseño de sesiones de aprendizaje. Dada una descripción del tema y los datos de la sesión, genera UNIFICADAMENTE el texto completo dividido en tres partes: inicio, desarrollo y conclusion. Responde ÚNICAMENTE con un JSON válido (sin texto adicional) con esta estructura exacta:
 {
   "inicio": { "texto": "<texto de inicio: contexto, propósito, conexión con objetivos y enganche inicial>" },
   "desarrollo": { "texto": "<texto de desarrollo: actividades, pasos, contenidos, recursos y sugerencias metodológicas>" },
   "conclusion": { "texto": "<texto de cierre: síntesis, indicadores de logro, evidencias y recomendaciones finales>" }
 }
 
-Genera textos claros y en español, de extensión moderada (2-6 párrafos por sección si procede). No incluyas listas de metadatos ni explicaciones fuera del JSON. Usa la siguiente descripción para orientar la generación:
-${descripcionTexto}`;
+Genera textos claros y en español, de extensión moderada (2-6 párrafos por sección si procede). No incluyas listas de metadatos ni explicaciones fuera del JSON. Usa la siguiente descripción para orientar la generación: */
+
+const prompt = `
+Eres un asistente pedagógico experto en diseño y redacción técnica de sesiones de aprendizaje.
+
+Tu tarea es generar el contenido completo de una ficha pedagógica compuesta por tres secciones: **inicio**, **desarrollo** y **conclusión**, en un lenguaje formal, descriptivo y en **tercera persona**, tal como se redacta en los documentos de planificación docente (no dirigido a los estudiantes).
+
+⚠️ Indicaciones clave:
+- No uses frases como "Estimado docente", "niños y niñas", "exploradores", "ustedes" o "vamos a...".
+- Utiliza siempre expresiones formales como "La docente presenta...", "El docente orienta...", "Se da a conocer...", "Se promueve que los estudiantes...".
+- Los textos deben describir lo que **ocurre en cada momento** de la sesión, no lo que se dice directamente a los estudiantes.
+- No incluyas comentarios ni explicaciones fuera del JSON.
+- Responde únicamente con un JSON válido con esta estructura exacta:
+
+{
+  "inicio": { "texto": "<HTML formal del inicio>" },
+  "desarrollo": { "texto": "<HTML formal del desarrollo>" },
+  "conclusion": { "texto": "<HTML formal de la conclusión>" }
+}
+
+📋 Criterios para cada momento:
+
+🟢 **Inicio:**
+Describe el saludo, la oración de la mañana (mencionando el lema "Siempre bendecidos y listos para aprender"), la motivación inicial, la activación de saberes previos mediante preguntas o dinámicas, la comunicación del propósito, los criterios de evaluación y los acuerdos de convivencia.
+
+🟡 **Desarrollo:**
+Incluye las siguientes etapas:
+- **Problematización:** se plantea una situación o texto para analizar; se formulan preguntas iniciales que invitan al diálogo ("Dialoguemos acerca de las respuestas").
+- **Análisis de la información:** se plantea una pregunta central de investigación o comprensión; puede incluir un enlace a un video educativo relacionado con el tema y grado.
+- **Toma de decisiones o elaboración:** se indica cómo los estudiantes aplican lo aprendido o elaboran productos/evidencias según los criterios definidos.
+- **Socialización:** se describe cómo los estudiantes comparten sus productos en el aula, promoviendo el trabajo colaborativo.
+- **Formalización:** el docente explica y consolida los conocimientos principales.
+- **Metacognición:** se incluyen preguntas de reflexión sobre el proceso de aprendizaje (por ejemplo: <em>¿Qué aprendieron hoy?, ¿Cómo lo lograron?, ¿Qué fue lo más interesante?, ¿Para qué les servirá?</em>).
+- Cierre con la entrega de una ficha informativa o ficha de trabajo para reforzar lo aprendido.
+
+🔵 **Conclusión:**
+Resume el cierre de la sesión destacando la reflexión y metacognición guiada por el o la docente, la síntesis de los aprendizajes y cómo se evidencian los logros respecto a las competencias y criterios evaluados. 
+Debe incluir preguntas de metacognición adecuadas al grado y tono formal, así como una retroalimentación general.
+
+📄 El contenido de cada campo "texto" debe estar en formato HTML (usa <p>, <ul>, <li>, <strong>, <em>), listo para insertarse en una vista.
+
+Usa el siguiente contexto de aprendizaje para personalizar el contenido según el tema, propósito, evidencias, competencias, capacidades y grado:
+
+${descripcionTexto}
+`;
 
     // Llamar al generador general
     const result = await this.generar(prompt);

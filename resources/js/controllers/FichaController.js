@@ -53,20 +53,24 @@ export class FichaController {
     //const prompt = `Eres un asistente pedagógico. Genera el texto del "Inicio" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe introducir el tema, motivar al estudiante y conectar con sus conocimientos previos. ${this._aprendizajesPrompt()}`;
 
     const prompt = `
-Eres un asistente pedagógico experto en planificación de clases. 
-Genera el texto del "Inicio" de una ficha educativa en formato JSON:
-
+Eres un asistente pedagógico experta/o en planificación de sesiones.
+Genera ÚNICAMENTE un JSON válido (sin texto adicional) con esta estructura EXACTA:
 {
-  "texto": "..."
+  "texto": "<HTML aquí>"
 }
 
-El Inicio debe contener:
-- Saludo inicial, oración o referencia al lema ( "Siempre bendecidos y listos para aprender").
-- Introducción antes de entrar al tema, haciendo preguntas simples para motivar la curiosidad.
-- Comunicar claramente el propósito de la sesión.
-- Dar a conocer los criterios de la sesión.
-- Establecer los acuerdos del día.
-- Utiliza el contexto del aprendizaje proporcionado:
+El campo "texto" debe contener HTML (usa <p>, <strong>, <em>, <ul>, <li>).
+El Inicio debe incluir, en este orden, y usando lenguaje natural apropiado para el grado:
+1) Saludo inicial y una breve oración o referencia al lema: "Siempre bendecidos y listos para aprender".
+2) Actividad para recuperar saberes previos: 1–2 preguntas abiertas relacionadas con el TEMA (mención explícita del tema).
+3) Indicación de que "La docente" o "El docente" (según el género proporcionado) anotará aportes.
+4) Comunicación textual EXACTA del PROPÓSITO de la sesión (usar el texto del propósito tal cual viene en el contexto).
+5) Mostrar los CRITERIOS de evaluación tal cual aparecen en el contexto (listarlos).
+6) Proponer 2 normas/acuerdos del día breves y claras.
+
+Usa el contexto de aprendizaje proporcionado a continuación para adaptar redacción y vocabulario (grado, género, evidencias, criterios, instrumentos). No incluyas instrucciones técnicas ni explicaciones sobre el JSON, responde SOLO con el JSON pedido.
+
+Contexto:
 ${this._aprendizajesPrompt()}
 `;
 
@@ -89,18 +93,46 @@ ${this._aprendizajesPrompt()}
 
     const prompt = `
 Eres un asistente pedagógico experto en planificación de clases. 
-Genera el texto del "Desarrollo" de una ficha educativa en formato JSON:
+Genera el texto del "Desarrollo" de una ficha educativa en formato JSON válido con la siguiente estructura:
 
 {
-  "texto": "..."
+  "texto": "<h3>...</h3><p>...</p> ..."
 }
 
-El Desarrollo debe incluir:
-- ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'La docente' : 'El docente') : 'El docente'} presenta la situación de aprendizaje.
-- Explicación del tema, competencias, capacidades y estándares según el grado del aula.
-- Actividades de análisis, búsqueda de información, preguntas y resolución de problemas.
-- Indicar cómo los estudiantes aplicarán lo aprendido y elaborarán productos o evidencias.
-- Referirse al contexto del aprendizaje proporcionado:
+Requisitos del contenido:
+- Escrito en tono formal y descriptivo (no dirigido directamente a los estudiantes).
+- Utiliza subtítulos en HTML (<h3>) para organizar las fases del desarrollo.
+- Emplea párrafos (<p>) y listas (<ul>, <li>) si corresponde.
+- Describe las siguientes etapas pedagógicas con contenido específico y relevante al tema:
+
+1. <h3>Problematización:</h3>
+   - ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'La docente' : 'El docente') : 'La docente'} presenta una situación o texto relacionado con el tema de aprendizaje, por ejemplo sobre la conquista del Perú, incluyendo información histórica breve y precisa.
+   - Formula preguntas iniciales para análisis, y usa la frase **"Dialoguemos acerca de las respuestas"**.
+   - Ejemplo: "¿Quiénes llegaron al Perú? ¿Cómo eran los incas? ¿Qué cambios ocurrieron con la llegada de los españoles?"
+
+2. <h3>Análisis de la información:</h3>
+   - Describe los contenidos de manera más detallada: eventos, personajes, lugares y conceptos históricos.
+   - Incluye preguntas guía que fomenten el pensamiento crítico.
+   - Añade un enlace a un video educativo pertinente al tema y grado. Ejemplo:
+     "Para complementar la información, se visualiza el video educativo disponible en <a href='https://www.youtube.com/ejemplo-video'>https://www.youtube.com/ejemplo-video</a>".
+
+3. <h3>Toma de decisiones y elaboración del producto:</h3>
+   - Explica las actividades que permiten aplicar lo aprendido: dibujos, trípticos, resúmenes, esquemas.
+   - Conecta estas actividades con los criterios de evaluación y competencias de la sesión.
+   - Describe paso a paso cómo los estudiantes producen la evidencia de aprendizaje.
+
+4. <h3>Socialización:</h3>
+   - Describe cómo los estudiantes presentan sus productos o conclusiones en el aula.
+   - Incluye interacción, intercambio de ideas y retroalimentación guiada por ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'la docente' : 'el docente') : 'la docente'}.
+
+5. <h3>Formalización:</h3>
+   - Presenta la síntesis de los aprendizajes y conclusiones finales del tema.
+   - Al final, ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'la docente' : 'el docente') : 'la docente'} entrega una ficha de información o ficha de trabajo para reforzar lo aprendido.
+   - Incluye preguntas de metacognición para reflexionar sobre el proceso de aprendizaje y conectar con los criterios y evidencias de la sesión.
+
+- Todo el contenido debe generarse en **HTML listo para insertar en la vista**, usando <p>, <ul>, <li>, <strong>, <em> y <h3> donde corresponda.
+- Mantener coherencia académica y descriptiva, en tercera persona.
+- Basarse en el siguiente contexto de aprendizaje:
 ${this._aprendizajesPrompt()}
 `;
 
@@ -120,21 +152,25 @@ ${this._aprendizajesPrompt()}
   async generarConclusion() {
     //const prompt = `Eres un asistente pedagógico. Genera el texto de la "Conclusión" de una ficha educativa en formato JSON:\n{\n  "texto": "..."\n}\nDebe resumir lo aprendido y motivar la reflexión del estudiante. ${this._aprendizajesPrompt()}`;
 
-    const prompt = `
-Eres un asistente pedagógico experto en planificación de clases. 
-Genera el texto de la "Conclusión" de una ficha educativa en formato JSON:
+const prompt = `
+Eres un asistente pedagógico experto en planificación de sesiones de aprendizaje para educación básica. 
+Genera el texto de la **Conclusión (Cierre)** de una sesión en formato JSON válido con esta estructura:
 
 {
-  "texto": "..."
+  "texto": "<p> ... texto en HTML ... </p>"
 }
 
-La Conclusión debe incluir:
-- Reflexión y metacognición guiada por ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'la docente' : 'el docente') : 'el docente'}.
-- Preguntas para reforzar lo aprendido y fomentar análisis personal.
-- Recordar cómo las actividades realizadas se conectan con los criterios, competencias y evidencias de la sesión.
-- Basarse en el contexto del aprendizaje proporcionado:
+Requisitos del contenido:
+- Escrito en tono formal y descriptivo (no dirigido directamente al estudiante).
+- Presenta una metacognición guiada por ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'la docente' : 'el docente') : 'la docente'}, donde se promueve la reflexión sobre lo aprendido durante la sesión.
+- Incluye **preguntas de introspección generadas automáticamente** adecuadas al grado de los estudiantes (por ejemplo: <em>¿Qué aprendieron hoy?, ¿Cómo lo lograron?, ¿Qué fue lo más interesante?, ¿Para qué servirá lo aprendido?</em>).
+- Resume cómo las actividades realizadas contribuyeron al desarrollo de las competencias y criterios de evaluación.
+- Utiliza párrafos en HTML (<p>) y listas (<ul>, <li>) cuando sea apropiado.
+- No emplees la segunda persona directa ("tú" o "ustedes"), sino en tercera persona o impersonal ("los estudiantes reflexionan", "se invita a considerar").
+- Usa un tono pedagógico, formal y coherente con el contexto del aprendizaje.
+- Basarse en el siguiente contexto de la sesión:
 ${this._aprendizajesPrompt()}
-`;
+  `;
 
     const schema = {
       "type": "OBJECT",
