@@ -31,22 +31,23 @@ class EnfoqueTransversalResource extends Resource
                 ->maxLength(255),
 
             Forms\Components\Builder::make('valores_actitudes')
-                ->label('Valores y Actitudes')
-                ->blocks([
-                    Forms\Components\Builder\Block::make('valor_actitud')
-                        ->schema([
-                            Forms\Components\TextInput::make('Valores')
-                                ->label('Valores')
-                                ->required(),
-                            Forms\Components\Textarea::make('Actitudes')
-                                ->label('Actitudes')
-                                ->rows(3)
-                                ->required(),
-                        ])
-                        ->columns(2)
-                        ->label('Valores y Actitudes'),
-                ])
-                ->collapsible(),
+                    ->label('Valores y Actitudes')
+                    ->blocks([
+                        Forms\Components\Builder\Block::make('valor_actitud')
+                            ->schema([
+                                Forms\Components\TextInput::make('Valores')
+                                    ->label('Valores')
+                                    ->required(),
+                                Forms\Components\Textarea::make('Actitudes')
+                                    ->label('Actitudes')
+                                    ->rows(3)
+                                    ->required(),
+                            ])
+                            ->columns(2)
+                            ->label('Valores y Actitudes'),
+                    ])
+                    ->collapsible()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -64,6 +65,7 @@ class EnfoqueTransversalResource extends Resource
         ])
         ->filters([])
         ->actions([
+            Tables\Actions\ViewAction::make(),
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make(),
         ]);

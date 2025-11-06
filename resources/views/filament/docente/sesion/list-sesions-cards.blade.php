@@ -421,9 +421,7 @@
                     });
                 } else {
                     if (confirm(`¿Estás seguro de que quieres duplicar "${tituloSesion}"?`)) {
-                        @this.call('duplicateSesion', {
-                            sesion_id: sesionId
-                        });
+                        @this.call('duplicateSesion', sesionId);
                     }
                 }
             }
@@ -456,10 +454,8 @@
                         showLoaderOnConfirm: true,
                         preConfirm: () => {
                             return new Promise((resolve) => {
-                                // Pasar un objeto con la clave sesion_id
-                                @this.call('deleteSesion', {
-                                    sesion_id: sesionId
-                                }).then(() => {
+                                // PASAR SOLO EL ID (no objeto)
+                                @this.call('deleteSesion', sesionId).then(() => {
                                     resolve();
                                 });
                             });

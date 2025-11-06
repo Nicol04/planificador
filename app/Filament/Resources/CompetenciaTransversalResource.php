@@ -75,6 +75,7 @@ class CompetenciaTransversalResource extends Resource
             RelationManagers\CapacidadesTransversalesRelationManager::class,
         ];
     }
+    
 
     public static function getPages(): array
     {

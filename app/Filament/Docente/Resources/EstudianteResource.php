@@ -141,7 +141,7 @@ class EstudianteResource extends Resource
                 ]),
             ]);
     }
-public static function canCreate(): bool
+    public static function canCreate(): bool
     {
         return false;
     }

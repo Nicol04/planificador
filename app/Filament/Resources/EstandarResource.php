@@ -83,7 +83,8 @@ class EstandarResource extends Resource
                 Textarea::make('descripcion')
                     ->label('Descripción del estándar')
                     ->required()
-                    ->rows(5),
+                    ->rows(5)
+                    ->columnSpanFull(),
             ]);
     }
 

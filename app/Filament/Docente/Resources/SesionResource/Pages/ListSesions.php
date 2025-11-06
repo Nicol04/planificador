@@ -9,6 +9,8 @@ use App\Models\Aula;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ListSesions extends ListRecords
 {
@@ -109,92 +111,140 @@ class ListSesions extends ListRecords
         return $query->with(['aulaCurso.curso'])->simplePaginate(12);
     }
     public function deleteSesion($id)
-    {
-        try {
-            $sesion = Sesion::findOrFail($id);
+{
+    try {
+        // aceptar payload { sesion_id: ... } o id directo
+        if (is_array($id) && isset($id['sesion_id'])) {
+            $id = $id['sesion_id'];
+        } elseif (is_object($id) && isset($id->sesion_id)) {
+            $id = $id->sesion_id;
+        }
+
+        $tituloSesion = null;
+
+        DB::transaction(function () use ($id, &$tituloSesion) {
+            $sesion = Sesion::with(['detalle', 'detalles', 'momentos', 'listasCotejos'])->findOrFail($id);
             $tituloSesion = $sesion->titulo;
 
-            // Contar elementos relacionados
-            $detallesCount = $sesion->detalle ? 1 : 0;
-            $momentosCount = $sesion->momentos()->count();
-
-            // Eliminar detalles y momentos relacionados
-            if ($sesion->detalle) {
-                $sesion->detalle->delete();
+            // eliminar listas de cotejo
+            foreach ($sesion->listasCotejos ?? [] as $lista) {
+                $lista->delete();
             }
-            foreach ($sesion->momentos as $momento) {
+
+            // eliminar momentos
+            foreach ($sesion->momentos ?? [] as $momento) {
                 $momento->delete();
             }
 
+            // eliminar detalles hasMany
+            foreach ($sesion->detalles ?? [] as $detalle) {
+                $detalle->delete();
+            }
+
+            // eliminar detalle hasOne (si existe)
+            if ($sesion->detalle) {
+                $sesion->detalle->delete();
+            }
+
+            // finalmente eliminar la sesión
             $sesion->delete();
+        });
 
-            \Filament\Notifications\Notification::make()
-                ->title('🗑️ Sesión eliminada exitosamente')
-                ->body("\"" . $tituloSesion . "\" ha sido eliminada" .
-                    ($detallesCount > 0 ? " junto con {$detallesCount} detalle curricular" : "") .
-                    ($momentosCount > 0 ? " y {$momentosCount} momentos." : "."))
-                ->success()
-                ->duration(4000)
-                ->send();
-        } catch (\Exception $e) {
-            \Filament\Notifications\Notification::make()
-                ->title('❌ Error al eliminar la sesión')
-                ->body('No se pudo eliminar la sesión. Verifica que no tenga dependencias o inténtalo nuevamente.')
-                ->danger()
-                ->duration(5000)
-                ->send();
-        }
+        \Filament\Notifications\Notification::make()
+            ->title('🗑️ Sesión eliminada exitosamente')
+            ->body("\"{$tituloSesion}\" ha sido eliminada con sus elementos relacionados.")
+            ->success()
+            ->duration(4000)
+            ->send();
+    } catch (\Throwable $e) {
+        Log::error('Error eliminando sesión', ['id' => $id, 'exception' => $e]);
+
+        \Filament\Notifications\Notification::make()
+            ->title('❌ Error al eliminar la sesión')
+            ->body('No se pudo eliminar la sesión. ' . ($e->getMessage() ?: 'Verifica dependencias.'))
+            ->danger()
+            ->duration(6000)
+            ->send();
     }
+}
 
-    public function duplicateSesion($id)
-    {
-        try {
-            // Buscar la sesión original
-            $sesion = Sesion::findOrFail($id);
+public function duplicateSesion($id)
+{
+    try {
+        // aceptar payload { sesion_id: ... } o id directo
+        if (is_array($id) && isset($id['sesion_id'])) {
+            $id = $id['sesion_id'];
+        } elseif (is_object($id) && isset($id->sesion_id)) {
+            $id = $id->sesion_id;
+        }
 
-            // Duplicar la sesión principal
-            $nuevaSesion = $sesion->replicate();
-            $nuevaSesion->titulo = $sesion->titulo . ' (Copia)';
-            $nuevaSesion->save();
+        $nuevaId = null;
 
-            // Duplicar el detalle (si existe)
+        DB::transaction(function () use ($id, &$nuevaId) {
+            $sesion = Sesion::with(['detalle', 'detalles', 'momentos', 'listasCotejos'])->findOrFail($id);
+
+            $nueva = $sesion->replicate();
+            $nueva->titulo = $sesion->titulo . ' (Copia)';
+            // opcional: marcar no pública
+            $nueva->public = false;
+            $nueva->save();
+
+            // duplicar detalle hasOne
             if ($sesion->detalle) {
                 $nuevoDetalle = $sesion->detalle->replicate();
-                $nuevoDetalle->sesion_id = $nuevaSesion->id;
+                $nuevoDetalle->sesion_id = $nueva->id;
                 $nuevoDetalle->save();
             }
 
-            // Duplicar los momentos (si existen)
-            foreach ($sesion->momentos as $momento) {
+            // duplicar detalles hasMany (evitar duplicar el hasOne si coincide)
+            $skipId = $sesion->detalle?->id ?? null;
+            foreach ($sesion->detalles ?? [] as $detalle) {
+                if ($skipId && $detalle->id === $skipId) {
+                    continue;
+                }
+                $nuevo = $detalle->replicate();
+                $nuevo->sesion_id = $nueva->id;
+                $nuevo->save();
+            }
+
+            // duplicar momentos
+            foreach ($sesion->momentos ?? [] as $momento) {
                 $nuevoMomento = $momento->replicate();
-                $nuevoMomento->sesion_id = $nuevaSesion->id;
+                $nuevoMomento->sesion_id = $nueva->id;
                 $nuevoMomento->save();
             }
 
-            // Notificación Filament
-            \Filament\Notifications\Notification::make()
-                ->title('📋 ¡Sesión duplicada exitosamente!')
-                ->body("Se ha creado una copia de \"" . $sesion->titulo . "\" con todos sus detalles y momentos.")
-                ->success()
-                ->duration(5000)
-                ->actions([
-                    \Filament\Notifications\Actions\Action::make('editar')
-                        ->label('✏️ Editar ahora')
-                        ->url(route('filament.docente.resources.sesions.edit', $nuevaSesion))
-                        ->button(),
-                    \Filament\Notifications\Actions\Action::make('ver')
-                        ->label('👁️ Ver sesión')
-                        ->button()
-                        ->color('gray'),
-                ])
-                ->send();
-        } catch (\Exception $e) {
-            \Filament\Notifications\Notification::make()
-                ->title('❌ Error al duplicar la sesión')
-                ->body($e->getMessage())
-                ->danger()
-                ->duration(5000)
-                ->send();
-        }
+            // duplicar listas de cotejo
+            foreach ($sesion->listasCotejos ?? [] as $lista) {
+                $nuevaLista = $lista->replicate();
+                $nuevaLista->sesion_id = $nueva->id;
+                $nuevaLista->save();
+            }
+
+            $nuevaId = $nueva->id;
+        });
+
+        \Filament\Notifications\Notification::make()
+            ->title('📋 ¡Sesión duplicada exitosamente!')
+            ->body('Se ha creado una copia de la sesión.')
+            ->success()
+            ->duration(5000)
+            ->actions([
+                \Filament\Notifications\Actions\Action::make('editar')
+                    ->label('✏️ Editar ahora')
+                    ->url(fn () => route('filament.docente.resources.sesions.edit', ['record' => $nuevaId]))
+                    ->button(),
+            ])
+            ->send();
+    } catch (\Throwable $e) {
+        Log::error('Error duplicando sesión', ['id' => $id, 'exception' => $e]);
+
+        \Filament\Notifications\Notification::make()
+            ->title('❌ Error al duplicar la sesión')
+            ->body('No se pudo duplicar la sesión. ' . ($e->getMessage() ?: 'Verifica logs.'))
+            ->danger()
+            ->duration(6000)
+            ->send();
     }
+}
 }
