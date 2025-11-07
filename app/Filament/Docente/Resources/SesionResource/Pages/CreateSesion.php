@@ -7,7 +7,7 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ListaCotejo;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\SesionMomento;
 class CreateSesion extends CreateRecord
 {
     protected static string $resource = SesionResource::class;
@@ -132,7 +132,38 @@ class CreateSesion extends CreateRecord
             'transversalidad' => $transversalidad,
             'evidencia' => $this->data['evidencias'] ?? '',
         ]);
+        $momentosRaw = $this->data['momentos_data'] ?? null;
+        if ($momentosRaw) {
+            $momentos = is_string($momentosRaw) ? json_decode($momentosRaw, true) : $momentosRaw;
+            if (is_array($momentos)) {
+                $inicio = $desarrollo = $cierre = null;
+                foreach ($momentos as $m) {
+                    $nombre = mb_strtolower(trim($m['nombre_momento'] ?? ''));
+                    $descripcion = $m['descripcion'] ?? ($m['inicio'] ?? ($m['desarrollo'] ?? ($m['cierre'] ?? null)));
+                    if ($nombre === 'inicio') {
+                        $inicio = $descripcion;
+                    } elseif ($nombre === 'desarrollo') {
+                        $desarrollo = $descripcion;
+                    } elseif ($nombre === 'cierre' || $nombre === 'conclusion') {
+                        $cierre = $descripcion;
+                    }
+                }
 
+                try {
+                    // Crea una fila en sesion_momentos con los tres textos
+                    $sesion->momentos()->create([
+                        'inicio' => $inicio,
+                        'desarrollo' => $desarrollo,
+                        'cierre' => $cierre,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Error guardando SesionMomento: '.$e->getMessage(), [
+                        'sesion_id' => $sesion->id,
+                        'momentos' => $momentos,
+                    ]);
+                }
+            }
+        }
     }
     
 }

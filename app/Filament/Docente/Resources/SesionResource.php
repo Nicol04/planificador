@@ -5,7 +5,6 @@ namespace App\Filament\Docente\Resources;
 use App\Filament\Docente\Resources\SesionResource\Pages;
 use App\Filament\Docente\Resources\SesionResource\Schemas\DatosSesionSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\EnfoquesSchema;
-use App\Filament\Docente\Resources\SesionResource\Schemas\MomentosSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\ProposAprSchema;
 use App\Models\Sesion;
 use Filament\Forms;
@@ -45,15 +44,6 @@ class SesionResource extends Resource
                     Step::make('Momentos de la Sesión')
                         ->schema(function (callable $get) {
                             return [
-
-                                Hidden::make('momentos_data')
-                                    ->default([
-                                        // Pre-llenamos los 3 momentos
-                                        ['nombre_momento' => 'Inicio', 'descripcion' => '', 'actividades' => ''],
-                                        ['nombre_momento' => 'Desarrollo', 'descripcion' => '', 'actividades' => ''],
-                                        ['nombre_momento' => 'Cierre', 'descripcion' => '', 'actividades' => ''],
-                                    ]),
-
                                 ViewField::make('momentos')
                                     ->view('filament.docente.sesion.momentos')
                                     ->viewData([
@@ -61,7 +51,7 @@ class SesionResource extends Resource
                                     ]),
                             ];
                         })
-
+                        ->description('Información de los momentos')
                 ])
                     ->statePath('data')
                     ->columnSpanFull()

@@ -6,8 +6,8 @@ import { Aprendizaje } from './models/Aprendizaje.js'; // añadir al top si usas
 
 console.log('🎯 main.js cargado correctamente');
 
-const API_KEY = "AIzaSyAvNoL4EJw-sGpzortVelmpdMRLlznIzZA"; // ⚠️ No seguro para producción
-const SEARCH_API_KEY = "AIzaSyBtow2Dzgpcuuko3cSVCh4L2A5s8j32r9Y"; // ⚠️ No seguro para producción
+const API_KEY = "AIzaSyAKUoCqU3kdOoQ6zz6bZIxA0uVCpqjnKyM"; // ⚠️ No seguro para producción
+const SEARCH_API_KEY = "AIzaSyAKUoCqU3kdOoQ6zz6bZIxA0uVCpqjnKyM"; // ⚠️ No seguro para producción
 const fichaController = new FichaController(API_KEY);
 const aprendizajeController = new AprendizajeController();
 const quillManager = new QuillEditorManager();
@@ -19,6 +19,14 @@ console.log('✅ Controladores inicializados:', {
   quillManager,
   wordExportService
 });
+
+// Nueva función: inicializar editores de forma segura (idempotente)
+function initEditorsIfNeeded() {
+  // Intentar inicializar solo si los elementos existen en DOM
+  quillManager.initializeEditor('#inicio-editor', 'bubble');
+  quillManager.initializeEditor('#desarrollo-editor', 'bubble');
+  quillManager.initializeEditor('#conclusion-editor', 'bubble');
+}
 
 function actualizarDatosSesionDesdeLabels() {
   // helper seguro para obtener texto y quitar prefijo
@@ -94,12 +102,10 @@ function guardarAprendizaje() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log('🎬 DOMContentLoaded - Inicializando editores...');
 
-  // Initialize Quill editors
-  quillManager.initializeEditor('#inicio-editor', 'bubble');
-  quillManager.initializeEditor('#desarrollo-editor', 'bubble');
-  quillManager.initializeEditor('#conclusion-editor', 'bubble');
+  // Initialize Quill editors (idempotente)
+  initEditorsIfNeeded();
 
-  console.log('✅ Editores Quill inicializados');
+  console.log('✅ Editores Quill inicializados (si estaban presentes)');
 
   // No generar automáticamente, esperar al usuario
   renderFicha();
@@ -133,11 +139,35 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log('🎉 Inicialización completa');
 });
 
+// Re-inicializar editores cuando Livewire/Filament actualice el DOM (por navegación entre pasos)
+if (window.Livewire && typeof window.Livewire.hook === 'function') {
+  try {
+    Livewire.hook('message.processed', (message, component) => {
+      // Pequeño delay para asegurar que el DOM ya esté insertado por Livewire
+      setTimeout(() => {
+        initEditorsIfNeeded();
+      }, 50);
+    });
+    console.log('🔁 Livewire hook: message.processed agregado para re-inicializar editores');
+  } catch (e) {
+    console.warn('Livewire presente pero no se pudo registrar hook:', e);
+  }
+}
+
+// Fallback: observar el DOM por si no existe Livewire (cubre casos raros)
+const observer = new MutationObserver((mutations) => {
+  // Si localizamos cualquiera de los editores que antes no existían, inicializar
+  if (document.querySelector('#inicio-editor') || document.querySelector('#desarrollo-editor') || document.querySelector('#conclusion-editor')) {
+    initEditorsIfNeeded();
+  }
+});
+observer.observe(document.body, { childList: true, subtree: true });
+
 // ✅ ACTUALIZADO: Usar QuillEditorManager para renderizar Markdown
 function renderFicha() {
-  quillManager.setMarkdown('#inicio-editor', fichaController.inicio.texto || "Pendiente de generación...");
-  quillManager.setMarkdown('#desarrollo-editor', fichaController.desarrollo.texto || "Pendiente de generación...");
-  quillManager.setMarkdown('#conclusion-editor', fichaController.conclusion.texto || "Pendiente de generación...");
+  quillManager.setMarkdown('#inicio-editor', fichaController.inicio.texto || "");
+  quillManager.setMarkdown('#desarrollo-editor', fichaController.desarrollo.texto || "");
+  quillManager.setMarkdown('#conclusion-editor', fichaController.conclusion.texto || "");
 
   // Sync generated content into hidden inputs so forms or other scripts can access them
   try {
