@@ -467,6 +467,41 @@
             </table>
             @endif
 
+            <!-- MOMENTOS: tabla simple -->
+            <div class="section-title">MOMENTOS Y ESTRATEGIAS</div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:20%;">MOMENTOS</th>
+                        <th>ESTRATEGIAS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-bold">INICIO</td>
+                        <td>{!! $inicioHtml ?? '<span class="text-muted small">No especificado</span>' !!}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">DESARROLLO</td>
+                        <td>{!! $desarrolloHtml ?? '<span class="text-muted small">No especificado</span>' !!}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">CIERRE</td>
+                        <td>{!! $cierreHtml ?? '<span class="text-muted small">No especificado</span>' !!}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            @php
+                $docenteNombre = $sesion->docente ? trim(($sesion->docente->persona->nombre ?? '') . ' ' . ($sesion->docente->persona->apellido ?? '')) : null;
+            @endphp
+            <div class="mt-4" style="margin-top:24px;">
+                <div style="width:260px; margin:40px auto 0; text-align:center;">
+                    <div style="border-bottom:1px solid #000; height:44px;"></div>
+                    <div class="small text-muted mt-2">Firma del docente</div>
+                    <div class="fst-italic mt-2">{{ $docenteNombre ?? '_________________________' }}</div>
+                </div>
+            </div>
 
         </div>
     </div>

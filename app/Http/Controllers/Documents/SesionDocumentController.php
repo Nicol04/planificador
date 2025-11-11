@@ -24,6 +24,11 @@ class SesionDocumentController extends DocumentController
             $curso = $sesion->aulaCurso?->curso;
             $aulaCurso = \App\Models\AulaCurso::with('aula')->find($sesion->aula_curso_id);
             $gradoSeccion = $aulaCurso && $aulaCurso->aula ? $aulaCurso->aula->grado_seccion : 'No asignado';
+            
+            $inicioHtml = $sesion->inicio ?? '';
+            $desarrolloHtml = $sesion->desarrollo ?? '';
+            $cierreHtml = $sesion->cierre ?? '';
+            
             $datosGenerales = [
                 'titulo' => $sesion->titulo,
                 'fecha' => $sesion->fecha ? \Carbon\Carbon::parse($sesion->fecha)->format('d/m/Y') : '',
@@ -34,6 +39,11 @@ class SesionDocumentController extends DocumentController
                 'docente' => $docente ? trim(($docente->persona->nombre ?? '') . ' ' . ($docente->persona->apellido ?? '')) : 'No asignado',
                 'curso' => $curso?->curso ?? 'No asignado',
                 'evidencias' => $detalle?->evidencia ?? 'No especificado',
+
+                // agregar momentos en texto plano para la plantilla
+                'INICIO' => $this->htmlToPlainText($inicioHtml),
+                'DESARROLLO' => $this->htmlToPlainText($desarrolloHtml),
+                'CIERRE' => $this->htmlToPlainText($cierreHtml),
             ];
 
             // Procesar propósitos de aprendizaje
@@ -64,6 +74,10 @@ class SesionDocumentController extends DocumentController
         $unidad = $sesion->unidad; // Si tienes relación con unidad
         $orientacion = $request->get('orientacion', 'vertical');
 
+        $inicioHtml = $sesion->inicio ?? '';
+        $desarrolloHtml = $sesion->desarrollo ?? '';
+        $cierreHtml = $sesion->cierre ?? '';
+        
         // Procesar propósitos
         $propositos = [];
         foreach ($detalle?->propositos_aprendizaje ?? [] as $prop) {
@@ -133,6 +147,10 @@ class SesionDocumentController extends DocumentController
             'desempenosTransversales' => $desempenosTransversales,
             'criteriosTransversales' => $criteriosTransversales,
             'instrumentosTransversales' => $instrumentosTransversales,
+
+            'inicioHtml' => $inicioHtml,
+            'desarrolloHtml' => $desarrolloHtml,
+            'cierreHtml' => $cierreHtml,
         ]);
     }
 
@@ -140,7 +158,12 @@ class SesionDocumentController extends DocumentController
     {
         // Elegir plantilla según orientación y si transversalidad está ausente (null)
         if ($orientacion === 'horizontal') {
-            $plantillaFile = 'plantilla_horizontal.docx';
+            if ($transversalidad === null) {
+                // plantilla específica horizontal cuando no hay transversalidad
+                $plantillaFile = 'plantilla_h_sin_transversal.docx';
+            } else {
+                $plantillaFile = 'plantilla_horizontal.docx';
+            }
         } else {
             // vertical
             if ($transversalidad === null) {
@@ -179,6 +202,10 @@ class SesionDocumentController extends DocumentController
         $templateProcessor->setValue('DOCENTE', $this->normalizeForTemplate($datosGenerales['docente'] ?? ''));
         $templateProcessor->setValue('CURSO', $this->normalizeForTemplate($datosGenerales['curso'] ?? ''));
         $templateProcessor->setValue('EVIDENCIAS', $this->normalizeForTemplate($datosGenerales['evidencias'] ?? ''));
+    
+        $templateProcessor->setValue('INICIO', $this->normalizeForTemplate($datosGenerales['INICIO'] ?? ''));
+        $templateProcessor->setValue('DESARROLLO', $this->normalizeForTemplate($datosGenerales['DESARROLLO'] ?? ''));
+        $templateProcessor->setValue('CIERRE', $this->normalizeForTemplate($datosGenerales['CIERRE'] ?? ''));
     }
 
     private function procesarPropositos($templateProcessor, $propositos)
@@ -256,6 +283,30 @@ class SesionDocumentController extends DocumentController
         $templateProcessor->setValue('CRITERIOS', $this->normalizeForTemplate(implode("\n\n", $criterios)));
         $templateProcessor->setValue('EVIDENCIAS', $this->normalizeForTemplate(implode("\n\n", $evidencias)));
         $templateProcessor->setValue('INSTRUMENTOS', $this->normalizeForTemplate(implode("\n\n", $instrumentos)));
+    }
+
+    private function htmlToPlainText(?string $html): string
+    {
+        if (empty($html)) return '';
+
+        // Reemplazar listas <li> por líneas con guion
+        $html = preg_replace('#<\s*li[^>]*>(.*?)<\s*/\s*li>#is', "\n- $1\n", $html);
+
+        // Reemplazar <br> y <p> por saltos de línea
+        $html = preg_replace('#<\s*br\s*/?\s*>#i', "\n", $html);
+        $html = preg_replace('#<\s*/\s*p\s*>#i', "\n", $html);
+        $html = preg_replace('#<\s*p[^>]*>#i', "\n", $html);
+
+        // Eliminar cualquier etiqueta HTML restante
+        $text = strip_tags($html);
+
+        // Decodificar entidades HTML y normalizar espacios
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/\r\n|\r/", "\n", $text);
+        $text = preg_replace("/\n{2,}/", "\n\n", $text);
+        $text = trim($text);
+
+        return $text;
     }
 
     private function procesarTransversalidad($templateProcessor, $transversalidad)

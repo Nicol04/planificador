@@ -224,47 +224,51 @@
             <!-- 1. DATOS INFORMATIVOS -->
             <div class="section-title">1. DATOS INFORMATIVOS:</div>
 
-<table class="info-table">
-    <tr>
-        <th style="width: 40%;">1.1. Institución educativa:</th>
-        <td>Ann Goulden</td>
-    </tr>
-    <tr>
-        <th>1.2. Directora:</th>
-        <td>Maricarmen Juliana Ruiz Falero</td>
-    </tr>
-    <tr>
-        <th>1.3. Docente:</th>
-        <td>{{ $sesion->docente ? trim(($sesion->docente->persona->nombre ?? '') . ' ' . ($sesion->docente->persona->apellido ?? '')) : 'No asignado' }}</td>
-    </tr>
-    <tr>
-        <th>1.4. Grado y sección:</th>
-        <td>{{ $sesion->aulaCurso && $sesion->aulaCurso->aula ? $sesion->aulaCurso->aula->grado_seccion : 'No asignado' }}</td>
-    </tr>
-    <tr>
-        <th>1.5. Área:</th>
-        <td>{{ $sesion->aulaCurso && $sesion->aulaCurso->curso ? $sesion->aulaCurso->curso->curso : 'No asignado' }}</td>
-    </tr>
-    <tr>
-        <th>1.6. Fecha:</th>
-        <td>{{ $sesion->fecha ? \Carbon\Carbon::parse($sesion->fecha)->format('d/m/Y') : 'No asignado' }}</td>
-    </tr>
-    <tr>
-        <th>1.7. Tiempo:</th>
-        <td>{{ $sesion->tiempo_estimado ?? 'No asignado' }} minutos</td>
-    </tr>
-</table>
-<!-- 2. NOMBRE DE LA SESIÓN -->
-<div class="section-title">2. NOMBRE DE LA SESIÓN:</div>
-<div class="content-text fw-bold" style="font-size: 18px; color: #0066cc;">
-    {{ $sesion->titulo }}
-</div>
+            <table class="info-table">
+                <tr>
+                    <th style="width: 40%;">1.1. Institución educativa:</th>
+                    <td>Ann Goulden</td>
+                </tr>
+                <tr>
+                    <th>1.2. Directora:</th>
+                    <td>Maricarmen Juliana Ruiz Falero</td>
+                </tr>
+                <tr>
+                    <th>1.3. Docente:</th>
+                    <td>{{ $sesion->docente ? trim(($sesion->docente->persona->nombre ?? '') . ' ' . ($sesion->docente->persona->apellido ?? '')) : 'No asignado' }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>1.4. Grado y sección:</th>
+                    <td>{{ $sesion->aulaCurso && $sesion->aulaCurso->aula ? $sesion->aulaCurso->aula->grado_seccion : 'No asignado' }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>1.5. Área:</th>
+                    <td>{{ $sesion->aulaCurso && $sesion->aulaCurso->curso ? $sesion->aulaCurso->curso->curso : 'No asignado' }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>1.6. Fecha:</th>
+                    <td>{{ $sesion->fecha ? \Carbon\Carbon::parse($sesion->fecha)->format('d/m/Y') : 'No asignado' }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>1.7. Tiempo:</th>
+                    <td>{{ $sesion->tiempo_estimado ?? 'No asignado' }} minutos</td>
+                </tr>
+            </table>
+            <!-- 2. NOMBRE DE LA SESIÓN -->
+            <div class="section-title">2. NOMBRE DE LA SESIÓN:</div>
+            <div class="content-text fw-bold" style="font-size: 18px; color: #0066cc;">
+                {{ $sesion->titulo }}
+            </div>
 
-<!-- 3. PROPÓSITO DE LA SESIÓN -->
-<div class="section-title">3. PROPÓSITO DE LA SESIÓN:</div>
-<div class="content-text">
-    {{ $sesion->proposito_sesion ?? 'No especificado' }}
-</div>
+            <!-- 3. PROPÓSITO DE LA SESIÓN -->
+            <div class="section-title">3. PROPÓSITO DE LA SESIÓN:</div>
+            <div class="content-text">
+                {{ $sesion->proposito_sesion ?? 'No especificado' }}
+            </div>
 
             <!-- 3. PROPÓSITOS DE APRENDIZAJE -->
             <div class="section-title">3. PROPÓSITOS DE APRENDIZAJE:</div>
@@ -282,7 +286,6 @@
                 <tbody>
                     @if (count($sesionInfo['propositos']) > 0)
                         @foreach ($sesionInfo['propositos'] as $proposito)
-
                             <!-- FILA A: ESTÁNDARES (etiqueta + valor ocupando el resto) -->
                             <tr>
                                 <th class="label-estandares" colspan="1">ESTÁNDARES</th>
@@ -305,213 +308,251 @@
                                     <div class="fw-bold text-primary mb-2" style="font-size: 11px;">
                                         <i class="fas fa-target me-1"></i>
                                         {{ $proposito['competencia'] ?? 'No especificado' }}
+                                    </div>
+                                    @if (!empty($proposito['capacidades']))
+                                        @foreach ($proposito['capacidades'] as $capacidad)
+                                            <div class="small text-muted mt-1" style="font-size: 9px;">
+                                                <i class="fas fa-arrow-right me-1" style="font-size: 7px;"></i>
+                                                {{ $capacidad }}
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted small">No especificado</span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    @if (!empty($proposito['desempenos']))
+                                        @foreach ($proposito['desempenos'] as $desempeno)
+                                            <div class="small mb-2" style="font-size: 9px;">
+                                                <i class="fas fa-check-circle text-success me-1"
+                                                    style="font-size: 7px;"></i>
+                                                {{ $desempeno }}
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted small">No especificado</span>
+                                    @endif
+                                </td>
+
+                                <td class="small" style="font-size: 9px;">
+                                    {{ $proposito['criterios'] ?? 'No especificado' }}
+                                </td>
+
+                                <!-- Evidencias: usar el campo del propósito o fallback al detalle de sesión -->
+                                <td class="small" style="font-size: 9px;">
+                                    @php
+                                        $evidHoriz = $proposito['evidencia'] ?? ($sesion->detalle?->evidencia ?? null);
+                                    @endphp
+                                    @if (!empty($evidHoriz) || $evidHoriz === '0')
+                                        {!! nl2br(e((string) $evidHoriz)) !!}
+                                    @else
+                                        <span class="text-muted small">No especificado</span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    @if (!empty($proposito['instrumentos']))
+                                        @foreach ($proposito['instrumentos'] as $instrumento)
+                                            <span class="badge bg-secondary small d-block mb-1" style="font-size: 8px;">
+                                                {{ $instrumento }}
+                                            </span>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted small">No especificado</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="5">
+                                <div class="content-text">No se han definido propósitos de aprendizaje para esta sesión.
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+            <!-- 4. ENFOQUES TRANSVERSALES -->
+            @if (!empty($sesion->detalle?->transversalidad))
+                <div class="section-title">4. ENFOQUES TRANSVERSALES</div>
+
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="background:#e3f2fd; color:#0066cc;" colspan="4">
+                            <i class="fas fa-lightbulb"></i>
+                            Enfoques transversales:
+                            <span class="fw-bold">{{ implode(', ', $enfoquesTransversales ?? []) }}</span>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th style="width: 25%;">Competencias y capacidades</th>
+                        <th style="width: 25%;">Desempeños</th>
+                        <th style="width: 25%;">Criterios</th>
+                        <th style="width: 25%;">Instrumento de evaluación</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="mb-2">
+                                <span class="fw-bold">
+                                    @if (!empty($competenciasTransversales))
+                                        <ul class="mb-1">
+                                            @foreach ($competenciasTransversales as $comp)
+                                                <li>{{ $comp }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <span class="text-muted">No especificado</span>
+                                    @endif
+                                </span>
                             </div>
-                            @if (!empty($proposito['capacidades']))
-                                @foreach ($proposito['capacidades'] as $capacidad)
-                                    <div class="small text-muted mt-1" style="font-size: 9px;">
-                                        <i class="fas fa-arrow-right me-1" style="font-size: 7px;"></i>
-                                        {{ $capacidad }}
-                                    </div>
-                                @endforeach
-                            @else
-                                <span class="text-muted small">No especificado</span>
-                            @endif
+                            <div>
+                                @if (!empty($capacidadesTransversales))
+                                    <ul>
+                                        @foreach ($capacidadesTransversales as $cap)
+                                            <li>{{ $cap }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <span class="text-muted">No especificado</span>
+                                @endif
+                            </div>
                         </td>
-
                         <td>
-                            @if (!empty($proposito['desempenos']))
-                                @foreach ($proposito['desempenos'] as $desempeno)
-                                    <div class="small mb-2" style="font-size: 9px;">
-                                        <i class="fas fa-check-circle text-success me-1" style="font-size: 7px;"></i>
-                                        {{ $desempeno }}
-                                    </div>
-                                @endforeach
+                            @if (!empty($desempenosTransversales))
+                                <ul>
+                                    @foreach ($desempenosTransversales as $des)
+                                        <li>{{ $des }}</li>
+                                    @endforeach
+                                </ul>
                             @else
-                                <span class="text-muted small">No especificado</span>
+                                <span class="text-muted">No especificado</span>
                             @endif
                         </td>
-
-                        <td class="small" style="font-size: 9px;">
-                            {{ $proposito['criterios'] ?? 'No especificado' }}
-                        </td>
-
-                        <!-- Evidencias: usar el campo del propósito o fallback al detalle de sesión -->
-                        <td class="small" style="font-size: 9px;">
-                            @php
-                                $evidHoriz = $proposito['evidencia'] ?? ($sesion->detalle?->evidencia ?? null);
-                            @endphp
-                            @if (!empty($evidHoriz) || $evidHoriz === '0')
-                                {!! nl2br(e((string) $evidHoriz)) !!}
-                            @else
-                                <span class="text-muted small">No especificado</span>
-                            @endif
-                        </td>
-
                         <td>
-                            @if (!empty($proposito['instrumentos']))
-                                @foreach ($proposito['instrumentos'] as $instrumento)
-                                    <span class="badge bg-secondary small d-block mb-1" style="font-size: 8px;">
-                                        {{ $instrumento }}
-                                    </span>
-                                @endforeach
+                            {{ $criteriosTransversales ?? 'No especificado' }}
+                        </td>
+                        <td>
+                            @if (!empty($instrumentosTransversales))
+                                <ul>
+                                    @foreach ($instrumentosTransversales as $inst)
+                                        <li>{{ $inst }}</li>
+                                    @endforeach
+                                </ul>
                             @else
-                                <span class="text-muted small">No especificado</span>
+                                <span class="text-muted">No especificado</span>
                             @endif
                         </td>
                     </tr>
-                @endforeach
-            @else
-                <tr>
-                    <td colspan="5">
-                        <div class="content-text">No se han definido propósitos de aprendizaje para esta sesión.</div>
-                    </td>
-                </tr>
+                </table>
             @endif
-        </tbody>
-    </table>
-    <!-- 4. ENFOQUES TRANSVERSALES -->
-    @if (!empty($sesion->detalle?->transversalidad))
-    <div class="section-title">4. ENFOQUES TRANSVERSALES</div>
+            
+            <!-- MOMENTOS: tabla simple -->
+            <div class="section-title">MOMENTOS Y ESTRATEGIAS</div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:20%;">MOMENTOS</th>
+                        <th>ESTRATEGIAS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-bold">INICIO</td>
+                        <td>{!! $inicioHtml ?? '<span class="text-muted small">No especificado</span>' !!}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">DESARROLLO</td>
+                        <td>{!! $desarrolloHtml ?? '<span class="text-muted small">No especificado</span>' !!}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">CIERRE</td>
+                        <td>{!! $cierreHtml ?? '<span class="text-muted small">No especificado</span>' !!}</td>
+                    </tr>
+                </tbody>
+            </table>
 
-    <table class="table table-bordered">
-        <tr>
-            <th style="background:#e3f2fd; color:#0066cc;" colspan="4">
-                <i class="fas fa-lightbulb"></i>
-                Enfoques transversales:
-                <span class="fw-bold">{{ implode(', ', $enfoquesTransversales ?? []) }}</span>
-            </th>
-        </tr>
-        <tr>
-            <th style="width: 25%;">Competencias y capacidades</th>
-            <th style="width: 25%;">Desempeños</th>
-            <th style="width: 25%;">Criterios</th>
-            <th style="width: 25%;">Instrumento de evaluación</th>
-        </tr>
-        <tr>
-            <td>
-                <div class="mb-2">
-                    <span class="fw-bold">
-                    @if (!empty($competenciasTransversales))
-                        <ul class="mb-1">
-                            @foreach ($competenciasTransversales as $comp)
-                                <li>{{ $comp }}</li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <span class="text-muted">No especificado</span>
-                    @endif
-                    </span>
+            @php
+                $docenteNombre = $sesion->docente ? trim(($sesion->docente->persona->nombre ?? '') . ' ' . ($sesion->docente->persona->apellido ?? '')) : null;
+            @endphp
+            <div class="mt-4" style="margin-top:24px;">
+                <div style="width:260px; margin:40px auto 0; text-align:center;">
+                    <div style="border-bottom:1px solid #000; height:44px;"></div>
+                    <div class="small text-muted mt-2">Firma del docente</div>
+                    <div class="fst-italic mt-2">{{ $docenteNombre ?? '_________________________' }}</div>
                 </div>
-                <div>
-                    @if (!empty($capacidadesTransversales))
-                        <ul>
-                            @foreach ($capacidadesTransversales as $cap)
-                                <li>{{ $cap }}</li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <span class="text-muted">No especificado</span>
-                    @endif
-                </div>
-            </td>
-            <td>
-                @if (!empty($desempenosTransversales))
-                    <ul>
-                        @foreach ($desempenosTransversales as $des)
-                            <li>{{ $des }}</li>
-                        @endforeach
-                    </ul>
-                @else
-                    <span class="text-muted">No especificado</span>
-                @endif
-            </td>
-            <td>
-                {{ $criteriosTransversales ?? 'No especificado' }}
-            </td>
-            <td>
-                @if (!empty($instrumentosTransversales))
-                    <ul>
-                        @foreach ($instrumentosTransversales as $inst)
-                            <li>{{ $inst }}</li>
-                        @endforeach
-                    </ul>
-                @else
-                    <span class="text-muted">No especificado</span>
-                @endif
-            </td>
-        </tr>
-    </table>
-    @endif
+            </div>
 
         </div>
     </div>
 
     <script>
-    function descargarDocumento() {
-        const orientacion = '{{ $orientacion }}';
-        window.location.href = `/sesiones/{{ $sesion->id }}/previsualizar?orientacion=${orientacion}`;
-    }
-
-    function cerrarVentana() {
-        // Primero intentar cerrar si es popup
-        if (window.opener !== null && !window.opener.closed) {
-            window.close();
-            return;
+        function descargarDocumento() {
+            const orientacion = '{{ $orientacion }}';
+            window.location.href = `/sesiones/{{ $sesion->id }}/previsualizar?orientacion=${orientacion}`;
         }
 
-        // Si hay historial, ir atrás
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            // Si no hay historial, ir a la lista de sesiones
-            window.location.href = '/docente/sesions';
-        }
-    }
+        function cerrarVentana() {
+            // Primero intentar cerrar si es popup
+            if (window.opener !== null && !window.opener.closed) {
+                window.close();
+                return;
+            }
 
-    // Detectar teclas para navegación
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            cerrarVentana();
+            // Si hay historial, ir atrás
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // Si no hay historial, ir a la lista de sesiones
+                window.location.href = '/docente/sesions';
+            }
         }
-        // Alt + Flecha izquierda para volver
-        if (event.altKey && event.key === 'ArrowLeft') {
-            cerrarVentana();
-        }
-    });
 
-    // Mostrar un toast de ayuda al cargar
-    window.addEventListener('load', function() {
-        setTimeout(function() {
-            const helpDiv = document.createElement('div');
-            helpDiv.innerHTML = `
+        // Detectar teclas para navegación
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                cerrarVentana();
+            }
+            // Alt + Flecha izquierda para volver
+            if (event.altKey && event.key === 'ArrowLeft') {
+                cerrarVentana();
+            }
+        });
+
+        // Mostrar un toast de ayuda al cargar
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const helpDiv = document.createElement('div');
+                helpDiv.innerHTML = `
             <div style="position: fixed; bottom: 20px; left: 20px; background: #333; color: white; 
                  padding: 10px 15px; border-radius: 5px; font-size: 12px; z-index: 1001;" 
                  id="helpToast">
                 <i class="fas fa-info-circle"></i> Presiona <kbd>ESC</kbd> o <kbd>Alt + ←</kbd> para volver a sesiones
             </div>
         `;
-            document.body.appendChild(helpDiv);
+                document.body.appendChild(helpDiv);
 
-            // Ocultar después de 3 segundos
-            setTimeout(function() {
-                const toast = document.getElementById('helpToast');
-                if (toast) {
-                    toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.5s';
-                    setTimeout(() => toast.remove(), 500);
-                }
-            }, 3000);
-        }, 1000);
-    });
+                // Ocultar después de 3 segundos
+                setTimeout(function() {
+                    const toast = document.getElementById('helpToast');
+                    if (toast) {
+                        toast.style.opacity = '0';
+                        toast.style.transition = 'opacity 0.5s';
+                        setTimeout(() => toast.remove(), 500);
+                    }
+                }, 3000);
+            }, 1000);
+        });
 
-    function abrirVistaPreviaSesion(orientacion) {
-        if (sesionIdActual) {
-            const url = `/sesiones/${sesionIdActual}/vista-previa?orientacion=${orientacion}`;
-            window.open(url, 'vistaPreviaSesion', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-            cerrarModalPreviaSesion();
+        function abrirVistaPreviaSesion(orientacion) {
+            if (sesionIdActual) {
+                const url = `/sesiones/${sesionIdActual}/vista-previa?orientacion=${orientacion}`;
+                window.open(url, 'vistaPreviaSesion', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+                cerrarModalPreviaSesion();
+            }
         }
-    }
-</script>
+    </script>
 
 </body>
 
