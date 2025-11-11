@@ -2,17 +2,22 @@ import { FichaController } from "./controllers/FichaController.js";
 import { AprendizajeController } from "./controllers/AprendizajeController.js";
 import { QuillEditorManager } from "./services/QuillEditorManager.js";
 import { WordExportService } from "./services/WordExportService.js";
-import { Aprendizaje } from './models/Aprendizaje.js'; // añadir al top si usas módulos
+import { Aprendizaje } from './models/Aprendizaje.js';
 import { getSesionIdFromEditUrl, SesionMomentoService } from "./services/SesionMomentoService.js";
 
 console.log('🎯 main.js cargado correctamente');
 
-const API_KEY = "AIzaSyAKUoCqU3kdOoQ6zz6bZIxA0uVCpqjnKyM"; // ⚠️ No seguro para producción
-const SEARCH_API_KEY = "AIzaSyAKUoCqU3kdOoQ6zz6bZIxA0uVCpqjnKyM"; // ⚠️ No seguro para producción
+const API_KEY = window.userGeminiKey ?? null;
+const SEARCH_API_KEY = window.userGeminiKey ?? null;
 const fichaController = new FichaController(API_KEY);
 const aprendizajeController = new AprendizajeController();
 const quillManager = new QuillEditorManager();
 const wordExportService = new WordExportService(quillManager);
+
+if (!API_KEY) {
+    console.warn("⚠️ No se encontró la clave Gemini del usuario autenticado.");
+}
+console.log(window.userGeminiKey);
 
 console.log('✅ Controladores inicializados:', {
   fichaController,
@@ -21,9 +26,7 @@ console.log('✅ Controladores inicializados:', {
   wordExportService
 });
 
-// Nueva función: inicializar editores de forma segura (idempotente)
 function initEditorsIfNeeded() {
-  // Opciones de toolbar comunes
   const toolbarOptions = [
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
@@ -48,7 +51,6 @@ function initEditorsIfNeeded() {
 }
 
 function actualizarDatosSesionDesdeLabels() {
-  // helper seguro para obtener texto y quitar prefijo
   const getText = (id, prefix = '') => {
     const el = document.getElementById(id);
     const text = el && el.innerText ? el.innerText : '';
@@ -61,7 +63,6 @@ function actualizarDatosSesionDesdeLabels() {
   const gradoAula = getText('gradoAulaLabel', 'Grado del Aula:') || '';
   const evidencias = getText('evidenciasLabel', 'Evidencias:') || '';
 
-  // Parseo robusto de .competencia-item sin usar selectores inválidos
   const competenciaItems = document.querySelectorAll('.competencia-item');
   const competencias = Array.from(competenciaItems).map(item => {
     const paragraphs = Array.from(item.querySelectorAll('p'));
@@ -100,7 +101,7 @@ function actualizarDatosSesionDesdeLabels() {
   window.dispatchEvent(new CustomEvent('sesionDataUpdated', { detail: window.datosSesion }));
 }
 function guardarAprendizaje() {
-  actualizarDatosSesionDesdeLabels(); // actualiza datos desde HTML
+  actualizarDatosSesionDesdeLabels();
 
   const temaInput = document.getElementById('tema');
   const tema = temaInput ? (temaInput.value || '') : '';
@@ -116,29 +117,23 @@ function guardarAprendizaje() {
   fichaController.setAprendizajes(aprendizajeController.obtenerAprendizajes());
 }
 
-
-// Cargar ficha al iniciar
 document.addEventListener("DOMContentLoaded", async () => {
   console.log('🎬 DOMContentLoaded - Inicializando editores...');
-
-  // Initialize Quill editors (idempotente)
   initEditorsIfNeeded();
 
   console.log('✅ Editores Quill inicializados (si estaban presentes)');
 
-  // No generar automáticamente, esperar al usuario
   renderFicha();
 
   const sesion = window.datosSesion || window.sesionData || {};
   if (sesion && (sesion.titulo || sesion.proposito_sesion)) {
     const apr = Aprendizaje.fromSessionData(sesion);
-    aprendizajeController.aprendizajes = []; // limpiar estado si se desea
+    aprendizajeController.aprendizajes = [];
     aprendizajeController.agregarAprendizaje(apr);
     fichaController.setAprendizajes(aprendizajeController.obtenerAprendizajes());
     console.log('⚡ Aprendizaje cargado desde session:', apr);
   }
 
-  // ✅ ACTUALIZADO: Agregar listeners a los inputs del formulario
   const formContainer = document.querySelector('.lg\\:col-span-2');
   if (formContainer) {
     const inputs = formContainer.querySelectorAll('input, textarea');
@@ -159,11 +154,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log('🎉 Inicialización completa');
 });
 
-// Re-inicializar editores cuando Livewire/Filament actualice el DOM (por navegación entre pasos)
 if (window.Livewire && typeof window.Livewire.hook === 'function') {
   try {
     Livewire.hook('message.processed', (message, component) => {
-      // Pequeño delay para asegurar que el DOM ya esté insertado por Livewire
       setTimeout(() => {
         initEditorsIfNeeded();
       }, 50);
@@ -174,22 +167,18 @@ if (window.Livewire && typeof window.Livewire.hook === 'function') {
   }
 }
 
-// Fallback: observar el DOM por si no existe Livewire (cubre casos raros)
 const observer = new MutationObserver((mutations) => {
-  // Si localizamos cualquiera de los editores que antes no existían, inicializar
   if (document.querySelector('#inicio-editor') || document.querySelector('#desarrollo-editor') || document.querySelector('#conclusion-editor')) {
     initEditorsIfNeeded();
   }
 });
 observer.observe(document.body, { childList: true, subtree: true });
 
-// ✅ ACTUALIZADO: Usar QuillEditorManager para renderizar Markdown
 function renderFicha() {
   quillManager.setMarkdown('#inicio-editor', fichaController.inicio.texto || "");
   quillManager.setMarkdown('#desarrollo-editor', fichaController.desarrollo.texto || "");
   quillManager.setMarkdown('#conclusion-editor', fichaController.conclusion.texto || "");
 
-  // Sync generated content into hidden inputs so forms or other scripts can access them
   try {
     const setHidden = (id, value) => {
       const el = document.getElementById(id);
@@ -212,13 +201,11 @@ window.generarFicha = async () => {
   const btn = document.getElementById('generar-btn');
   btn.disabled = true;
 
-  // ✅ MEJORADO: Mantener estructura del botón con HTML
   btn.innerHTML = `
     <span>⏳</span>
     <span>Generando Ficha...</span>
   `;
 
-  // ✅ ACTUALIZADO: Usar QuillEditorManager
   quillManager.setContent('#inicio-editor', "Generando...");
   quillManager.setContent('#desarrollo-editor', "Generando...");
   quillManager.setContent('#conclusion-editor', "Generando...");
@@ -244,7 +231,6 @@ window.generarFicha = async () => {
     <span>Generar Ficha Completa</span>
   `;
 };
-// Nueva función: enviar los valores de los editores al endpoint por AJAX
 async function enviarMomentosASession() {
   const inicio = document.getElementById('inicioInput')?.value || '';
   const desarrollo = document.getElementById('desarrolloInput')?.value || '';
@@ -253,12 +239,10 @@ async function enviarMomentosASession() {
     const data = await SesionMomentoService.saveMomentos(inicio, desarrollo, cierre);
     console.log('✅ Momentos guardados en sesión:', data);
   } catch (error) {
-    // El error ya se loguea en el servicio
   }
 }
 
 window.regenerar = async (seccion, e) => {
-  // obtener el botón de forma segura: si se pasa el evento lo usamos, si no buscamos por onclick
   const btn = e && e.target
     ? e.target
     : document.querySelector(`button[onclick^="regenerar('${seccion}")`) // intento de fallback
@@ -270,10 +254,8 @@ window.regenerar = async (seccion, e) => {
     btn.textContent = "⏳ Generando...";
   }
 
-  // Actualizar aprendizajes antes de regenerar
   guardarAprendizaje();
 
-  // Mostrar estado en Quill
   if (seccion === "inicio") quillManager.setContent('#inicio-editor', "Generando...");
   else if (seccion === "desarrollo") quillManager.setContent('#desarrollo-editor', "Generando...");
   else if (seccion === "conclusion") quillManager.setContent('#conclusion-editor', "Generando...");
@@ -300,8 +282,6 @@ function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-
-// Detectar si estamos en la vista de edición y cargar los momentos usando el id de la sesión en la URL
 function getSesionIdFromUrl() {
   const match = window.location.pathname.match(/sesions\/(\d+)/);
   return match ? match[1] : null;
@@ -313,7 +293,6 @@ async function cargarMomentosSiEdit() {
     try {
       const response = await SesionMomentoService.getMomentosById(sesionId);
       if (response && response.momentos && response.momentos.length > 0) {
-        // Usar el primer momento (o adaptar si hay varios)
         const momento = response.momentos[0];
         document.getElementById('inicioInput').value = momento.inicio || '';
         document.getElementById('desarrolloInput').value = momento.desarrollo || '';
@@ -324,10 +303,7 @@ async function cargarMomentosSiEdit() {
         console.log('✅ Momentos cargados en edición:', momento);
       }
     } catch (error) {
-      // El error ya se loguea en el servicio
     }
   }
 }
-
-// Llamar al cargar la página
 cargarMomentosSiEdit();

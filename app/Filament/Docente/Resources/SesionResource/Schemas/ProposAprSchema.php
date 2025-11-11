@@ -52,8 +52,8 @@ class ProposAprSchema
                         return $competencia;
                     })
                     ->afterStateUpdated(function ($state) {
-        session()->put('competencias', $state ?? []);
-    }),
+                        session()->put('competencias', $state ?? []);
+                    }),
                 // Paso 3: Evidencias Generales
                 Forms\Components\Textarea::make('evidencias')
                     ->label('3️⃣ Evidencias de la sesión')
@@ -209,10 +209,10 @@ class ProposAprSchema
                 ->reactive()
                 ->default([])
                 ->afterStateUpdated(function ($state, callable $set) {
-        $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
-        $set('criterios', $items);
-        session()->put('criterios', $items);
-    })
+                    $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
+                    $set('criterios', $items);
+                    session()->put('criterios', $items);
+                })
                 ->dehydrated(true)
                 ->columnSpan('full'),
 
@@ -234,8 +234,8 @@ class ProposAprSchema
                         ->searchable()
                         ->reactive()
                         ->afterStateUpdated(function ($state) {
-        session()->put('instrumentos_predefinidos', $state);
-    })
+                            session()->put('instrumentos_predefinidos', $state);
+                        })
                         ->placeholder('Selecciona un instrumento...')
                         ->columnSpan('full'),
 
@@ -244,9 +244,9 @@ class ProposAprSchema
                         ->placeholder('Escribe y presiona Enter')
                         ->reactive()
                         ->afterStateUpdated(function ($state) {
-        $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
-        session()->put('instrumentos_personalizados', $items);
-    })
+                            $items = array_values(array_filter(array_map('trim', (array) $state), fn($v) => $v !== ''));
+                            session()->put('instrumentos_personalizados', $items);
+                        })
                         ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Personalizado')
                         ->columnSpan('full'),
 
@@ -255,24 +255,25 @@ class ProposAprSchema
                         ->label('¿Deseas generar la lista de cotejo?')
                         ->reactive()
                         ->default(false)
-                        ->visible(fn($get) => $get('instrumentos_predefinidos') === 'Lista de cotejo'
+                        ->visible(fn($get) => (
+                            $get('instrumentos_predefinidos') === 'Lista de cotejo'
+                            || (is_array($get('instrumentos_predefinidos')) && in_array('Lista de cotejo', $get('instrumentos_predefinidos'), true))
                             || !empty($get('lista_cotejo_titulo'))
-                            || !empty($get('lista_cotejo_niveles')))
+                        ))
                         ->afterStateHydrated(function ($state, callable $set, callable $get) {
-                            if (!$state && (!empty($get('lista_cotejo_titulo')) || !empty($get('lista_cotejo_niveles')))) {
+                            $inst = $get('instrumentos_predefinidos');
+                            $isArray = is_array($inst) && in_array('Lista de cotejo', $inst, true);
+                            if (!$state && ($inst === 'Lista de cotejo' || $isArray || !empty($get('lista_cotejo_titulo')))) {
                                 $set('generar_lista_cotejo', true);
                             }
                         })
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             if ($state) {
-                                // si se activa, asegurar que título y niveles existen
                                 if (trim((string) ($get('lista_cotejo_niveles') ?? '')) === '') {
                                     $set('lista_cotejo_niveles', 'Logrado, En proceso, Destacado');
                                 }
                             } else {
-                                // al desactivar borramos título y niveles para evitar valores sobrantes
                                 $set('lista_cotejo_titulo', null);
-                                // si quieres conservar niveles aunque se desactive, comenta la siguiente línea
                                 $set('lista_cotejo_niveles', null);
                             }
                         })
@@ -286,7 +287,7 @@ class ProposAprSchema
                         ->visible(function ($get) {
                             $inst = $get('instrumentos_predefinidos');
                             $isArray = is_array($inst) && in_array('Lista de cotejo', $inst, true);
-                            return $inst === 'Lista de cotejo' || $isArray || !empty($get('lista_cotejo_titulo')) || !empty($get('lista_cotejo_niveles'));
+                            return $inst === 'Lista de cotejo' || $isArray;
                         })
                         ->disabled(fn($get) => ! (bool) ($get('generar_lista_cotejo') ?? false))
                         ->default(null)
@@ -305,7 +306,7 @@ class ProposAprSchema
                         ->visible(function ($get) {
                             $inst = $get('instrumentos_predefinidos');
                             $isArray = is_array($inst) && in_array('Lista de cotejo', $inst, true);
-                            return $inst === 'Lista de cotejo' || $isArray || !empty($get('lista_cotejo_titulo')) || !empty($get('lista_cotejo_niveles'));
+                            return $inst === 'Lista de cotejo' || $isArray;
                         })
                         ->helperText('Valores por defecto: Logrado, En proceso, No logrado')
                         ->default('Logrado, En proceso, No logrado')

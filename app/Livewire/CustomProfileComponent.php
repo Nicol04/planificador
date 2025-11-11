@@ -7,6 +7,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,7 @@ class CustomProfileComponent extends Component implements HasForms
 
     public function mount(): void
     {
+        $user = Auth::user();
         $persona = Auth::user()?->persona;
 
         $this->form->fill([
@@ -41,6 +43,7 @@ class CustomProfileComponent extends Component implements HasForms
             'apellido' => $persona?->apellido,
             'dni' => $persona?->dni,
             'genero' => $persona?->genero,
+            'gemini_api_key' => $user?->gemini_api_key,
         ]);
     }
 
@@ -55,13 +58,37 @@ class CustomProfileComponent extends Component implements HasForms
                         Forms\Components\TextInput::make('dni')->label('DNI')->disabled(),
                         Forms\Components\TextInput::make('genero')->label('Género')->disabled(),
                     ]),
+
+                Section::make('Configuración de Inteligencia Artificial')
+                    ->description('Aquí puedes ingresar tu clave API de Gemini para habilitar las funciones de IA en tus planificaciones.')
+                    ->schema([
+                        Forms\Components\TextInput::make('gemini_api_key')
+                            ->label('Clave API de Gemini')
+                            ->password()
+                            ->revealable() // 👁️ permite mostrar/ocultar
+                            ->helperText('Tu clave se guardará de forma segura y encriptada.')
+                            ->maxLength(255)
+                            ->dehydrateStateUsing(fn($state) => trim($state)), // Limpia espacios
+                    ])
             ])
             ->statePath('data');
     }
 
     public function save(): void
     {
-        // solo lectura, no necesitas guardar
+        $user = Auth::user();
+
+        // Guardamos solo la clave de la API
+        if (!empty($this->data['gemini_api_key'])) {
+            $user->update([
+                'gemini_api_key' => $this->data['gemini_api_key'],
+            ]);
+
+            Notification::make()
+                ->title('✅ Clave API guardada correctamente')
+                ->success()
+                ->send();
+        }
     }
 
     public function render(): View

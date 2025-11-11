@@ -22,6 +22,7 @@ class User extends Authenticatable implements HasAvatar
         'password_plano',
         'persona_id',
         'avatar_url',
+        'gemini_api_key',
     ];
 
     protected $hidden = [
@@ -34,8 +35,10 @@ class User extends Authenticatable implements HasAvatar
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'gemini_api_key' => 'encrypted',
         ];
     }
+
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'persona_id');

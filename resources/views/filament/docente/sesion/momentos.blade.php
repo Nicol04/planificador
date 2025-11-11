@@ -1,4 +1,11 @@
 @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js'])
+
+@if (empty(auth()->user()->gemini_api_key))
+    <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg mb-4">
+        ⚠️ Aún no has configurado tu clave Gemini. Ve a tu perfil para agregarla.
+    </div>
+@endif
+
 <div class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen py-8 px-4">
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -241,7 +248,7 @@
         ['nombre_momento' => 'Desarrollo', 'descripcion' => $datosSesion['desarrollo'] ?? '', 'actividades' => ''],
         ['nombre_momento' => 'Cierre', 'descripcion' => $datosSesion['conclusion'] ?? '', 'actividades' => ''],
     ];
-
+    $user = auth()->user();
 @endphp
 
 <h2 id="tituloLabel">Titulo: {{ $datosSesion['titulo'] ?? '' }}</h2>
@@ -257,6 +264,8 @@
 <textarea id="conclusionInput" name="data[cierre]" style="display:none;">{{ $datosSesion['conclusion'] ?? '' }}</textarea>
 
 <script>
+    window.userGeminiKey = @json($user?->gemini_api_key);
+
     document.addEventListener('DOMContentLoaded', function() {
         function syncMomentos() {
             // Obtener HTML directamente de los editores contenteditable
