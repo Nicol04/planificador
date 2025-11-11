@@ -110,6 +110,27 @@
                                 Ver
                             </x-filament::button>
 
+                            {{-- Botones táctiles rápidos --}}
+                            <div class="flex items-center gap-2">
+                                @if ($sesion->public)
+                                    <x-filament::button color="warning" size="sm" icon="heroicon-o-lock-closed"
+                                        class="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition inline-flex items-center gap-2"
+                                        onclick="confirmarTogglePublicacionSesion({{ $sesion->id }}, '{{ addslashes($sesion->titulo) }}', true)"
+                                        aria-label="Quitar publicación">
+                                        🔒
+                                        <span class="ml-1">Quitar publicación</span>
+                                    </x-filament::button>
+                                @else
+                                    <x-filament::button color="success" size="sm" icon="heroicon-o-globe-alt"
+                                        class="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition inline-flex items-center gap-2"
+                                        onclick="confirmarTogglePublicacionSesion({{ $sesion->id }}, '{{ addslashes($sesion->titulo) }}', false)"
+                                        aria-label="Publicar">
+                                        🌐
+                                        <span class="ml-1">Publicar</span>
+                                    </x-filament::button>
+                                @endif
+                            </div>
+
                             {{-- Menú dropdown --}}
                             <x-filament::dropdown>
                                 <x-slot name="trigger">
@@ -467,6 +488,47 @@
                         @this.call('deleteSesion', {
                             sesion_id: sesionId
                         });
+                    }
+                }
+            }
+
+            function confirmarTogglePublicacionSesion(sesionId, tituloSesion, isCurrentlyPublic) {
+                if (typeof Swal !== 'undefined') {
+                    const title = isCurrentlyPublic ? '🔒 Quitar publicación' : '🌐 Publicar Sesión';
+                    const confirmText = isCurrentlyPublic ? '<i class="fas fa-times-circle"></i> Sí, quitar' :
+                        '<i class="fas fa-globe"></i> Sí, publicar';
+                    const htmlMessage = isCurrentlyPublic ?
+                        `<p>¿Deseas quitar la publicación de <strong>${tituloSesion}</strong>?</p>
+                           <p class="text-muted">La sesión dejará de estar visible para el grupo docente.</p>` :
+                        `<p>¿Deseas publicar la sesión <strong>${tituloSesion}</strong>?</p>
+                           <p class="text-muted">Estará visible para el grupo docente de la institución.</p>`;
+
+                    Swal.fire({
+                        title: title,
+                        html: htmlMessage,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: confirmText,
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#0066cc',
+                        cancelButtonColor: '#6c757d',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return new Promise((resolve) => {
+                                @this.call('togglePublicacion', sesionId).then(() => {
+                                    resolve();
+                                }).catch(() => {
+                                    resolve();
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    const ok = confirm(isCurrentlyPublic ?
+                        `Quitar publicación de "${tituloSesion}"?` :
+                        `Publicar "${tituloSesion}"?`);
+                    if (ok) {
+                        @this.call('togglePublicacion', sesionId);
                     }
                 }
             }
