@@ -103,7 +103,7 @@
                             <div wire:ignore wire:key="inicio-editor" class="pl-0">
                                 <div id="inicio-editor" data-quill="true" contenteditable="true"
                                     class="campo-editable w-full text-slate-700 text-sm leading-relaxed"
-                                    style="min-height:120px;"></div>
+                                    style="min-height:120px;">{!! $datosSesion['inicio'] ?? '' !!}</div>
                             </div>
                         </div>
                     </section>
@@ -122,7 +122,7 @@
                             <div wire:ignore wire:key="desarrollo-editor" class="pl-0">
                                 <div id="desarrollo-editor" data-quill="true" contenteditable="true"
                                     class="campo-editable w-full text-slate-700 text-sm leading-relaxed"
-                                    style="min-height:220px;"></div>
+                                    style="min-height:220px;">{!! $datosSesion['desarrollo'] ?? '' !!}</div>
                             </div>
                         </div>
                     </section>
@@ -141,7 +141,7 @@
                             <div wire:ignore wire:key="conclusion-editor" class="pl-0">
                                 <div id="conclusion-editor" data-quill="true" contenteditable="true"
                                     class="campo-editable w-full text-slate-700 text-sm leading-relaxed"
-                                    style="min-height:120px;"></div>
+                                    style="min-height:120px;">{!! $datosSesion['cierre'] ?? '' !!}</div>
                             </div>
                         </div>
                     </section>
@@ -250,53 +250,56 @@
 <p id="gradoAulaLabel">Grado del Aula: {{ $datosSesion['grado_aula'] ?? 'N/A' }}</p>
 
 <input type="hidden" id="momentos_data_input" name="data[momentos_data]" value='@json($momentos_defecto)'>
-<!-- Hidden fields to store the generated text so it can be submitted or read by other scripts -->
-<textarea id="inicioInput" name="inicio" style="display:none;">{{ $datosSesion['inicio'] ?? '' }}</textarea>
-<textarea id="desarrolloInput" name="desarrollo" style="display:none;">{{ $datosSesion['desarrollo'] ?? '' }}</textarea>
-<textarea id="conclusionInput" name="conclusion" style="display:none;">{{ $datosSesion['conclusion'] ?? '' }}</textarea>
+
+<!-- Hidden fields ahora forman parte del state 'data' para que Filament/Livewire los capture -->
+<textarea id="inicioInput" name="data[inicio]" style="display:none;">{{ $datosSesion['inicio'] ?? '' }}</textarea>
+<textarea id="desarrolloInput" name="data[desarrollo]" style="display:none;">{{ $datosSesion['desarrollo'] ?? '' }}</textarea>
+<textarea id="conclusionInput" name="data[cierre]" style="display:none;">{{ $datosSesion['conclusion'] ?? '' }}</textarea>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         function syncMomentos() {
-            const inicio = document.getElementById('inicioInput')?.value ?? '';
-            const desarrollo = document.getElementById('desarrolloInput')?.value ?? '';
-            const conclusion = document.getElementById('conclusionInput')?.value ?? '';
+            // Obtener HTML directamente de los editores contenteditable
+            const inicioHtml = document.getElementById('inicio-editor')?.innerHTML ?? '';
+            const desarrolloHtml = document.getElementById('desarrollo-editor')?.innerHTML ?? '';
+            const conclusionHtml = document.getElementById('conclusion-editor')?.innerHTML ?? '';
 
-            const arr = [{
-                    nombre_momento: 'Inicio',
-                    descripcion: inicio,
-                    actividades: ''
-                },
-                {
-                    nombre_momento: 'Desarrollo',
-                    descripcion: desarrollo,
-                    actividades: ''
-                },
-                {
-                    nombre_momento: 'Cierre',
-                    descripcion: conclusion,
-                    actividades: ''
-                },
+            // sincronizar los hidden que Filament persiste (data[...] names) y disparar input
+            const hi = document.getElementById('inicioInput');
+            const hd = document.getElementById('desarrolloInput');
+            const hc = document.getElementById('conclusionInput');
+            if (hi) { hi.value = inicioHtml; hi.dispatchEvent(new Event('input', { bubbles: true })); }
+            if (hd) { hd.value = desarrolloHtml; hd.dispatchEvent(new Event('input', { bubbles: true })); }
+            if (hc) { hc.value = conclusionHtml; hc.dispatchEvent(new Event('input', { bubbles: true })); }
+
+            const arr = [
+                { nombre_momento: 'Inicio', descripcion: inicioHtml, actividades: '' },
+                { nombre_momento: 'Desarrollo', descripcion: desarrolloHtml, actividades: '' },
+                { nombre_momento: 'Cierre', descripcion: conclusionHtml, actividades: '' },
             ];
 
-            const hidden = document.querySelector('input[name="data[momentos_data]"]') || document
-                .getElementById('momentos_data_input');
+            const hidden = document.querySelector('input[name="data[momentos_data]"]') || document.getElementById('momentos_data_input');
             if (hidden) {
                 hidden.value = JSON.stringify(arr);
-                // disparar evento input para que Livewire detecte el cambio
-                hidden.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
+                hidden.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
 
-        ['inicioInput', 'desarrolloInput', 'conclusionInput'].forEach(id => {
+        ['inicio-editor', 'desarrollo-editor', 'conclusion-editor'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', syncMomentos);
+            if (!el) return;
+            // input no siempre dispara en div contenteditable dependiendo del editor, usar varios eventos
+            el.addEventListener('input', syncMomentos);
+            el.addEventListener('keyup', syncMomentos);
+            el.addEventListener('blur', syncMomentos);
+            // observer para cambios programáticos (p. ej. Quill)
+            const mo = new MutationObserver(syncMomentos);
+            mo.observe(el, { childList: true, subtree: true, characterData: true });
         });
 
         // sincronizar justo antes de enviar cualquier formulario
         document.addEventListener('submit', syncMomentos, true);
+        syncMomentos();
     });
 </script>
 

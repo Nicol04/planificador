@@ -13,6 +13,14 @@ Route::get('/', function () {
 });
 Route::middleware(['auth'])->group(function () {
     // Rutas protegidas por autenticación
+
+    // RUTAS PARA RECUPERAR GENERACIÓN DE IA
+    // Ruta AJAX para guardar valores de SesionMomento en sesión
+    Route::post('/sesion-momento/session', [\App\Http\Controllers\SesionMomentoSessionController::class, 'store'])->name('sesion-momento.session.store');
+    
+    // Ruta GET para obtener el momento de sesión por id
+    Route::get('/sesion-momento/{sesionId}', [\App\Http\Controllers\SesionMomentoSessionController::class, 'showById'])->name('sesion-momento.session.showById');
+
     Route::get('/users/exportar', [UserController::class, 'exportarUsuarios'])->name('users.exportarUsuarios');
     //Reporte de usuarios por aula
     Route::get('/aulas/{aulaId}/exportar-usuarios', [UserController::class, 'exportarUsuariosPorAula'])->name('aulas.exportarUsuarios');

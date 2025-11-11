@@ -3,6 +3,7 @@ import { AprendizajeController } from "./controllers/AprendizajeController.js";
 import { QuillEditorManager } from "./services/QuillEditorManager.js";
 import { WordExportService } from "./services/WordExportService.js";
 import { Aprendizaje } from './models/Aprendizaje.js'; // añadir al top si usas módulos
+import { getSesionIdFromEditUrl, SesionMomentoService } from "./services/SesionMomentoService.js";
 
 console.log('🎯 main.js cargado correctamente');
 
@@ -22,10 +23,28 @@ console.log('✅ Controladores inicializados:', {
 
 // Nueva función: inicializar editores de forma segura (idempotente)
 function initEditorsIfNeeded() {
-  // Intentar inicializar solo si los elementos existen en DOM
-  quillManager.initializeEditor('#inicio-editor', 'bubble');
-  quillManager.initializeEditor('#desarrollo-editor', 'bubble');
-  quillManager.initializeEditor('#conclusion-editor', 'bubble');
+  // Opciones de toolbar comunes
+  const toolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link', 'blockquote', 'code-block'],
+    ['clean']
+  ];
+
+  quillManager.initializeEditor('#inicio-editor', 'snow', {
+    modules: { toolbar: toolbarOptions },
+    placeholder: 'Escribe el Inicio...'
+  });
+
+  quillManager.initializeEditor('#desarrollo-editor', 'snow', {
+    modules: { toolbar: toolbarOptions },
+    placeholder: 'Escribe el Desarrollo...'
+  });
+
+  quillManager.initializeEditor('#conclusion-editor', 'snow', {
+    modules: { toolbar: toolbarOptions },
+    placeholder: 'Escribe la Conclusión...'
+  });
 }
 
 function actualizarDatosSesionDesdeLabels() {
@@ -128,6 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       el.addEventListener('change', () => {
         console.log('📝 Campo modificado, guardando aprendizaje...');
         guardarAprendizaje();
+        enviarMomentosASession();
       });
     });
 
@@ -209,6 +229,8 @@ window.generarFicha = async () => {
     console.log('📝 Aprendizajes guardados:', aprendizajeController.obtenerAprendizajes());
     await fichaController.generarTodo();
     console.log('✅ Ficha generada exitosamente');
+    enviarMomentosASession();
+
   } catch (error) {
     console.error('❌ Error al generar ficha:', error);
     quillManager.setContent('#inicio-editor', "Error al generar. Ver consola.");
@@ -222,6 +244,18 @@ window.generarFicha = async () => {
     <span>Generar Ficha Completa</span>
   `;
 };
+// Nueva función: enviar los valores de los editores al endpoint por AJAX
+async function enviarMomentosASession() {
+  const inicio = document.getElementById('inicioInput')?.value || '';
+  const desarrollo = document.getElementById('desarrolloInput')?.value || '';
+  const cierre = document.getElementById('conclusionInput')?.value || '';
+  try {
+    const data = await SesionMomentoService.saveMomentos(inicio, desarrollo, cierre);
+    console.log('✅ Momentos guardados en sesión:', data);
+  } catch (error) {
+    // El error ya se loguea en el servicio
+  }
+}
 
 window.regenerar = async (seccion, e) => {
   // obtener el botón de forma segura: si se pasa el evento lo usamos, si no buscamos por onclick
@@ -265,3 +299,35 @@ window.exportarWord = async () => {
 function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+
+// Detectar si estamos en la vista de edición y cargar los momentos usando el id de la sesión en la URL
+function getSesionIdFromUrl() {
+  const match = window.location.pathname.match(/sesions\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+async function cargarMomentosSiEdit() {
+  const sesionId = getSesionIdFromEditUrl();
+  if (sesionId) {
+    try {
+      const response = await SesionMomentoService.getMomentosById(sesionId);
+      if (response && response.momentos && response.momentos.length > 0) {
+        // Usar el primer momento (o adaptar si hay varios)
+        const momento = response.momentos[0];
+        document.getElementById('inicioInput').value = momento.inicio || '';
+        document.getElementById('desarrolloInput').value = momento.desarrollo || '';
+        document.getElementById('conclusionInput').value = momento.cierre || '';
+        quillManager.setMarkdown('#inicio-editor', momento.inicio || '');
+        quillManager.setMarkdown('#desarrollo-editor', momento.desarrollo || '');
+        quillManager.setMarkdown('#conclusion-editor', momento.cierre || '');
+        console.log('✅ Momentos cargados en edición:', momento);
+      }
+    } catch (error) {
+      // El error ya se loguea en el servicio
+    }
+  }
+}
+
+// Llamar al cargar la página
+cargarMomentosSiEdit();

@@ -25,6 +25,27 @@ class Sesion extends Model
         'public' => 'boolean',
     ];
 
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::created(function ($sesion) {
+            // Obtener los valores de la sesión de Laravel
+            $inicio = session('sesion_momento_inicio', null);
+            $desarrollo = session('sesion_momento_desarrollo', null);
+            $cierre = session('sesion_momento_cierre', null);
+
+            // Solo crear si hay al menos uno
+            if ($inicio !== null || $desarrollo !== null || $cierre !== null) {
+                $sesion->momento()->create([
+                    'inicio' => $inicio ?? '',
+                    'desarrollo' => $desarrollo ?? '',
+                    'cierre' => $cierre ?? '',
+                ]);
+            }
+        });
+    }
+
     public function scopePublic($query)
     {
         return $query->where('public', true);
@@ -54,14 +75,33 @@ class Sesion extends Model
     }
 
     // Nueva relación para guardar momentos (sesion_momentos)
-    public function momentos()
+    public function momento()
     {
-        return $this->hasMany(SesionMomento::class);
+        return $this->hasOne(SesionMomento::class);
     }
     public function listasCotejos()
     {
         return $this->hasMany(\App\Models\ListaCotejo::class, 'sesion_id');
     }
+
+    public function getInicioAttribute(): ?string
+    {
+        // Esto cargará los datos de la relación 'momento'
+        return $this->momento?->inicio;
+    }
+
+    public function getDesarrolloAttribute(): ?string
+    {
+        return $this->momento?->desarrollo;
+    }
+
+    public function getCierreAttribute(): ?string
+    {
+        return $this->momento?->cierre;
+    }
+
+    // Opcional pero recomendado para asegurarte de que Filament los serialice al editar
+    protected $appends = ['inicio', 'desarrollo', 'cierre'];
 
     // Accesor: URL de imagen, devuelve imagen guardada o placeholder
     public function getImagenUrlAttribute()

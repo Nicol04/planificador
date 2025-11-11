@@ -17,31 +17,45 @@ class EditSesion extends EditRecord
         // Cargar datos del detalle de sesión
         $sesion = $this->record;
         $detalle = $sesion->detalle;
-
+        $fillData = $data;
         // Obtener curso_id desde aula_curso_id
         if ($sesion->aula_curso_id) {
             $aulaCurso = AulaCurso::find($sesion->aula_curso_id);
             if ($aulaCurso) {
-                $data['curso_id'] = $aulaCurso->curso_id;
+                $fillData['curso_id'] = $aulaCurso->curso_id;
             }
         }
 
+        try {
+            $mom = $sesion->momento; // usa la relación momento()
+            if ($mom) {
+                // Rellenar el array esperado por los campos RichEditor: data.momentos_data.inicio|desarrollo|cierre
+                $fillData['momentos_data'] = [
+                    'inicio' => $mom->inicio ?? '',
+                    'desarrollo' => $mom->desarrollo ?? '',
+                    'cierre' => $mom->cierre ?? '',
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error al obtener momentos de la sesión: ' . $e->getMessage());
+        }
+
         if ($detalle) {
-            $data['competencias'] = $detalle->propositos_aprendizaje ?? [];
-            $data['evidencias'] = $detalle->evidencia ?? '';
+            $fillData['competencias'] = $detalle->propositos_aprendizaje ?? [];
+            $fillData['evidencias'] = $detalle->evidencia ?? '';
 
             // Normalizar cada propósito para que el formulario lo muestre correctamente
-            foreach ($data['competencias'] as $index => $prop) {
+            foreach ($fillData['competencias'] as $index => $prop) {
                 // instrumentos_predefinidos: puede venir como array o string -> dejar string (primer valor) para el Select
                 $instPre = $prop['instrumentos_predefinidos'] ?? null;
                 if (is_array($instPre)) {
-                    $data['competencias'][$index]['instrumentos_predefinidos'] = count($instPre) ? $instPre[0] : null;
+                    $fillData['competencias'][$index]['instrumentos_predefinidos'] = count($instPre) ? $instPre[0] : null;
                 } else {
-                    $data['competencias'][$index]['instrumentos_predefinidos'] = $instPre;
+                    $fillData['competencias'][$index]['instrumentos_predefinidos'] = $instPre;
                 }
 
                 // instrumentos_personalizados: asegurar array
-                $data['competencias'][$index]['instrumentos_personalizados'] = is_array($prop['instrumentos_personalizados'] ?? null)
+                $fillData['competencias'][$index]['instrumentos_personalizados'] = is_array($prop['instrumentos_personalizados'] ?? null)
                     ? $prop['instrumentos_personalizados']
                     : (empty($prop['instrumentos_personalizados']) ? [] : (array) $prop['instrumentos_personalizados']);
 
@@ -54,7 +68,7 @@ class EditSesion extends EditRecord
                 } else {
                     $criteriosArr = [];
                 }
-                $data['competencias'][$index]['criterios'] = $criteriosArr;
+                $fillData['competencias'][$index]['criterios'] = $criteriosArr;
 
                 // lista de cotejo: si existe al menos una ListaCotejo para la sesión, prellenamos los campos de la primera encontrada
                 try {
@@ -65,62 +79,72 @@ class EditSesion extends EditRecord
 
                 if ($lista) {
                     // marcar como generada y rellenar título/niveles; el Select debe mostrar "Lista de cotejo"
-                    $data['competencias'][$index]['generar_lista_cotejo'] = true;
-                    $data['competencias'][$index]['lista_cotejo_titulo'] = $lista->titulo;
-                    $data['competencias'][$index]['lista_cotejo_niveles'] = $lista->niveles;
-                    $data['competencias'][$index]['instrumentos_predefinidos'] = 'Lista de cotejo';
+                    $fillData['competencias'][$index]['generar_lista_cotejo'] = true;
+                    $fillData['competencias'][$index]['lista_cotejo_titulo'] = $lista->titulo;
+                    $fillData['competencias'][$index]['lista_cotejo_niveles'] = $lista->niveles;
+                    $fillData['competencias'][$index]['instrumentos_predefinidos'] = 'Lista de cotejo';
                 } else {
                     // si el propósito ya trae datos de lista, respetarlos; si no, aseguramos valores por defecto
-                    $data['competencias'][$index]['generar_lista_cotejo'] = !empty($prop['generar_lista_cotejo']);
-                    $data['competencias'][$index]['lista_cotejo_titulo'] = $prop['lista_cotejo_titulo'] ?? null;
-                    $data['competencias'][$index]['lista_cotejo_niveles'] = $prop['lista_cotejo_niveles'] ?? 'Logrado, En proceso, Destacado';
+                    $fillData['competencias'][$index]['generar_lista_cotejo'] = !empty($prop['generar_lista_cotejo']);
+                    $fillData['competencias'][$index]['lista_cotejo_titulo'] = $prop['lista_cotejo_titulo'] ?? null;
+                    $fillData['competencias'][$index]['lista_cotejo_niveles'] = $prop['lista_cotejo_niveles'] ?? 'Logrado, En proceso, Destacado';
                 }
             }
 
             if ($detalle->transversalidad) {
-                $data['mostrar_enfoques'] = true;
+                $fillData['mostrar_enfoques'] = true;
                 $transversal = $detalle->transversalidad;
-                $data['enfoque_transversal_ids'] = $transversal['enfoque_transversal_ids'] ?? [];
-                $data['competencias_transversales_ids'] = $transversal['competencias_transversales_ids'] ?? [];
-                $data['capacidades_transversales_ids'] = $transversal['capacidades_transversales_ids'] ?? [];
-                $data['desempeno_transversal_ids'] = $transversal['desempeno_transversal_ids'] ?? [];
-                $data['criterios_transversales'] = $transversal['criterios_transversales'] ?? '';
-                $data['instrumentos_transversales_ids'] = $transversal['instrumentos_transversales_ids'] ?? [];
-                $data['instrumentos_transversales_personalizados'] = $transversal['instrumentos_transversales_personalizados'] ?? '';
+                $fillData['enfoque_transversal_ids'] = $transversal['enfoque_transversal_ids'] ?? [];
+                $fillData['competencias_transversales_ids'] = $transversal['competencias_transversales_ids'] ?? [];
+                $fillData['capacidades_transversales_ids'] = $transversal['capacidades_transversales_ids'] ?? [];
+                $fillData['desempeno_transversal_ids'] = $transversal['desempeno_transversal_ids'] ?? [];
+                $fillData['criterios_transversales'] = $transversal['criterios_transversales'] ?? '';
+                $fillData['instrumentos_transversales_ids'] = $transversal['instrumentos_transversales_ids'] ?? [];
+                $fillData['instrumentos_transversales_personalizados'] = $transversal['instrumentos_transversales_personalizados'] ?? '';
             }
         }
 
-        return $data;
+        return ['data' => $fillData];
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $user = $this->record->docente;
+        if (isset($data['data']) && is_array($data['data'])) {
+            $inner = $data['data'];
 
-        if ($user) {
-            $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
-            if ($usuarioAula) {
-                $cursoId = $data['curso_id'] ?? null;
-                
-                if ($cursoId) {
-                    $aulaCurso = AulaCurso::where('aula_id', $usuarioAula->aula_id)
-                        ->where('curso_id', $cursoId)
-                        ->first();
+            $user = $this->record->docente;
+
+            if ($user) {
+                $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
+                if ($usuarioAula) {
+                    $cursoId = $inner['curso_id'] ?? null;
                     
-                    if ($aulaCurso) {
-                        $data['aula_curso_id'] = $aulaCurso->id;
+                    if ($cursoId) {
+                        $aulaCurso = AulaCurso::where('aula_id', $usuarioAula->aula_id)
+                            ->where('curso_id', $cursoId)
+                            ->first();
+                        
+                        if ($aulaCurso) {
+                            $inner['aula_curso_id'] = $aulaCurso->id;
+                        }
                     }
                 }
             }
+
+            $data['data'] = $inner;
+            return $data;
         }
 
-        return $data;
+        // Fallback: comportamiento previo (por seguridad)
+        return parent::mutateFormDataBeforeSave($data);
     }
 
     protected function afterSave(): void
     {
         $sesion = $this->record;
         $detalle = $sesion->detalle;
+        $state = $this->form->getState();
+        $formData = $this->data['data'] ?? $state;
 
         try {
             $sesion->listasCotejos()->delete();
@@ -129,8 +153,8 @@ class EditSesion extends EditRecord
         }
         // Preparar datos de propósitos de aprendizaje
         $propositos = [];
-        if (!empty($this->data['competencias'])) {
-            foreach ($this->data['competencias'] as $compIndex => $comp) {
+        if (!empty($formData['competencias'])) {
+            foreach ($formData['competencias'] as $compIndex => $comp) {
                 // Combinar instrumentos predefinidos y personalizados
                 $criteriosRaw = $comp['criterios'] ?? [];
                 if (!is_array($criteriosRaw)) {
@@ -179,15 +203,15 @@ class EditSesion extends EditRecord
 
         // Preparar datos de transversalidad
         $transversalidad = null;
-        if ($this->data['mostrar_enfoques'] ?? false) {
+        if ($formData['mostrar_enfoques'] ?? false) {
             $transversalidad = [
-                'enfoque_transversal_ids' => $this->data['enfoque_transversal_ids'] ?? [],
-                'competencias_transversales_ids' => $this->data['competencias_transversales_ids'] ?? [],
-                'capacidades_transversales_ids' => $this->data['capacidades_transversales_ids'] ?? [],
-                'desempeno_transversal_ids' => $this->data['desempeno_transversal_ids'] ?? [],
-                'criterios_transversales' => $this->data['criterios_transversales'] ?? '',
-                'instrumentos_transversales_ids' => $this->data['instrumentos_transversales_ids'] ?? [],
-                'instrumentos_transversales_personalizados' => $this->data['instrumentos_transversales_personalizados'] ?? '',
+                'enfoque_transversal_ids' => $formData['enfoque_transversal_ids'] ?? [],
+                'competencias_transversales_ids' => $formData['competencias_transversales_ids'] ?? [],
+                'capacidades_transversales_ids' => $formData['capacidades_transversales_ids'] ?? [],
+                'desempeno_transversal_ids' => $formData['desempeno_transversal_ids'] ?? [],
+                'criterios_transversales' => $formData['criterios_transversales'] ?? '',
+                'instrumentos_transversales_ids' => $formData['instrumentos_transversales_ids'] ?? [],
+                'instrumentos_transversales_personalizados' => $formData['instrumentos_transversales_personalizados'] ?? '',
             ];
         }
 
@@ -196,8 +220,55 @@ class EditSesion extends EditRecord
             $detalle->update([
                 'propositos_aprendizaje' => $propositos,
                 'transversalidad' => $transversalidad,
-                'evidencia' => $this->data['evidencias'] ?? '',
+                'evidencia' => $formData['evidencias'] ?? '',
             ]);
+        }
+
+        // Guardar/actualizar momentos (soporta formato nuevo y antiguo)
+        try {
+            $momentosRaw = $formData['momentos_data'] ?? null;
+            if ($momentosRaw) {
+                $momentos = is_string($momentosRaw) ? json_decode($momentosRaw, true) : $momentosRaw;
+
+                $inicio = $desarrollo = $cierre = null;
+
+                if (is_array($momentos) && (array_key_exists('inicio', $momentos) || array_key_exists('desarrollo', $momentos) || array_key_exists('cierre', $momentos))) {
+                    $inicio = $momentos['inicio'] ?? null;
+                    $desarrollo = $momentos['desarrollo'] ?? null;
+                    $cierre = $momentos['cierre'] ?? null;
+                } elseif (is_array($momentos)) {
+                    foreach ($momentos as $m) {
+                        $nombre = mb_strtolower(trim($m['nombre_momento'] ?? ''));
+                        $descripcion = $m['descripcion'] ?? ($m['inicio'] ?? ($m['desarrollo'] ?? ($m['cierre'] ?? null)));
+                        if ($nombre === 'inicio') {
+                            $inicio = $descripcion;
+                        } elseif ($nombre === 'desarrollo') {
+                            $desarrollo = $descripcion;
+                        } elseif ($nombre === 'cierre' || $nombre === 'conclusion') {
+                            $cierre = $descripcion;
+                        }
+                    }
+                }
+
+                if ($inicio || $desarrollo || $cierre) {
+                    $momRel = $sesion->momento;
+                    if ($momRel) {
+                        $momRel->update([
+                            'inicio' => $inicio,
+                            'desarrollo' => $desarrollo,
+                            'cierre' => $cierre,
+                        ]);
+                    } else {
+                        $sesion->momento()->create([
+                            'inicio' => $inicio,
+                            'desarrollo' => $desarrollo,
+                            'cierre' => $cierre,
+                        ]);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error guardando/actualizando SesionMomento en afterSave: '.$e->getMessage(), ['sesion_id' => $sesion->id]);
         }
     }
 

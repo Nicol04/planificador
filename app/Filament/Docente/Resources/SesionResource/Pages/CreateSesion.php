@@ -14,8 +14,11 @@ class CreateSesion extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        if (isset($data['data'])) {
+            $data = $data['data'];
+        }
         $user = Auth::user();
-
+        
         if ($user) {
             $usuarioAula = $user->usuario_aulas()->with('aula')->latest()->first();
             if ($usuarioAula) {
@@ -40,14 +43,14 @@ class CreateSesion extends CreateRecord
 
     protected function afterCreate(): void
     {
+        $state = $this->form->getState();
+        $formData = $this->data['data'] ?? $state;
         $sesion = $this->record;
 
         // Preparar datos de propósitos de aprendizaje
         $propositos = [];
-        if (!empty($this->data['competencias'])) {
-            foreach ($this->data['competencias'] as $comp) {
-                // Combinar instrumentos predefinidos y personalizados
-                // normalizar criterios (ya lo tienes)
+        if (!empty($formData['competencias'])) {
+            foreach ($formData['competencias'] as $comp) {
                 $criteriosRaw = $comp['criterios'] ?? [];
                 if (!is_array($criteriosRaw)) {
                     if (is_string($criteriosRaw)) {
@@ -114,15 +117,15 @@ class CreateSesion extends CreateRecord
 
         // Preparar datos de transversalidad
         $transversalidad = null;
-        if ($this->data['mostrar_enfoques'] ?? false) {
+        if ($formData['mostrar_enfoques'] ?? false) {
             $transversalidad = [
-                'enfoque_transversal_ids' => $this->data['enfoque_transversal_ids'] ?? [],
-                'competencias_transversales_ids' => $this->data['competencias_transversales_ids'] ?? [],
-                'capacidades_transversales_ids' => $this->data['capacidades_transversales_ids'] ?? [],
-                'desempeno_transversal_ids' => $this->data['desempeno_transversal_ids'] ?? [],
-                'criterios_transversales' => $this->data['criterios_transversales'] ?? '',
-                'instrumentos_transversales_ids' => $this->data['instrumentos_transversales_ids'] ?? [],
-                'instrumentos_transversales_personalizados' => $this->data['instrumentos_transversales_personalizados'] ?? '',
+                'enfoque_transversal_ids' => $formData['enfoque_transversal_ids'] ?? [],
+                'competencias_transversales_ids' => $formData['competencias_transversales_ids'] ?? [],
+                'capacidades_transversales_ids' => $formData['capacidades_transversales_ids'] ?? [],
+                'desempeno_transversal_ids' => $formData['desempeno_transversal_ids'] ?? [],
+                'criterios_transversales' => $formData['criterios_transversales'] ?? '',
+                'instrumentos_transversales_ids' => $formData['instrumentos_transversales_ids'] ?? [],
+                'instrumentos_transversales_personalizados' => $formData['instrumentos_transversales_personalizados'] ?? '',
             ];
         }
 
@@ -130,13 +133,24 @@ class CreateSesion extends CreateRecord
         $sesion->detalles()->create([
             'propositos_aprendizaje' => $propositos,
             'transversalidad' => $transversalidad,
-            'evidencia' => $this->data['evidencias'] ?? '',
+            'evidencia' => $formData['evidencias'] ?? '',
         ]);
-        $momentosRaw = $this->data['momentos_data'] ?? null;
+
+        // Guardar momentos: soporta formato nuevo (assoc) y antiguo (lista)
+        $momentosRaw = $formData['momentos_data'] ?? null;
         if ($momentosRaw) {
+            // Si viene como JSON string intentar decodificar
             $momentos = is_string($momentosRaw) ? json_decode($momentosRaw, true) : $momentosRaw;
-            if (is_array($momentos)) {
-                $inicio = $desarrollo = $cierre = null;
+
+            $inicio = $desarrollo = $cierre = null;
+
+            // Formato nuevo: array asociativo con claves inicio/desarrollo/cierre
+            if (is_array($momentos) && (array_key_exists('inicio', $momentos) || array_key_exists('desarrollo', $momentos) || array_key_exists('cierre', $momentos))) {
+                $inicio = $momentos['inicio'] ?? null;
+                $desarrollo = $momentos['desarrollo'] ?? null;
+                $cierre = $momentos['cierre'] ?? null;
+            } elseif (is_array($momentos)) {
+                // Formato antiguo: lista de objetos con nombre_momento y descripcion
                 foreach ($momentos as $m) {
                     $nombre = mb_strtolower(trim($m['nombre_momento'] ?? ''));
                     $descripcion = $m['descripcion'] ?? ($m['inicio'] ?? ($m['desarrollo'] ?? ($m['cierre'] ?? null)));
@@ -148,10 +162,11 @@ class CreateSesion extends CreateRecord
                         $cierre = $descripcion;
                     }
                 }
+            }
 
+            if ($inicio || $desarrollo || $cierre) {
                 try {
-                    // Crea una fila en sesion_momentos con los tres textos
-                    $sesion->momentos()->create([
+                    $sesion->momento()->create([
                         'inicio' => $inicio,
                         'desarrollo' => $desarrollo,
                         'cierre' => $cierre,

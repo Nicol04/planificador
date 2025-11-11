@@ -16,4 +16,8 @@ class SesionMomento extends Model
     {
         return $this->belongsTo(Sesion::class);
     }
+    public static function findAllBySesionId($sesionId)
+    {
+        return static::where('sesion_id', $sesionId)->get()->toArray();
+    }
 }
