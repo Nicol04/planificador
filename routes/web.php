@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Docente\PlantillaController;
 use App\Http\Controllers\Documents\AsistenciaDocumentController;
 use App\Http\Controllers\Documents\ListasCotejoDocumentController;
 use App\Http\Controllers\Documents\SesionDocumentController;
@@ -47,6 +48,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('listas-cotejo.previsualizar');
         
         
+
+    //Rutas para las plantillas
+    //Sesiones
+    Route::post('/docente/sesion/{id}/plantilla', [PlantillaController::class, 'PlantillaSesion'])
+    ->name('docente.sesion.plantilla');
+
 Route::get('/documentos/asistencias/vista-previa-html', [AsistenciaDocumentController::class, 'vistaPreviaHtml'])
     ->name('asistencias.vista.previa');
 
