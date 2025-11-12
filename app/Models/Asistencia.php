@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonPeriod;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,11 +17,71 @@ class Asistencia extends Model
         'mes',
         'fecha_inicio',
         'fecha_fin',
-        'estudiantes',
     ];
     protected $casts = [
-        'estudiantes' => 'array',
         'fecha_inicio' => 'date',
         'fecha_fin' => 'date',
     ];
+    
+    /**
+     * Cuenta las semanas calculadas
+     */
+    public function countWeeks(): int
+    {
+        return count($this->weeksMatrix());
+    }
+
+    /**
+     * Plantilla de semana vacía (L..V)
+     */
+    protected function emptyWeekTemplate(): array
+    {
+        return [
+            'L'  => ['date' => null, 'is_class_day' => false],
+            'Ma' => ['date' => null, 'is_class_day' => false],
+            'Mi' => ['date' => null, 'is_class_day' => false],
+            'J'  => ['date' => null, 'is_class_day' => false],
+            'V'  => ['date' => null, 'is_class_day' => false],
+        ];
+    }
+
+    /**
+     * Clase CSS sugerida para un día (por ejemplo para pintar azul días sin clase)
+     * Aquí se puede extender para consultar feriados o calendario por aula.
+     */
+    public function cssClassForDay(array $day = []): string
+    {
+        return ($day['is_class_day'] ?? false) ? '' : 'no-class';
+    }
+
+    /**
+     * Genera una matriz de semanas (L..V) para un mes y año dados.
+     * Cada elemento de la matriz es ['L'=>['date'=>..., 'is_class_day'=>bool], ... ]
+     */
+    public static function generateWeeksMatrix(int $mes, int $anio): array
+    {
+        $startOfMonth = Carbon::create($anio, $mes, 1)->startOfMonth()->startOfDay();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth()->endOfDay();
+
+        // Empezamos en el lunes de la semana que contiene el primer día del mes
+        $current = $startOfMonth->copy()->startOfWeek(Carbon::MONDAY);
+
+        $weeks = [];
+        while ($current->lessThanOrEqualTo($endOfMonth)) {
+            $week = [];
+            $names = ['L', 'Ma', 'Mi', 'J', 'V'];
+            for ($d = 0; $d < 5; $d++) {
+                $date = $current->copy()->addDays($d);
+                $inMonth = $date->between($startOfMonth, $endOfMonth);
+                $week[$names[$d]] = [
+                    'date' => $inMonth ? $date->toDateString() : null,
+                    'is_class_day' => $inMonth, // por defecto, si está en el mes se considera día de clase
+                ];
+            }
+            $weeks[] = $week;
+            $current->addWeek();
+        }
+
+        return $weeks;
+    }
 }
