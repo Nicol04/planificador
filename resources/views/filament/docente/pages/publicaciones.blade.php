@@ -10,7 +10,7 @@
         <div class="info">
             <h1>Publicaciones</h1>
             <span>
-                Plantillas públicas de sesiones — puedes revisar, descargar o usar como plantilla.
+                Plantillas públicas de sesiones, compartidas por el personal docente — puedes revisar, descargar o usar como plantilla.
             </span>
         </div>
 
@@ -242,6 +242,62 @@
                             </a>
 
                             <span class="time">{{ $unidad->duracion ?? '' }}</span>
+                        </div>
+                    </div>
+                </article>
+            @endforeach
+
+            {{-- Mostrar plantillas públicas como fichas --}}
+            @php
+                // Si el controlador no pasó $plantillas, obtener publicas aquí
+                $plantillasList = $plantillas ?? \App\Models\Plantilla::where('public', true)->get();
+            @endphp
+
+            @foreach ($plantillasList as $plantilla)
+                @php
+                    // Resolver URL de imagen_preview (si ya es URL o si es path en storage)
+                    $raw = $plantilla->imagen_preview ?? null;
+                    if ($raw && filter_var($raw, FILTER_VALIDATE_URL)) {
+                        $img = $raw;
+                    } elseif ($raw) {
+                        $img = \Illuminate\Support\Facades\Storage::url($raw);
+                    } else {
+                        $img = 'https://via.placeholder.com/420x240?text=Plantilla';
+                    }
+
+                    $tipo = $plantilla->tipo ?? 'Otros';
+                @endphp
+
+                <article class="card" data-id="{{ $plantilla->id }}" data-type="plantillas" data-tipo="{{ $tipo }}">
+                    <div class="card-thumb" style="position:relative;">
+                        <img src="{{ $img }}" alt="{{ $plantilla->nombre ?? 'Plantilla' }}">
+                        <div class="badge badge--plantilla">Plantilla</div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="meta">
+                            <span class="tema">{{ ucfirst($tipo) }}</span>
+                        </div>
+
+                        <h3 class="title">{{ $plantilla->nombre ?? 'Sin título' }}</h3>
+
+                        <div class="card-meta-info" style="font-size:13px;color:#6b7280;margin-bottom:10px;">
+                            @if(!empty($plantilla->user))
+                                <div><strong>Por:</strong> {{ optional($plantilla->user->persona)->nombre ?? $plantilla->user->name }}</div>
+                            @endif
+                            <div><strong>Tipo:</strong> {{ ucfirst($tipo) }}</div>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn btn-duplicate" data-id="{{ $plantilla->id }}"
+                                data-titulo="{{ $plantilla->nombre }}" title="Usar plantilla">
+                                Usar plantilla
+                            </button>
+
+                            <a class="btn btn-download" href="{{ $plantilla->archivo ?? '#' }}"
+                                data-id="{{ $plantilla->id }}" target="_blank" title="Descargar">
+                                Descargar
+                            </a>
                         </div>
                     </div>
                 </article>

@@ -53,6 +53,22 @@ class User extends Authenticatable implements HasAvatar
             ->withTimestamps()
             ->withPivot('año_id');
     }
+    public function plantillas()
+    {
+        return $this->hasMany(Plantilla::class);
+    }
+    public function asistencias()
+    {
+        return $this->hasMany(Asistencia::class, 'docente_id');
+    }
+    /**
+     * Plantillas favoritas del usuario
+     */
+    public function favoritos()
+    {
+        return $this->belongsToMany(Plantilla::class, 'plantilla_user', 'user_id', 'plantilla_id')
+                    ->withTimestamps();
+    }
     public function getFilamentAvatarUrl(): ?string
     {
         $avatarColumn = config('filament-edit-profile.avatar_column', 'avatar_url');

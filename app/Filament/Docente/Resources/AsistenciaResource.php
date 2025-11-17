@@ -6,6 +6,7 @@ use App\Filament\Docente\Resources\AsistenciaResource\Pages;
 use App\Filament\Docente\Resources\AsistenciaResource\RelationManagers;
 use App\Models\Asistencia;
 use App\Models\Estudiante;
+use App\Models\UsuarioAula;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -26,13 +27,47 @@ class AsistenciaResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Hidden::make('docente_id')
+                    ->default(fn() => Auth::id()) // Asigna el ID del usuario autenticado
+                    ->dehydrated(true)
+                    ->required(),
+                Forms\Components\Hidden::make('nombre_aula')
+                    ->default(function () {
+                        $user = Auth::user();
+
+                        if (! $user) return null;
+
+                        // Si el docente tiene varios, tomamos el primero
+                        $ua = $user->usuario_aulas()->with('aula')->first();
+
+                        if ($ua && $ua->aula) {
+                            return $ua->aula->nombre;
+                        }
+
+                        return null;
+                    })
+                    ->dehydrated(true) // Para que se guarde en la BD
+                    ->required(),
+                Forms\Components\Hidden::make('plantilla_id')
+                    ->default(fn() => ($id = request()->query('plantilla_id')) ? (int) $id : (request()->route('plantilla_id') ?? null))
+                    ->dehydrated(true)
+                    ->required(),
                 // Selector de mes y año
                 Forms\Components\Select::make('mes')
                     ->label('Mes')
                     ->options([
-                        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-                        5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-                        9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+                        1 => 'Enero',
+                        2 => 'Febrero',
+                        3 => 'Marzo',
+                        4 => 'Abril',
+                        5 => 'Mayo',
+                        6 => 'Junio',
+                        7 => 'Julio',
+                        8 => 'Agosto',
+                        9 => 'Septiembre',
+                        10 => 'Octubre',
+                        11 => 'Noviembre',
+                        12 => 'Diciembre',
                     ])
                     ->reactive()
                     ->required(),
@@ -50,10 +85,15 @@ class AsistenciaResource extends Resource
                     })
                     ->reactive()
                     ->required(),
+                Forms\Components\Hidden::make('dias_no_clase')
+                    ->default(fn(?Asistencia $record) => $record?->dias_no_clase ?? [])
+                    ->dehydrated(true)
+                    ->id('dias_no_clase_input'),
 
                 // Renderiza la vista Blade como HTML seguro usando HtmlString
                 Forms\Components\Placeholder::make('preview_calendar')
                     ->label('Calendario y Estudiantes')
+                    ->columnSpan('full') // Ocupa todo el ancho del formulario
                     ->content(function ($get) {
                         $mes = $get('mes');
                         $anio = $get('anio');
@@ -78,15 +118,23 @@ class AsistenciaResource extends Resource
                             }
                         }
 
+                        $existingDias = $get('dias_no_clase') ?? [];
+
                         $html = view('filament.docente.asistencia.asistencia', [
                             'matrix' => $matrix,
                             'students' => $students,
                             'weeksCount' => $weeksCount,
+                            'existingDias' => $existingDias,
                         ])->render();
-
-                        return new HtmlString($html);
+                        $wrapped = '<div class="w-full overflow-auto">' . $html . '</div>';
+                        return new HtmlString($wrapped);
                     }),
             ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
     }
 
     public static function getRelations(): array
@@ -102,7 +150,7 @@ class AsistenciaResource extends Resource
             'index' => Pages\ListAsistencias::route('/'),
             'create' => Pages\CreateAsistencia::route('/create'),
             'edit' => Pages\EditAsistencia::route('/{record}/edit'),
-            
+
         ];
     }
 }

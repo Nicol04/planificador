@@ -10,19 +10,29 @@ use Illuminate\Database\Eloquent\Model;
 class Asistencia extends Model
 {
     use HasFactory;
+    public $timestamps = false;
     protected $table = 'asistencias';
     protected $fillable = [
         'docente_id',
+        'plantilla_id',
         'nombre_aula',
         'mes',
-        'fecha_inicio',
-        'fecha_fin',
+        'anio',
+        'dias_no_clase',
     ];
     protected $casts = [
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
+        'dias_no_clase' => 'array',
     ];
-    
+
+    public function docente()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function plantilla()
+    {
+        return $this->belongsTo(Plantilla::class, 'plantilla_id');
+    }
+
     /**
      * Cuenta las semanas calculadas
      */

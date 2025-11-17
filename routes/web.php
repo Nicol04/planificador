@@ -47,18 +47,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/listas-cotejo/{id}/previsualizar', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'previsualizar'])
         ->name('listas-cotejo.previsualizar');
         
-        
+    //Ruta para la previsualización de asistencias
+
+    Route::post('/asistencias/previsualizar', [AsistenciaDocumentController::class, 'previsualizar'])
+        ->name('asistencias.previsualizar');
+
+    Route::get('/asistencias/{id}/previsualizar', [AsistenciaDocumentController::class, 'previsualizar'])
+        ->whereNumber('id')
+        ->name('asistencias.previsualizar.show');
 
     //Rutas para las plantillas
     //Sesiones
     Route::post('/docente/sesion/{id}/plantilla', [PlantillaController::class, 'PlantillaSesion'])
     ->name('docente.sesion.plantilla');
 
-Route::get('/documentos/asistencias/vista-previa-html', [AsistenciaDocumentController::class, 'vistaPreviaHtml'])
-    ->name('asistencias.vista.previa');
-
-Route::get('/documentos/asistencias/previsualizar/{id?}', [AsistenciaDocumentController::class, 'previsualizar'])
-    ->name('asistencias.previsualizar');
 });
 Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
 Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');

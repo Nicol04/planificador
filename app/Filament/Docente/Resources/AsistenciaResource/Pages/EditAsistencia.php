@@ -13,7 +13,11 @@ class EditAsistencia extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\Action::make('previsualizar')
+                ->label('Previsualizar')
+                ->icon('heroicon-o-eye')
+                ->url(route('asistencias.previsualizar.show', $this->record->id))
+                ->openUrlInNewTab(),
         ];
     }
 }
