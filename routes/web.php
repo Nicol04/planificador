@@ -56,6 +56,9 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber('id')
         ->name('asistencias.previsualizar.show');
 
+    Route::get('asistencias/{id}/download', [AsistenciaDocumentController::class, 'descargarDocx'])
+        ->name('asistencias.download');
+
     //Rutas para las plantillas
     //Sesiones
     Route::post('/docente/sesion/{id}/plantilla', [PlantillaController::class, 'PlantillaSesion'])

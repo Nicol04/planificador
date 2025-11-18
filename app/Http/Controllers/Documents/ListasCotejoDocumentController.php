@@ -11,6 +11,8 @@ use App\Models\ListaCotejo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpWord\TemplateProcessor;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
 use App\Models\Año;
 use App\Models\usuario_aula;
 use App\Models\Estudiante;
@@ -22,7 +24,15 @@ class ListasCotejoDocumentController extends DocumentController
     {
         try {
             $lista = ListaCotejo::findOrFail($id);
-            $orientacion = $request->get('orientacion', 'vertical');
+
+            // Obtener orientación: si solicitan raw=1 y no se especifica orientación, usar horizontal por defecto
+            $orientacionRequest = $request->get('orientacion', null);
+            $isRaw = $request->boolean('raw');
+            if ($orientacionRequest === null) {
+                $orientacion = $isRaw ? 'horizontal' : 'vertical';
+            } else {
+                $orientacion = $orientacionRequest;
+            }
 
             $competencia = $lista->competencia_id ? Competencia::find($lista->competencia_id)?->nombre : '';
             $titulo = $lista->titulo ?? '';
@@ -65,18 +75,54 @@ class ListasCotejoDocumentController extends DocumentController
                     }
                 }
             }
+            // preparar datos generales (añadido: docente, grado, area)
+            $docenteName = $sesion?->docente?->persona ? trim(($sesion->docente->persona->nombre ?? '') . ' ' . ($sesion->docente->persona->apellido ?? '')) : '';
+            $gradoSeccion = $sesion?->aulaCurso?->aula?->grado_seccion ?? '';
+            $area = $sesion?->aulaCurso?->curso?->curso ?? '';
+
             $datosGenerales = [
                 'competencia' => $competenciaNombre ?? '',
                 'titulo' => $titulo,
                 'criterios' => $criterios,
                 'niveles' => $niveles,
                 'estudiantes' => $estudiantes,
+                // meta para el documento
+                'docente' => $docenteName,
+                'grado_seccion' => $gradoSeccion,
+                'area' => $area,
             ];
 
-            $rutaArchivo = $this->generarDocumento($lista, $datosGenerales, $orientacion);
+            // Si se solicita raw=1 generar documento programáticamente (sin plantilla)
+            if ($isRaw) {
+                $rutaArchivo = $this->generarDocumentoDesdeCero($lista, $datosGenerales, $orientacion);
+            } else {
+                $rutaArchivo = $this->generarDocumento($lista, $datosGenerales, $orientacion);
+            }
+
             $nombreDescarga = 'ListaCotejo_' . ($titulo ? str_replace(' ', '_', $titulo) : 'lista_' . $lista->id) . '_' . date('Y-m-d') . '.docx';
 
-            return $this->downloadResponse($rutaArchivo, $nombreDescarga);
+            // --- NUEVO: asegurar extensión .docx y entregar con response()->download ---
+            if (!file_exists($rutaArchivo)) {
+                throw new \Exception('Archivo generado no encontrado: ' . $rutaArchivo);
+            }
+
+            $finalPath = $rutaArchivo;
+            if (strtolower(pathinfo($finalPath, PATHINFO_EXTENSION)) !== 'docx') {
+                $withExt = $finalPath . '.docx';
+                // renombrar si no existe ya la versión con extensión
+                if (!file_exists($withExt)) {
+                    @rename($finalPath, $withExt);
+                }
+                $finalPath = file_exists($withExt) ? $withExt : $finalPath;
+            }
+
+            if (!file_exists($finalPath)) {
+                throw new \Exception('No se pudo preparar el archivo para descarga.');
+            }
+
+            return response()->download($finalPath, $nombreDescarga, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ])->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => true,
@@ -248,12 +294,46 @@ class ListasCotejoDocumentController extends DocumentController
         $criterios = $datosGenerales['criterios'] ?? '';
         $niveles = $datosGenerales['niveles'] ?? '';
         $estudiantes = $datosGenerales['estudiantes'] ?? [];
+        $docente = $datosGenerales['docente'] ?? '';
+        $gradoSeccion = $datosGenerales['grado_seccion'] ?? '';
+        $area = $datosGenerales['area'] ?? '';
 
-        // Variables básicas
+        // Normalizar niveles como array y asegurar los 3 esperados
+        $nivelesArr = [];
+        if (is_array($niveles)) {
+            $nivelesArr = $niveles;
+        } elseif (is_string($niveles) && trim($niveles) !== '') {
+            $nivelesArr = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|,/', $niveles)), fn($v) => $v !== ''));
+        }
+        if (count($nivelesArr) < 3) {
+            $nivelesArr = ['No logrado', 'En proceso', 'Destacado'];
+        } else {
+            $nivelesArr = array_slice($nivelesArr, 0, 3);
+        }
+
+        // asociar emojis a niveles (para plantilla)
+        $emojiMap = [
+            'No logrado' => '😞',
+            'En proceso'  => '😐',
+            'Destacado'   => '😊',
+            'Logrado'     => '😊',
+        ];
+        $nivelesConEmoji = array_map(function($n) use ($emojiMap) {
+            $label = $n ?: '';
+            $e = $emojiMap[$label] ?? ($emojiMap[trim($label)] ?? '');
+            return trim($label . ($e ? ' ' . $e : ''));
+        }, $nivelesArr);
+
+        // Variables básicas (mantener otras asignaciones)
         $templateProcessor->setValue('COMPETENCIA', htmlspecialchars($competencia));
         $templateProcessor->setValue('TITULO', htmlspecialchars($titulo));
         $templateProcessor->setValue('CRITERIOS', htmlspecialchars($criterios));
-        $templateProcessor->setValue('NIVELES', htmlspecialchars($niveles));
+        // pasar niveles con emojis (por ejemplo: "No logrado 😞, En proceso 😐, Destacado 😊")
+        $templateProcessor->setValue('NIVELES', htmlspecialchars(implode(', ', $nivelesConEmoji)));
+        // meta adicionales para que la plantilla muestre lo mismo que la vista previa
+        $templateProcessor->setValue('DOCENTE', htmlspecialchars($docente));
+        $templateProcessor->setValue('GRADO_SECCION', htmlspecialchars($gradoSeccion));
+        $templateProcessor->setValue('AREA', htmlspecialchars($area));
 
         // Si hay estudiantes, clonar filas
         if (!empty($estudiantes)) {
@@ -271,5 +351,158 @@ class ListasCotejoDocumentController extends DocumentController
             $templateProcessor->setValue('N#1', '');
             $templateProcessor->setValue('NOMBRE#1', '');
         }
+    }
+
+    /**
+     * Genera un documento .docx programáticamente (PhpWord) sin usar plantilla.
+     */
+    private function generarDocumentoDesdeCero($lista_cotejo, $datosGenerales, $orientacion = 'vertical')
+    {
+        $competencia = $datosGenerales['competencia'] ?? '';
+        $titulo = $datosGenerales['titulo'] ?? '';
+        $criteriosText = $datosGenerales['criterios'] ?? '';
+        $nivelesText = $datosGenerales['niveles'] ?? '';
+        $estudiantes = $datosGenerales['estudiantes'] ?? [];
+        $docente = $datosGenerales['docente'] ?? '';
+        $gradoSeccion = $datosGenerales['grado_seccion'] ?? '';
+        $area = $datosGenerales['area'] ?? '';
+
+        // parsear criterios y niveles
+        $criterios = $criteriosText !== '' ? array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $criteriosText)), fn($v)=>$v !== '')) : [];
+        // niveles por defecto solicitados por el usuario (asegurar 'Destacado' en vez de 'Logrado')
+        $niveles = $nivelesText !== '' ? array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|,/', $nivelesText)), fn($v)=>$v !== '')) : [];
+        if (count($niveles) < 3) $niveles = ['No logrado','En proceso','Destacado'];
+
+        // mapa de emojis para mostrar en encabezados
+        $emojiMap = [
+            'No logrado' => '😞',
+            'En proceso' => '😐',
+            'Destacado'   => '😊',
+            'Logrado'     => '😊',
+        ];
+
+        $numCriteria = max(1, count($criterios));
+        $numLevels = count($niveles);
+        $totalCriteriaCols = $numCriteria * $numLevels;
+
+        // iniciar PhpWord
+        $phpWord = new PhpWord();
+        $sectionStyle = [];
+        if ($orientacion === 'horizontal') {
+            $sectionStyle = ['orientation' => 'landscape', 'marginTop' => 600, 'marginLeft'=>600, 'marginRight'=>600];
+        }
+        $section = $phpWord->addSection($sectionStyle);
+
+        // estilos básicos
+        $phpWord->addTitleStyle(1, ['name'=>'Merriweather','size'=>16,'bold'=>true,'color'=>'063826']);
+        $phpWord->addFontStyle('meta', ['name'=>'Nunito','size'=>10,'color'=>'063826','bold'=>true]);
+
+        // Header: título centrado (usar $titulo si existe)
+        $mainTitle = $titulo ?: 'LISTA DE COTEJO';
+        $section->addText($mainTitle, ['name'=>'Merriweather','size'=>16,'bold'=>true,'color'=>'063826'], ['alignment'=>'center']);
+        $section->addTextBreak(1);
+        // meta centrada: docente / grado - sección / área
+        $metaLine = trim(implode(' · ', array_filter([$docente, $gradoSeccion, $area])));
+        if ($metaLine !== '') {
+            $section->addText($metaLine, ['name'=>'Nunito','size'=>10,'color'=>'374151'], ['alignment'=>'center']);
+            $section->addTextBreak(1);
+        } else {
+            // si no hay meta, mostramos competencia centrada para mantener similar a vista previa
+            $section->addText('Competencia: ' . ($competencia ?: '—'), ['name'=>'Nunito','size'=>10,'color'=>'374151'], ['alignment'=>'center']);
+            $section->addTextBreak(1);
+        }
+
+        // Tabla: estilo y creación
+        $tableStyleName = 'CotejoTable';
+        $phpWord->addTableStyle($tableStyleName, [
+            'borderSize' => 6, 'borderColor' => '093a30', 'cellMargin' => 80
+        ], []);
+        $table = $section->addTable($tableStyleName);
+
+        // ---------- Encabezados solicitados ----------
+        // Fila 1: N° | Apellidos y nombres | CRITERIOS (colspan = numCriteria * numLevels)
+        $table->addRow();
+        // N° y Nombre se fusionan verticalmente (3 filas de encabezado)
+        $table->addCell(1200, ['vMerge' => 'restart'])->addText('N°', ['bold'=>true], ['alignment'=>'center']);
+        $table->addCell(8000, ['vMerge' => 'restart'])->addText('Apellidos y nombres', ['bold'=>true], ['alignment'=>'center']);
+        // CRITERIOS span horizontalmente
+        $table->addCell(7000, ['gridSpan' => $totalCriteriaCols])->addText('CRITERIOS', ['bold'=>true], ['alignment'=>'center']);
+
+        // Fila 2: celdas continuadas para N y Nombre + cada criterio (colspan = numLevels)
+        $table->addRow();
+        // continuar la fusión vertical para N° y Nombre
+        $table->addCell(1200, ['vMerge' => 'continue']);
+        $table->addCell(8000, ['vMerge' => 'continue']);
+        // columnas: cada criterio ocupa gridSpan = numLevels
+        if (count($criterios) > 0) {
+            foreach ($criterios as $crit) {
+                $table->addCell( ($numLevels * 1400), ['gridSpan' => $numLevels ])->addText($crit, ['bold'=>true], ['alignment'=>'center']);
+            }
+        } else {
+            // si no hay criterios, crear una sola columna de criterio vacía con sus niveles
+            $table->addCell( ($numLevels * 1400), ['gridSpan' => $numLevels ])->addText('Criterio', ['bold'=>true], ['alignment'=>'center']);
+        }
+
+        // Fila 3: celdas continuadas para N y Nombre + niveles por criterio (añadir emojis a los labels)
+        $table->addRow();
+        $table->addCell(1200, ['vMerge' => 'continue']);
+        $table->addCell(8000, ['vMerge' => 'continue']);
+        // colorear las celdas de nivel en el header para que se asemeje a la vista previa
+        $levelBg = [
+            'No logrado' => 'FEE2E2', // rojo claro
+            'En proceso' => 'FEF3C7', // amarillo claro
+            'Destacado'  => 'DCFCE7', // verde claro
+        ];
+        if (count($criterios) > 0) {
+            foreach ($criterios as $_) {
+                foreach ($niveles as $nivel) {
+                    $emoji = $emojiMap[$nivel] ?? '';
+                    $nivelLabel = trim($nivel . ($emoji ? ' ' . $emoji : ''));
+                    $bg = $levelBg[$nivel] ?? '';
+                    $cellStyle = $bg ? ['bgColor' => $bg] : [];
+                    $table->addCell(1400, $cellStyle)->addText($nivelLabel, ['size'=>9,'bold'=>true], ['alignment'=>'center']);
+                }
+            }
+        } else {
+            // caso sin criterios: mostrar sólo los niveles una vez
+            foreach ($niveles as $nivel) {
+                $emoji = $emojiMap[$nivel] ?? '';
+                $nivelLabel = trim($nivel . ($emoji ? ' ' . $emoji : ''));
+                $bg = $levelBg[$nivel] ?? '';
+                $cellStyle = $bg ? ['bgColor' => $bg] : [];
+                $table->addCell(1400, $cellStyle)->addText($nivelLabel, ['size'=>9,'bold'=>true], ['alignment'=>'center']);
+            }
+        }
+
+        // ---------- Filas de estudiantes ----------
+        if (!empty($estudiantes)) {
+            foreach ($estudiantes as $idx => $est) {
+                $nombre = is_array($est) ? ($est['nombre'] ?? '') : ($est->nombre ?? '');
+                $table->addRow();
+                $table->addCell(1200)->addText((string)($idx + 1), [], ['alignment'=>'center']);
+                $table->addCell(8000)->addText($nombre, [], ['alignment'=>'left']);
+                // celdas vacías por cada criterio * niveles (dejar en blanco hasta que el usuario marque)
+                $colsToAdd = $numCriteria * $numLevels;
+                for ($c = 0; $c < $colsToAdd; $c++) {
+                    $table->addCell(1400)->addText(''); // vacía por defecto
+                }
+            }
+        } else {
+            // fila vacía
+            $table->addRow();
+            $table->addCell(1200)->addText('1', [], ['alignment'=>'center']);
+            $table->addCell(8000)->addText('', [], ['alignment'=>'left']);
+            $colsToAdd = $numCriteria * $numLevels;
+            for ($c = 0; $c < $colsToAdd; $c++) {
+                $table->addCell(1400)->addText(''); // vacía por defecto
+            }
+        }
+
+        // guardar en archivo temporal
+        $rutaTemp = $this->generateTempFile('lista_cotejo_raw_' . ($lista_cotejo->id ?? uniqid()));
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($rutaTemp);
+
+        return $rutaTemp;
     }
 }

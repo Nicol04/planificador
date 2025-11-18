@@ -59,14 +59,48 @@
     </div>
 
     <div class="students-panel">
+        {{-- determinar lista de estudiantes disponible --}}
+        @php
+            $listaEst = $estudiantes ?? ($students ?? []);
+        @endphp
+
+        <!-- Mostrar DOCENTE y AULA -->
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:8px;">
+            <div><strong>Docente:</strong> {{ $docenteNombre ?? (\Illuminate\Support\Facades\Auth::user()->name ?? \Illuminate\Support\Facades\Auth::user()->email ?? '—') }}</div>
+            @php
+                // intentar obtener aula/grado-seccion del docente autenticado
+                $aulaInfo = null;
+                try {
+                    $añoActual = \App\Models\Año::whereDate('fecha_inicio','<=',now())->whereDate('fecha_fin','>=',now())->first();
+                    $ua = \App\Models\usuario_aula::where('user_id', \Illuminate\Support\Facades\Auth::id())->when($añoActual, fn($q)=> $q->where('año_id',$añoActual->id))->first();
+                    if ($ua?->aula_id) {
+                        $a = \App\Models\Aula::find($ua->aula_id);
+                        if ($a) $aulaInfo = trim(($a->grado ?? '') . ' / ' . ($a->seccion ?? ''), ' / ');
+                    }
+                } catch (\Throwable $e) {
+                    $aulaInfo = null;
+                }
+            @endphp
+            <div><strong>Aula:</strong> {{ $gradoSeccion ?? $aulaInfo ?? '—' }}</div>
+        </div>
+
         <strong>Estudiantes del aula</strong>
 
-        @if ($students->count())
-            <ul class="students-list">
-                @foreach ($students as $s)
-                    <li>{{ $s->nombres }} {{ $s->apellidos }}</li>
+        @if (!empty($listaEst) && is_iterable($listaEst) && count($listaEst) > 0)
+            <ol class="students-list-vertical">
+                @foreach ($listaEst as $i => $s)
+                    @php
+                        if (is_array($s)) {
+                            $nombre = $s['nombre'] ?? trim((($s['nombres'] ?? '') . ' ' . ($s['apellidos'] ?? '')));
+                        } elseif (is_object($s)) {
+                            $nombre = trim(($s->nombres ?? $s->nombre ?? '') . ' ' . ($s->apellidos ?? ''));
+                        } else {
+                            $nombre = (string)$s;
+                        }
+                    @endphp
+                    <li>{{ $nombre }}</li>
                 @endforeach
-            </ul>
+            </ol>
         @else
             <div class="no-students">No se encontraron estudiantes (asegure que el docente tiene aula_id).</div>
         @endif
@@ -167,31 +201,37 @@
 
     .as-table {
         width: 100%;
-        border-collapse: separate;
+        border-collapse: collapse; /* líneas continuas oscuras */
         border-spacing: 0;
         min-width: 720px;
     }
 
+    /* bordes oscuros para la tabla de calendario */
+    .as-table, .as-table th, .as-table td {
+        border: 1px solid #0f172a;
+    }
     .as-table thead th {
-        background: #f8fafc;
+        background: linear-gradient(180deg,#e6f0ff,#eef7ff);
         padding: 12px;
-        font-weight: 600;
-        color: #1e293b;
-        border-bottom: 2px solid #e2e8f0;
+        font-weight: 700;
+        color: #071030;
+        border-bottom: 2px solid #0b1220;
         text-align: center;
     }
-
     .as-table td {
         padding: 12px 10px;
         text-align: center;
-        border-bottom: 1px solid #f1f5f9;
+        background: #ffffff;
+        color: #0f172a;
     }
+    .as-table tbody tr:nth-child(even) td { background:#fbfdff; }
+    .as-table tbody tr:hover td { background:#f3f9ff; }
 
     .sticky-col {
         position: sticky;
         left: 0;
         background: #ffffff;
-        border-right: 1px solid #e2e8f0;
+        border-right: 1px solid #0f172a;
         z-index: 3;
     }
 
@@ -231,10 +271,15 @@
 
     /* ESTILO CUANDO ES NO CLASE */
     .no-class-cell .day-num {
-        background: #e8f1ff;
-        border-color: #c9dcff;
-        color: #1e40af;
+        background: #fff8dc;
+        border-color: #f5d488;
+        color: #5a3410;
     }
+    /* si quieres estados futuros (Falta/Justificada), puedes añadir clases así:
+       td.status-F .day-num { background:#fee2e2; border-color:#fca5a5; color:#7f1d1d; }
+       td.status-J .day-num { background:#dcfce7; border-color:#bbf7d0; color:#065f46; }
+       td.status-A .day-num { background:#ecfdf5; border-color:#bbf7d0; color:#065f46; }
+    */
 
     /* TOGGLE MODERNO */
     .toggle {
@@ -303,6 +348,20 @@
         border: 1px solid #e2e8f0;
         font-size: 0.95rem;
         color: #0f172a;
+    }
+
+    {{-- Nuevo CSS para lista vertical numerada --}}
+    .students-list-vertical {
+        margin-top:10px;
+        padding-left: 1.2rem;
+        display: block;
+        list-style-position: inside;
+        column-count: 1; /* cambiar a 2 para mostrar en dos columnas */
+        gap: 12px;
+    }
+    @media (min-width: 900px) {
+        /* si quieres mostrar en dos columnas en pantallas grandes, descomenta: */
+        /* .students-list-vertical { column-count: 2; } */
     }
 
     @media (max-width:780px) {

@@ -5,174 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de asistencia - {{ $mes ?? 'Mes no definido' }} {{ $anio ?? '' }}</title>
 
-    <!-- Fuentes bonitas -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
+    <!-- Nuevas fuentes: serif para títulos + sans para UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-        .header-banner{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:linear-gradient(180deg,#eaf3ff,#f8fbff);
-    padding:16px 20px;
-    border-radius:16px;
-    margin-bottom:22px;
-    border:1px solid rgba(15,23,42,0.05);
-    box-shadow:0 10px 26px rgba(2,6,23,0.04);
-}
-
-.header-logo{
-    width:95px;
-    height:auto;
-    object-fit:contain;
-}
-
-.header-title{
-    text-align:center;
-}
-
-.header-title h1{
-    margin:0;
-    font-size:32px;
-    font-weight:700;
-    color:#2563eb;
-    text-shadow:0 2px 6px rgba(37,99,235,0.18);
-}
-
-.header-title p{
-    margin:6px 0 0 0;
-    font-size:16px;
-    font-weight:500;
-    color:#0f172a;
-}
-
-/* RESPONSIVE */
-@media (max-width:850px){
-    .header-logo{
-        width:70px;
-    }
-    .header-title h1{
-        font-size:24px;
-    }
-}
-
-@media (max-width:600px){
-    .header-banner{
-        flex-direction:column;
-        gap:10px;
-        padding:14px;
-    }
-    .header-title p{
-        font-size:14px;
-    }
-}
         :root{
-            --bg:#f3f6fb;
-            --card:#ffffff;
-            --muted:#64748b;
-            --accent:#2563eb;
-            --accent-2:#06b6d4;
-            --success:#10b981;
-            --danger:#ef4444;
-            --shadow: 0 12px 30px rgba(2,6,23,0.06);
-            --radius:12px;
-            --glass: rgba(255,255,255,0.6);
+            --bg:#f7faf7;
+            --paper:#ffffff;
+            --muted:#6b7280;
+            --accent-dark:#064e3b; /* verde oscuro */
+            --accent-warm:#ff7a18; /* naranja */
+            --soft:#eef6f2;
+            --shadow: 0 10px 28px rgba(6,78,59,0.06);
+            --radius:14px;
+            --line-dark: rgba(6,78,59,0.18); /* línea oscura para separar */
         }
-        html, body { height:100%; margin:0; background: linear-gradient(180deg,#f6f9ff 0%, #eef5ff 100%); font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#0f172a; }
 
-        .document-preview { width:100%; padding:28px; box-sizing:border-box; min-height:100vh; }
+        html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--soft),#fbfcfb);font-family:'Nunito',system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#042f26;}
 
-        /* Toolbar (sin cambios funcionales, más estética) */
-        .preview-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
-        .preview-title { font-size:1.35rem; font-weight:700; color:var(--accent); margin:0; letter-spacing:0.2px; }
-        .btn-primary { background:var(--accent); border:none; padding:8px 14px; border-radius:10px; color:#fff; box-shadow: 0 8px 22px rgba(37,99,235,0.12); }
-        .btn-ghost { background:transparent; border:1px solid rgba(15,23,42,0.06); padding:8px 12px; border-radius:10px; color:#0f172a; }
+        .document-preview{width:100%;padding:26px;box-sizing:border-box;min-height:100vh;}
 
-        /* Info card / leyenda (nuevo diseño) */
-        .info-card { display:flex; justify-content:space-between; align-items:center; background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.95)); padding:14px; border-radius:var(--radius); box-shadow:var(--shadow); gap:18px; margin-bottom:18px; border: 1px solid rgba(15,23,42,0.04); }
-        .info-left { display:flex; gap:18px; align-items:center; }
-        .teacher-avatar {
-            width:64px; height:64px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-            background: linear-gradient(135deg,var(--accent-2),var(--accent)); color:white; font-weight:700; font-size:18px;
-            box-shadow: 0 10px 24px rgba(6,182,212,0.12);
+        /* Marco alrededor de la vista previa */
+        .document-frame{
+            background: var(--paper);
+            border: 2px solid var(--accent-dark);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 18px 40px rgba(4,47,38,0.08);
+            /* pequeño separador visual con el fondo de la página */
+            margin: 8px 0;
         }
-        /* imagen dentro del avatar */
-        .teacher-avatar img { width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block; }
-        .info-meta { display:flex; flex-direction:column; gap:6px; }
-        .info-meta .label { font-size:12px; color:var(--muted); }
-        .info-meta .value { font-size:15px; font-weight:700; color:#0f172a; }
 
-        /* Leyenda visual con tarjetas y iconos SVG */
-        .legend-card { display:flex; gap:12px; align-items:center; }
-        .legend-item {
-            display:flex; gap:12px; align-items:center; background: linear-gradient(180deg,#fff, #fbfdff);
-            padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.04); box-shadow: 0 8px 22px rgba(2,6,23,0.04);
-            min-width:150px;
+        /* Cabecera renovada: fondo claro, título serif */
+        .header-banner{
+            display:flex;
+            gap:16px;
+            align-items:center;
+            justify-content:space-between;
+            background:linear-gradient(180deg,#ffffff,#f3fbf8);
+            padding:18px 22px;
+            border-radius:16px;
+            border:1px solid rgba(6,78,59,0.06);
+            box-shadow:var(--shadow);
+            margin-bottom:20px;
         }
-        .legend-icon {
-            width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800;
-            box-shadow: 0 8px 20px rgba(2,6,23,0.06);
-        }
-        .legend-icon.a { background: linear-gradient(90deg,#06b6d4,#0ea5a4); }
-        .legend-icon.f { background: linear-gradient(90deg,#fb7185,#ef4444); }
-        .legend-icon.j { background: linear-gradient(90deg,#60a5fa,#2563eb); }
-        .legend-text { display:flex; flex-direction:column; }
-        .legend-text .title { font-weight:700; font-size:13px; color:#0f172a; }
-        .legend-text .desc { font-size:11px; color:var(--muted); margin-top:2px; }
 
-        /* Tabla: líneas oscuras y más color */
-        .table {
-            min-width:1200px;
-            width:100%;
-            border-collapse: collapse; /* líneas continuas */
+        /* Línea divisoria oscura debajo del header */
+        .header-banner { border-bottom: 3px solid var(--line-dark); }
+
+        .header-title h1{
+            margin:0;
+            font-family:'Merriweather', serif;
+            font-size:28px;
+            color:var(--accent-dark);
+            font-weight:900;
+        }
+        .header-title p{
+            margin:4px 0 0 0;
+            font-size:13px;
+            color:var(--muted);
+            font-weight:600;
+        }
+        .header-logo{ width:88px; height:auto; object-fit:contain; }
+
+        /* Toolbar simplificado */
+        .preview-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; }
+        .btn-primary{ background:var(--accent-dark); color:#fff; border:none; padding:8px 12px; border-radius:10px; }
+        .btn-ghost{ background:transparent; border:1px solid rgba(4,47,38,0.06); padding:8px 10px; border-radius:10px; color:var(--accent-dark); }
+
+        /* Info card: avatar circular y leyenda tipo chips */
+        .info-card{ display:flex; justify-content:space-between; align-items:center; gap:18px; padding:14px; border-radius:var(--radius); background:linear-gradient(180deg,#fff,#fbfffb); box-shadow:var(--shadow); border:1px solid rgba(6,78,59,0.04); margin-bottom:18px; }
+        .info-left{ display:flex; gap:14px; align-items:center; }
+        .teacher-avatar{ width:68px; height:68px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:20px; background:linear-gradient(135deg,var(--accent-dark),var(--accent-warm)); box-shadow: 0 8px 18px rgba(6,78,59,0.08); }
+        .teacher-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+        .info-meta{ display:flex; flex-direction:column; gap:4px; }
+        .info-meta .label{ font-size:12px; color:var(--muted); font-weight:700; letter-spacing:0.2px; }
+        .info-meta .value{ font-size:15px; color:var(--accent-dark); font-weight:800; }
+
+        /* Nueva leyenda: chips verticales con icono y texto debajo */
+        .legend-card{ display:flex; gap:14px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+        .legend-chip{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:8px;
             background:transparent;
-            border-radius:10px;
-            overflow:hidden;
+            padding:6px 8px;
+            min-width:92px;
         }
-        /* bordes oscuros en toda la tabla */
-        .table, .table th, .table td {
-            border: 1px solid #0f172a; /* línea oscura */
+        .legend-dot{
+            width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800;
+            box-shadow: 0 8px 16px rgba(2,6,23,0.06);
         }
-        thead th {
-            background: linear-gradient(180deg,#e6f0ff,#eef7ff);
-            padding:12px 10px;
-            font-weight:800;
-            text-align:center;
-            color:#071030;
-            border-bottom:2px solid #0b1220;
+        .legend-dot.att { background: linear-gradient(135deg,#10b981,#047857); } /* asistió */
+        .legend-dot.abs { background: linear-gradient(135deg,#f97316,#ff4d4f); } /* falta */
+        .legend-dot.exc { background: linear-gradient(135deg,#60a5fa,#2563eb); } /* justificado */
+        .legend-label{ font-size:12px; color:var(--muted); font-weight:700; text-align:center; }
+
+        /* Tabla: estética más suave, pero con líneas oscuras visibles y marco interno */
+        .table{ min-width:1200px; border-collapse:separate; border-spacing:0; width:100%; background:transparent; border: 2px solid var(--line-dark); border-radius:10px; overflow:hidden; }
+        .table th, .table td{ border-bottom:1px solid rgba(4,47,38,0.08); padding:10px 8px; vertical-align:middle; }
+        thead th{ background:linear-gradient(180deg,#f0fff7,#f7fbfb); color:var(--accent-dark); font-weight:800; font-size:13px; text-align:center; border-bottom:3px solid var(--line-dark); }
+        tbody tr:nth-child(even) td{ background:#fcfffb; }
+        tbody td{ background:#fff; color:#02352b; }
+
+        /* añadir líneas verticales oscuras entre columnas importantes */
+        .table td:not(:last-child), .table th:not(:last-child) {
+            border-right: 1px solid rgba(4,47,38,0.06);
         }
-        tbody td {
-            padding:12px 10px;
-            color:#0f172a;
-            background: #ffffff;
+
+        th.sticky-col, td.sticky-col{ position:sticky; left:0; z-index:7; background:#fff; box-shadow: 3px 0 6px rgba(2,6,23,0.02); border-right:2px solid var(--line-dark); }
+
+        /* Columnas "no clase": marcar con borde naranja suave */
+        td.no-class-column, td.no-class-column *{ background:linear-gradient(180deg,#fff7f2,#fff9f4) !important; color:#7a2b00 !important; }
+        td.no-class-column{ border-left:3px solid rgba(255,122,24,0.95) !important; }
+
+        .day-header-number{ font-weight:800; color:var(--accent-dark); font-size:13px; padding:6px; }
+
+        @media (max-width:900px){
+            .table{ min-width:900px; }
+            .teacher-avatar{ width:56px; height:56px; }
+            .header-title h1{ font-size:20px; }
+            .info-card{ flex-direction:column; align-items:flex-start; gap:12px; }
         }
-        tbody tr:nth-child(even) td { background: #fbfdff; } /* filas alternadas suaves */
-        tbody tr:hover td { background: #f3f9ff; }
 
-        /* sticky columns mantienen borde oscuro */
-        th.sticky-col, td.sticky-col { position:sticky; left:0; z-index:7; background:#fff; border-right:1px solid #0f172a; }
-
-        /* Dias "no clase": amarillo por defecto; puedes cambiar a rojo/verde si necesitas otros estados */
-        td.no-class-column, td.no-class-column * {
-            background: linear-gradient(180deg,#fff8dc,#fff3b0) !important;
-            color: #4b2e00 !important;
-        }
-        /* enfatizar borde izquierdo para visual */
-        td.no-class-column { border-left: 3px solid #f59e0b !important; }
-
-        .day-header-number { font-size:13px; font-weight:800; color:#071030; padding:6px; }
-
-        /* Leyenda: actualizar para mostrar el color amarillo */
-        .legend-item { display:flex; gap:12px; align-items:center; }
-        .legend-dot.legend-no-class { width:14px;height:14px;border-radius:50%; background:linear-gradient(180deg,#fff8dc,#fff3b0); border:1px solid #f59e0b; }
-
-        /* responsive tweaks */
-        @media (max-width:900px){ .table { min-width:900px; } .info-card{ flex-direction:column; align-items:flex-start; } .teacher-avatar{ width:56px; height:56px; } }
-
-        /* imprimir: ocultar botones y elementos interactivos, simplificar apariencia */
+        /* imprimir: ocultar botones y elementos interactivos, simplificar marco/estilos */
         @media print{
+            /* ocultar toolbar y controles */
             .no-print,
             .preview-toolbar,
             .preview-actions,
@@ -182,26 +143,30 @@
             #toggle-fullscreen,
             a.btn-primary { display: none !important; }
 
-            /* limpiar bordes/sombras para impresión */
-            .document-preview { box-shadow: none !important; border: none !important; background: #fff !important; }
-            .header-banner { box-shadow: none !important; border-bottom: 1px solid rgba(0,0,0,0.08) !important; }
-            .info-card { box-shadow: none !important; border: 1px solid rgba(0,0,0,0.06) !important; }
+            /* limpiar sombras/bordes para impresión */
+            .document-frame { box-shadow: none !important; border: 1px solid #00000020 !important; padding: 8px !important; }
+            .header-banner { box-shadow: none !important; border-bottom: 1px solid #00000020 !important; }
+            .info-card { box-shadow: none !important; border: 1px solid #00000010 !important; }
 
+            /* tabla: evitar cortes indeseados y ajustar colores para impresión */
             .table { page-break-inside: avoid; -webkit-print-color-adjust: exact; color-adjust: exact; }
-            thead th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
-            tbody td { background: #fff !important; }
+            thead th { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+            tbody td { background: #ffffff !important; }
 
+            /* fondo blanco */
             html, body { background: #fff !important; }
 
+            /* asegurar que sticky columns se impriman correctamente */
             th.sticky-col, td.sticky-col { position: static !important; }
 
+            /* eliminar efectos visuales no necesarios en papel */
             * { box-shadow: none !important; text-shadow: none !important; }
         }
     </style>
 </head>
 <body class="bg-light">
 
-<div class="document-preview">
+<div class="document-preview document-frame">
     {{-- Toolbar y título --}}
     <div class="preview-toolbar no-print">
         
@@ -236,7 +201,7 @@
         <p>Institución Educativa Ann Goulden</p>
     </div>
 
-    <img src="{{ url('assets/img/logo_ministerio.png') }}" alt="Logo MINEDU" style="width: 140px; height: 60px; object-fit: contain;" class="header-logo right-logo">
+    <img src="{{ url('assets/img/logo_ministerio.png') }}" alt="Logo MINEDU" style="width: 120px; height: 54px; object-fit: contain;" class="header-logo right-logo">
 </div>
 
     {{-- Información del docente y leyenda en tarjeta --}} 
@@ -291,46 +256,30 @@
             </div>
         </div>
 
+        <!-- nueva leyenda: chips circulares con etiqueta debajo -->
         <div class="legend-card" role="list" aria-label="Leyenda de asistencia" title="Leyenda">
-            <div class="legend-item" role="listitem" title="Asistió">
-                <div class="legend-icon a" aria-hidden="true">
-                    <!-- SVG A -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 12l4 4L20 4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+            <div class="legend-chip" role="listitem" title="Asistió">
+                <div class="legend-dot att" aria-hidden="true">
+                    <!-- icono simplificado -->
+                    ✓
                 </div>
-                <div class="legend-text">
-                    <div class="title">Asistió</div>
-                    <div class="desc">Marca de asistencia</div>
-                </div>
+                <div class="legend-label">Asistió<br><small style="color:var(--muted);font-weight:600;">Presente</small></div>
             </div>
 
-            <div class="legend-item" role="listitem" title="Falta">
-                <div class="legend-icon f" aria-hidden="true">
-                    <!-- SVG F -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 5v6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 19h8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+            <div class="legend-chip" role="listitem" title="Falta">
+                <div class="legend-dot abs" aria-hidden="true">
+                    <!-- icono simplificado -->
+                    ✕
                 </div>
-                <div class="legend-text">
-                    <div class="title">Falta</div>
-                    <div class="desc">Inasistencia</div>
-                </div>
+                <div class="legend-label">Falta<br><small style="color:var(--muted);font-weight:600;">Ausente</small></div>
             </div>
 
-            <div class="legend-item" role="listitem" title="Justificado">
-                <div class="legend-icon j" aria-hidden="true">
-                    <!-- SVG J -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 8v8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 12h8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+            <div class="legend-chip" role="listitem" title="Justificado">
+                <div class="legend-dot exc" aria-hidden="true">
+                    <!-- icono simplificado -->
+                    !
                 </div>
-                <div class="legend-text">
-                    <div class="title">Justificado</div>
-                    <div class="desc">Inasistencia justificada</div>
-                </div>
+                <div class="legend-label">Justificado<br><small style="color:var(--muted);font-weight:600;">Excusa válida</small></div>
             </div>
         </div>
     </div>

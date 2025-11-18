@@ -45,14 +45,25 @@ class Plantilla extends Model
                     ->withTimestamps();
     }
 
-    public function getImagenPreviewUrlAttribute()
+    public function getVistaSeguraAttribute(): string
     {
-        if ($this->imagen_preview) {
-            return Storage::url($this->imagen_preview);
+        $default = 'filament.docente.documentos.asistencias.vista-previa-horizontal';
+
+        // Lista de vistas permitidas (añadir aquí las vistas que vayas a soportar)
+        $whitelist = [
+            'filament.docente.documentos.asistencias.vista-previa-horizontal',
+            'filament.docente.documentos.asistencias.vista-previa-horizontal2',
+        ];
+
+        // Si en 'archivo' guardas la vista, validar y devolver
+        if (!empty($this->archivo) && is_string($this->archivo)) {
+            $candidate = trim($this->archivo);
+            if (in_array($candidate, $whitelist, true)) {
+                return $candidate;
+            }
         }
 
-        // placeholder simple (ajustar si desea otro)
-        return asset('vendor/filament/img/placeholder-image.png');
+        return $default;
     }
 
     /**

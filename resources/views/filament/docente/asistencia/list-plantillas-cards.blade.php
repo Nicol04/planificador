@@ -1,209 +1,337 @@
 <x-filament-panels::page>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js'])
 
-	<div class="space-y-6">
-		{{-- Header --}}
-		<div class="flex justify-between items-center">
-			<div>
-				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">📄 Plantillas de Asistencia</h1>
-				<p class="text-gray-600 dark:text-gray-400">Selecciona una plantilla para crear tu asistencia</p>
-			</div>
-		</div>
+    <div class="space-y-6">
+        {{-- Header mejorado --}}
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">📄 Plantillas de
+                    Asistencia</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Selecciona una plantilla para crear tu
+                    asistencia — <span class="font-medium text-indigo-600">{{ $plantillas->count() }} disponibles</span>
+                </p>
+            </div>
 
-		{{-- Reemplazo: Botones toggle centrados con mejor diseño --}}
-		<div class="w-full flex justify-center mt-2">
-			<div class="inline-flex items-center rounded-full bg-white/60 dark:bg-gray-800/60 shadow-sm p-1 gap-2">
-				<button id="btn-plantillas" type="button" class="tab-btn" aria-pressed="true" data-tab="plantillas">
-					<span class="hidden sm:inline">📁</span> Plantillas
-				</button>
-				<button id="btn-mis-asistencias" type="button" class="tab-btn" aria-pressed="false" data-tab="mis">
-					<span class="hidden sm:inline">🗂️</span> Mis asistencias
-				</button>
-			</div>
-		</div>
+            <div class="flex items-center gap-3">
 
-		{{-- Sección: Plantillas --}}
-		<div id="plantillas-section">
-			{{-- Cards de plantillas --}}
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-				@forelse($plantillas as $plantilla)
-					<div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden group">
-						{{-- Imagen preview --}}
-						<img src="{{ $plantilla->imagen_preview_url }}" alt="{{ $plantilla->nombre }}" class="h-40 w-full object-cover rounded-t-xl">
+                <div class="inline-flex items-center rounded-full bg-white/60 dark:bg-gray-800/60 shadow-sm p-1">
+                    <button id="btn-plantillas" type="button" class="tab-btn px-3 py-1 rounded-full text-sm font-medium"
+                        aria-pressed="true" data-tab="plantillas">Plantillas</button>
+                    <button id="btn-mis-asistencias" type="button"
+                        class="tab-btn px-3 py-1 rounded-full text-sm font-medium" aria-pressed="false"
+                        data-tab="mis">Mis asistencias</button>
+                </div>
+            </div>
+        </div>
 
-						<div class="p-6">
-							{{-- Nombre --}}
-							<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">{{ $plantilla->nombre }}</h3>
-							<p class="text-sm text-gray-500 mb-4">Tipo: {{ ucfirst($plantilla->tipo) }}</p>
+        {{-- Sección: Plantillas --}}
+        <div id="plantillas-section">
+            {{-- Cards de plantillas (rediseñadas) --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @forelse($plantillas as $plantilla)
+                    <article
+                        class="tpl-card group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-1">
+                        <div class="relative">
+                            <img src="{{ $plantilla->imagen_preview_url }}" alt="{{ $plantilla->nombre }}"
+                                class="w-full h-40 object-cover">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                            </div>
 
-							<div class="flex justify-between">
-								<button class="btn btn-primary btn-use-template" data-id="{{ $plantilla->id }}">
-									Usar plantilla
-								</button>
-							</div>
-						</div>
-					</div>
-				@empty
-					<p>No hay plantillas de asistencia disponibles.</p>
-				@endforelse
-			</div>
-		</div>
+                            <div class="absolute left-3 top-3">
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-white/80 text-gray-800">
+                                    {{ ucfirst($plantilla->tipo) }}
+                                </span>
+                            </div>
 
-		{{-- Sección: Mis Asistencias (oculta por defecto) --}}
-		<div id="misasistencias-section" class="hidden">
-			<div>
-				<div class="flex items-center justify-between">
-					<div>
-						<h2 class="text-2xl font-semibold text-gray-900 dark:text-white">🗂️ Mis Asistencias</h2>
-						<p class="text-gray-600 dark:text-gray-400">Asistencias que has creado</p>
-					</div>
-				</div>
+                            <div class="absolute right-3 top-3">
+                                @if ($plantilla->public)
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-indigo-100 text-indigo-700">Público</span>
+                                @else
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-gray-100 text-gray-700">Privado</span>
+                                @endif
+                            </div>
+                        </div>
 
-				<div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					@forelse($misAsistencias as $asistencia)
-						<div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden">
-							<div class="p-6">
-								<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
-									{{ $asistencia->nombre_aula ?? 'Asistencia #' . $asistencia->id }}
-								</h3>
-								<p class="text-sm text-gray-500 mb-2">
-									{{ \Illuminate\Support\Str::title(\DateTime::createFromFormat('!m', $asistencia->mes)->format('F') ?? '') ?? '' }}
-									{{ $asistencia->anio ?? '' }}
-								</p>
-								@if($asistencia->plantilla)
-									<p class="text-sm text-gray-500 mb-3">Plantilla: {{ $asistencia->plantilla->nombre }}</p>
-								@endif
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $plantilla->nombre }}
+                            </h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                {{ $plantilla->archivo ? 'Plantilla cargada' : 'Sin archivo' }}</p>
 
-								<div class="flex justify-between">
-									<a href="{{ \App\Filament\Docente\Resources\AsistenciaResource::getUrl('edit', ['record' => $asistencia->id]) }}" class="btn btn-secondary">
-										Abrir
-									</a>
-									<span class="text-xs text-gray-400 self-center">ID: {{ $asistencia->id }}</span>
-								</div>
-							</div>
-						</div>
-					@empty
-						<p class="text-gray-500">No has creado asistencias aún.</p>
-					@endforelse
-				</div>
-			</div>
-		</div>
-	</div>
+                            <div class="flex items-center justify-between mt-4 gap-2">
+                                <div class="card-actions flex gap-2 items-center">
+                                    <button class="btn btn-primary btn-use-template" data-id="{{ $plantilla->id }}"
+                                        title="Usar plantilla">Usar</button>
 
-	@push('scripts')
-		<script>
-			document.addEventListener('DOMContentLoaded', function () {
-				// --- Estilos & clases para los botones (coherentes y con transición) ---
-				const activeClasses = ['bg-indigo-600','text-white','shadow-md'];
-				const inactiveClasses = ['bg-white','text-gray-700','border','border-gray-200','dark:bg-gray-800','dark:text-gray-200','dark:border-gray-700'];
-				const tabButtons = document.querySelectorAll('.tab-btn');
+                                    <a href="{{ $plantilla->archivo_url }}" target="_blank" rel="noopener"
+                                        class="btn btn-secondary" title="Editar plantilla (abre archivo)">
+                                        Editar
+                                    </a>
+                                </div>
 
-				// Estilizar botones base
-				tabButtons.forEach(b => {
-					b.classList.add('px-4','py-2','rounded-full','text-sm','transition','duration-200','focus:outline-none','focus:ring','focus:ring-indigo-300');
-				});
+                                <a href="#" class="text-xs text-gray-400">ID {{ $plantilla->id }}</a>
+                            </div>
+                        </div>
+                    </article>
+                @empty
+                    <p class="text-center text-gray-500">No hay plantillas de asistencia disponibles.</p>
+                @endforelse
+            </div>
+        </div>
 
-				function setButtonActive(btn) {
-					// limpiar
-					tabButtons.forEach(b => {
-						b.classList.remove(...activeClasses);
-						b.classList.remove(...inactiveClasses);
-						b.setAttribute('aria-pressed', 'false');
-					});
-					// activar seleccionado
-					btn.classList.add(...activeClasses);
-					btn.setAttribute('aria-pressed', 'true');
-				}
+        {{-- Sección: Mis Asistencias (oculta por defecto) --}}
+        <div id="misasistencias-section" class="hidden">
+            <div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">🗂️ Mis Asistencias</h2>
+                        <p class="text-gray-600 dark:text-gray-400">Asistencias que has creado</p>
+                    </div>
+                </div>
 
-				// --- Toggle de secciones (plantillas / mis asistencias) ---
-				const btnPlantillas = document.getElementById('btn-plantillas');
-				const btnMis = document.getElementById('btn-mis-asistencias');
-				const sectionPlantillas = document.getElementById('plantillas-section');
-				const sectionMis = document.getElementById('misasistencias-section');
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @forelse($misAsistencias as $asistencia)
+                        <div
+                            class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden">
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                                    {{ $asistencia->nombre_aula ?? 'Asistencia #' . $asistencia->id }}
+                                </h3>
+                                <p class="text-sm text-gray-500 mb-2">
+                                    {{ \Illuminate\Support\Str::title(\DateTime::createFromFormat('!m', $asistencia->mes)->format('F') ?? '') ?? '' }}
+                                    {{ $asistencia->anio ?? '' }}
+                                </p>
+                                @if ($asistencia->plantilla)
+                                    <p class="text-sm text-gray-500 mb-3">Plantilla:
+                                        {{ $asistencia->plantilla->nombre }}</p>
+                                @endif
 
-				function setActiveTab(tab) {
-					if (tab === 'plantillas') {
-						sectionPlantillas.classList.remove('hidden');
-						sectionMis.classList.add('hidden');
-						setButtonActive(btnPlantillas);
-					} else {
-						sectionPlantillas.classList.add('hidden');
-						sectionMis.classList.remove('hidden');
-						setButtonActive(btnMis);
-					}
-				}
+                                <div class="flex justify-between items-center">
+                                    <div class="card-actions flex gap-2 items-center">
+                                        <a href="{{ \App\Filament\Docente\Resources\AsistenciaResource::getUrl('edit', ['record' => $asistencia->id]) }}"
+                                            class="btn btn-secondary" title="Editar asistencia">
+                                            Editar
+                                        </a>
+                                        <a href="{{ route('asistencias.previsualizar.show', ['id' => $asistencia->id]) }}"
+                                            target="_blank" rel="noopener" class="btn btn-primary"
+                                            title="Previsualizar asistencia">
+                                            Previsualizar
+                                        </a>
+                                    </div>
+                                    <span class="text-xs text-gray-400 self-center">ID: {{ $asistencia->id }}</span>
+                                </div>
 
-				btnPlantillas.addEventListener('click', () => setActiveTab('plantillas'));
-				btnMis.addEventListener('click', () => setActiveTab('mis'));
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-gray-500">No has creado asistencias aún.</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
 
-				// Inicializar estado (plantillas por defecto)
-				setActiveTab('plantillas');
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- Estilos & clases para los botones (coherentes y con transición) ---
+                const activeClasses = ['bg-indigo-600', 'text-white', 'shadow-md'];
+                const inactiveClasses = ['bg-white', 'text-gray-700', 'border', 'border-gray-200', 'dark:bg-gray-800',
+                    'dark:text-gray-200', 'dark:border-gray-700'
+                ];
+                const tabButtons = document.querySelectorAll('.tab-btn');
 
-				// --- Integración con código existente de confirmar uso de plantilla ---
-				const createUrl = @json(\App\Filament\Docente\Resources\AsistenciaResource::getUrl('create'));
+                // Estilizar botones base
+                tabButtons.forEach(b => {
+                    b.classList.add('px-4', 'py-2', 'rounded-full', 'text-sm', 'transition', 'duration-200',
+                        'focus:outline-none', 'focus:ring', 'focus:ring-indigo-300');
+                });
 
-				function confirmarUsoPlantilla(plantillaId, nombrePlantilla) {
-					let targetUrl;
-					try {
-						const urlObj = new URL(createUrl, window.location.origin);
-						urlObj.searchParams.set('plantilla_id', plantillaId);
-						targetUrl = urlObj.toString();
-					} catch (e) {
-						targetUrl = createUrl + (createUrl.includes('?') ? '&' : '?') + 'plantilla_id=' + encodeURIComponent(plantillaId);
-					}
+                function setButtonActive(btn) {
+                    // limpiar
+                    tabButtons.forEach(b => {
+                        b.classList.remove(...activeClasses);
+                        b.classList.remove(...inactiveClasses);
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    // activar seleccionado
+                    btn.classList.add(...activeClasses);
+                    btn.setAttribute('aria-pressed', 'true');
+                }
 
-					if (typeof Swal !== 'undefined') {
-						const title = '🌐 Usar plantilla';
-						const htmlMessage = `<p>¿Deseas usar la plantilla <strong>${nombrePlantilla}</strong> para crear una nueva asistencia?</p>
+                // --- Toggle de secciones (plantillas / mis asistencias) ---
+                const btnPlantillas = document.getElementById('btn-plantillas');
+                const btnMis = document.getElementById('btn-mis-asistencias');
+                const sectionPlantillas = document.getElementById('plantillas-section');
+                const sectionMis = document.getElementById('misasistencias-section');
+
+                function setActiveTab(tab) {
+                    if (tab === 'plantillas') {
+                        sectionPlantillas.classList.remove('hidden');
+                        sectionMis.classList.add('hidden');
+                        setButtonActive(btnPlantillas);
+                    } else {
+                        sectionPlantillas.classList.add('hidden');
+                        sectionMis.classList.remove('hidden');
+                        setButtonActive(btnMis);
+                    }
+                }
+
+                btnPlantillas.addEventListener('click', () => setActiveTab('plantillas'));
+                btnMis.addEventListener('click', () => setActiveTab('mis'));
+
+                // Inicializar estado (plantillas por defecto)
+                setActiveTab('plantillas');
+
+                // --- Integración con código existente de confirmar uso de plantilla ---
+                const createUrl = @json(\App\Filament\Docente\Resources\AsistenciaResource::getUrl('create'));
+
+                function confirmarUsoPlantilla(plantillaId, nombrePlantilla) {
+                    let targetUrl;
+                    try {
+                        const urlObj = new URL(createUrl, window.location.origin);
+                        urlObj.searchParams.set('plantilla_id', plantillaId);
+                        targetUrl = urlObj.toString();
+                    } catch (e) {
+                        targetUrl = createUrl + (createUrl.includes('?') ? '&' : '?') + 'plantilla_id=' +
+                            encodeURIComponent(plantillaId);
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        const title = '🌐 Usar plantilla';
+                        const htmlMessage = `<p>¿Deseas usar la plantilla <strong>${nombrePlantilla}</strong> para crear una nueva asistencia?</p>
 											 <p class="text-muted">Se abrirá el formulario de creación con la plantilla seleccionada.</p>`;
 
-						Swal.fire({
-							title: title,
-							html: htmlMessage,
-							icon: 'question',
-							showCancelButton: true,
-							confirmButtonText: '<i class="fas fa-check-circle"></i> Sí, usar plantilla',
-							cancelButtonText: 'Cancelar',
-							confirmButtonColor: '#0066cc',
-							cancelButtonColor: '#6c757d',
-							showLoaderOnConfirm: true,
-							preConfirm: () => {
-								return new Promise((resolve) => {
-									setTimeout(() => {
-										window.location.href = targetUrl;
-										resolve();
-									}, 400);
-								});
-							},
-							allowOutsideClick: () => !Swal.isLoading()
-						});
-					} else {
-						if (confirm(`Usar plantilla "${nombrePlantilla}" para crear asistencia?`)) {
-						 window.location.href = targetUrl;
-						}
-					}
-				}
+                        Swal.fire({
+                            title: title,
+                            html: htmlMessage,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fas fa-check-circle"></i> Sí, usar plantilla',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#0066cc',
+                            cancelButtonColor: '#6c757d',
+                            showLoaderOnConfirm: true,
+                            preConfirm: () => {
+                                return new Promise((resolve) => {
+                                    setTimeout(() => {
+                                        window.location.href = targetUrl;
+                                        resolve();
+                                    }, 400);
+                                });
+                            },
+                            allowOutsideClick: () => !Swal.isLoading()
+                        });
+                    } else {
+                        if (confirm(`Usar plantilla "${nombrePlantilla}" para crear asistencia?`)) {
+                            window.location.href = targetUrl;
+                        }
+                    }
+                }
 
-				function initHandlers() {
-					document.querySelectorAll('.btn-use-template').forEach(btn => {
-						btn.addEventListener('click', function () {
-							const plantillaId = this.dataset.id;
-							const nombre = this.closest('div').querySelector('h3')?.innerText ?? `#${plantillaId}`;
-							confirmarUsoPlantilla(plantillaId, nombre);
-						});
-					});
-				}
+                function initHandlers() {
+                    document.querySelectorAll('.btn-use-template').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const plantillaId = this.dataset.id;
+                            const nombre = this.closest('div').querySelector('h3')?.innerText ??
+                                `#${plantillaId}`;
+                            confirmarUsoPlantilla(plantillaId, nombre);
+                        });
+                    });
+                }
 
-				// Cargar Swal desde CDN si no existe
-				if (typeof Swal === 'undefined') {
-					const s = document.createElement('script');
-					s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-					s.onload = initHandlers;
-					document.head.appendChild(s);
-				} else {
-					initHandlers();
-				}
-			});
-		</script>
-	@endpush
+                // Cargar Swal desde CDN si no existe
+                if (typeof Swal === 'undefined') {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                    s.onload = initHandlers;
+                    document.head.appendChild(s);
+                } else {
+                    initHandlers();
+                }
+            });
+        </script>
+    @endpush
+
+    {{-- Nuevo CSS para mejorar diseño --}}
+    <style>
+        /* compact card helpers */
+        .tpl-card img {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .tpl-card .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ajustar botones tab */
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #374151;
+        }
+
+        .tab-btn[aria-pressed="true"] {
+            background: linear-gradient(90deg, #4f46e5, #06b6d4);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+        }
+
+        /* Normalizar botones dentro de las tarjetas */
+        .card-actions .btn {
+            height: 36px;
+            padding: 0 12px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #e6eaf0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        /* Ajuste para botones con iconos o texto corto */
+        .btn {
+            line-height: 1;
+        }
+
+        /* responsive tweaks */
+        @media (max-width: 640px) {
+            .tpl-card img {
+                height: 120px;
+                object-fit: cover;
+            }
+        }
+    </style>
 </x-filament-panels::page>
