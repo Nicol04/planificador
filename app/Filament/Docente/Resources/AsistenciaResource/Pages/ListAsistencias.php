@@ -52,4 +52,8 @@ class ListAsistencias extends ListRecords
             'misAsistencias' => $misAsistencias, // <-- agregado
         ]);
     }
+    public function deleteAsistencias($id)
+    {
+        
+    }
 }

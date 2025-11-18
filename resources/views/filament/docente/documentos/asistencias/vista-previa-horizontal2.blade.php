@@ -428,19 +428,53 @@
     </div>
 </div>
 
-<!-- Script: fullscreen toggle -->
+<!-- Script: fullscreen toggle (existente) -->
 <script>
-    (function(){
-        const btn = document.getElementById('toggle-fullscreen');
-        if (!btn) return;
-        btn.addEventListener('click', function(){
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(()=>{ alert('No se pudo activar pantalla completa'); });
-            } else {
-                document.exitFullscreen().catch(()=>{});
-            }
-        });
-    })();
+	(function(){
+		const btn = document.getElementById('toggle-fullscreen');
+		if (!btn) return;
+		btn.addEventListener('click', function(){
+			if (!document.fullscreenElement) {
+				document.documentElement.requestFullscreen().catch(()=>{ alert('No se pudo activar pantalla completa'); });
+			} else {
+				document.exitFullscreen().catch(()=>{});
+			}
+		});
+	})();
+</script>
+
+{{-- Advertencia antes de descargar .docx (usa SweetAlert2) --}}
+<script>
+	(function(){
+		function ensureSwal(cb){
+			if (typeof Swal !== 'undefined') return cb();
+			const s = document.createElement('script');
+			s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+			s.onload = cb;
+			document.head.appendChild(s);
+		}
+
+		const form = document.getElementById('download-word-form');
+		if (!form) return;
+		form.addEventListener('submit', function(e){
+			e.preventDefault();
+			ensureSwal(function(){
+				Swal.fire({
+					title: 'Advertencia',
+					html: 'El archivo .docx puede no conservar exactamente el mismo diseño visual que la vista (colores, tipografías o posiciones). ¿Deseas continuar de todas formas?',
+					icon: 'warning',
+					showCancelButton: true,
+					confirmButtonText: 'Sí, descargar',
+					cancelButtonText: 'Cancelar',
+					focusCancel: true,
+				}).then(function(result){
+					if(result.isConfirmed){
+						form.submit();
+					}
+				});
+			});
+		});
+	})();
 </script>
 </body>
 </html>

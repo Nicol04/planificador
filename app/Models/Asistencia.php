@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\CarbonPeriod;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +37,17 @@ class Asistencia extends Model
      */
     public function countWeeks(): int
     {
-        return count($this->weeksMatrix());
+        // Si el modelo tiene mes y año válidos, generar la matriz y contar semanas.
+        if (!empty($this->mes) && !empty($this->anio) && is_numeric($this->mes) && is_numeric($this->anio)) {
+            try {
+                return count(self::generateWeeksMatrix((int)$this->mes, (int)$this->anio));
+            } catch (\Throwable $e) {
+                // En caso de error defensivo, devolver 0.
+                return 0;
+            }
+        }
+        // Fallback seguro
+        return 0;
     }
 
     /**

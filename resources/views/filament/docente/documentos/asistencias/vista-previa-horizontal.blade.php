@@ -479,19 +479,53 @@
     </div>
 </div>
 
-<!-- Script: fullscreen toggle -->
+<!-- Script: fullscreen toggle y advertencia antes de descargar .docx -->
 <script>
-    (function(){
-        const btn = document.getElementById('toggle-fullscreen');
-        if (!btn) return;
-        btn.addEventListener('click', function(){
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(()=>{ alert('No se pudo activar pantalla completa'); });
-            } else {
-                document.exitFullscreen().catch(()=>{});
-            }
-        });
-    })();
+	(function(){
+		// fullscreen toggle (existente)
+		const btnFs = document.getElementById('toggle-fullscreen');
+		if (btnFs) {
+			btnFs.addEventListener('click', function(){
+				if (!document.fullscreenElement) {
+					document.documentElement.requestFullscreen().catch(()=>{ alert('No se pudo activar pantalla completa'); });
+				} else {
+					document.exitFullscreen().catch(()=>{});
+				}
+			});
+		}
+
+		// Helper para cargar SweetAlert2 si no está presente
+		function ensureSwal(cb){
+			if (typeof Swal !== 'undefined') return cb();
+			const s = document.createElement('script');
+			s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+			s.onload = cb;
+			document.head.appendChild(s);
+		}
+
+		// Interceptar envío del form de descarga y mostrar advertencia
+		const form = document.getElementById('download-word-form');
+		if (form) {
+			form.addEventListener('submit', function(e){
+				e.preventDefault();
+				ensureSwal(function(){
+					Swal.fire({
+						title: 'Advertencia',
+						html: 'El archivo .docx puede no conservar exactamente el mismo diseño visual que la vista (colores, tipografías o posiciones). ¿Deseas continuar de todas formas?',
+						icon: 'warning',
+						showCancelButton: true,
+						confirmButtonText: 'Sí, descargar',
+						cancelButtonText: 'Cancelar',
+						focusCancel: true,
+					}).then(function(result){
+						if (result.isConfirmed) {
+							form.submit();
+						}
+					});
+				});
+			});
+		}
+	})();
 </script>
 </body>
 </html>

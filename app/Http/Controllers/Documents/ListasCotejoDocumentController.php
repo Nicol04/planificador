@@ -3,10 +3,7 @@
 namespace App\Http\Controllers\Documents;
 
 use App\Models\Sesion;
-use App\Models\User;
-use App\Models\AulaCurso;
 use App\Models\Competencia;
-use App\Models\Curso;
 use App\Models\ListaCotejo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -401,16 +398,24 @@ class ListasCotejoDocumentController extends DocumentController
         $mainTitle = $titulo ?: 'LISTA DE COTEJO';
         $section->addText($mainTitle, ['name'=>'Merriweather','size'=>16,'bold'=>true,'color'=>'063826'], ['alignment'=>'center']);
         $section->addTextBreak(1);
-        // meta centrada: docente / grado - sección / área
-        $metaLine = trim(implode(' · ', array_filter([$docente, $gradoSeccion, $area])));
-        if ($metaLine !== '') {
-            $section->addText($metaLine, ['name'=>'Nunito','size'=>10,'color'=>'374151'], ['alignment'=>'center']);
-            $section->addTextBreak(1);
-        } else {
-            // si no hay meta, mostramos competencia centrada para mantener similar a vista previa
-            $section->addText('Competencia: ' . ($competencia ?: '—'), ['name'=>'Nunito','size'=>10,'color'=>'374151'], ['alignment'=>'center']);
-            $section->addTextBreak(1);
+
+        // --- CABECERA SIMPLIFICADA: mostrar COMPETENCIA, y en la misma línea GRADO/SECCIÓN · DOCENTE ---
+        if (!empty($competencia)) {
+            $section->addText('Competencia: ' . $competencia, ['name'=>'Nunito','size'=>10,'color'=>'374151'], ['alignment'=>'left']);
         }
+
+        $line = [];
+        if (!empty($gradoSeccion)) {
+            $line[] = 'Grado/Sección: ' . $gradoSeccion;
+        }
+        if (!empty($docente)) {
+            $line[] = 'Docente: ' . $docente;
+        }
+        if (!empty($line)) {
+            $section->addText(implode(' · ', $line), ['name'=>'Nunito','size'=>10,'color'=>'374151'], ['alignment'=>'left']);
+        }
+        $section->addTextBreak(1);
+        // --- FIN CABECERA SIMPLIFICADA ---
 
         // Tabla: estilo y creación
         $tableStyleName = 'CotejoTable';

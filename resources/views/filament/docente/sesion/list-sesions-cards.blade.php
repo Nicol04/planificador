@@ -298,17 +298,11 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
         <div style="background: white; border-radius: 10px; padding: 24px; max-width: 420px; text-align: center;">
             <h3 style="margin-bottom: 16px; color: #0066cc;">📄 Vista previa - Lista de cotejo</h3>
-            <p style="margin-bottom: 18px; color: #666;">Seleccione la orientación para previsualizar la lista:</p>
-            <div style="display:flex; gap:12px; justify-content:center; margin-bottom:18px;">
-                <button onclick="abrirVistaPreviaListasConOrientacion('vertical')"
-                    style="background:#0066cc; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer;">
-                    Vertical
-                </button>
-                <button onclick="abrirVistaPreviaListasConOrientacion('horizontal')"
-                    style="background:#28a745; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer;">
-                    Horizontal
-                </button>
-            </div>
+
+            <button onclick="abrirVistaPreviaListasConOrientacion('horizontal')"
+                style="background:#28a745; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer;">
+                Horizontal
+            </button>
             <div style="display:flex; gap:10px; justify-content:center; margin-bottom:8px;">
                 <button onclick="imprimirDesdeModalListas()"
                     style="background:#17a2b8; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer;">

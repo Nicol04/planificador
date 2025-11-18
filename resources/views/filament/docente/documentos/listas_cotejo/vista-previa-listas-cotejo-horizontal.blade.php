@@ -95,8 +95,8 @@
 		<button class="btn btn-outline-dark" type="button" onclick="cerrarVentana();"><i class="fas fa-arrow-left"></i> Volver</button>
 
 		@if($firstListaId)
-			<!-- Mantener sólo descarga sin plantilla y forzar horizontal -->
-			<a class="btn btn-success" href="{{ url('/listas-cotejo/'.$firstListaId.'/previsualizar') }}?orientacion=horizontal&raw=1" target="_blank"><i class="fas fa-file-word"></i> .docx</a>
+			<!-- Mantener sólo descarga sin plantilla y forzar horizontal (identificable para el JS) -->
+			<a class="btn btn-success btn-download-word" href="{{ url('/listas-cotejo/'.$firstListaId.'/previsualizar') }}?orientacion=horizontal&raw=1" target="_blank"><i class="fas fa-file-word"></i> .docx</a>
 		@else
 			<button class="btn btn-primary" onclick="alert('No hay listas disponibles para descargar');">Descargar</button>
 		@endif
@@ -217,6 +217,38 @@
 	</div>
 
 	<script>
+		// Advertencia antes de descargar .docx desde listas de cotejo
+		(function(){
+			function ensureSwal(cb){
+				if (typeof Swal !== 'undefined') return cb();
+				const s = document.createElement('script');
+				s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+				s.onload = cb;
+				document.head.appendChild(s);
+			}
+			document.querySelectorAll('.btn-download-word').forEach(function(btn){
+				btn.addEventListener('click', function(e){
+					e.preventDefault();
+					const href = this.getAttribute('href');
+					ensureSwal(function(){
+						Swal.fire({
+							title: 'Advertencia',
+							html: 'El archivo .docx puede no conservar exactamente el mismo diseño visual que la vista (colores, tipografías o posiciones). ¿Deseas continuar de todas formas?',
+							icon: 'warning',
+							showCancelButton: true,
+							confirmButtonText: 'Sí, descargar',
+							cancelButtonText: 'Cancelar',
+							focusCancel: true,
+						}).then(function(result){
+							if(result.isConfirmed){
+								window.open(href, '_blank');
+							}
+						});
+					});
+				});
+			});
+		})();
+
 		function imprimirLista() { try { window.print(); } catch (e) { console.error(e); } }
 		function cerrarVentana() {
 			try { if (window.opener && !window.opener.closed) { window.close(); return; } } catch(e){}

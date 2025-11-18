@@ -32,8 +32,21 @@
                     <article
                         class="tpl-card group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-1">
                         <div class="relative">
-                            <img src="{{ $plantilla->imagen_preview_url }}" alt="{{ $plantilla->nombre }}"
-                                class="w-full h-40 object-cover">
+                            @php
+                                $preview = $plantilla->imagen_preview ?? null;
+                                // ruta por defecto (coloca tu placeholder en public/images/placeholder-template.png)
+                                $placeholder = asset('images/placeholder-template.png');
+                                if (empty($preview)) {
+                                    $previewUrl = $placeholder;
+                                } elseif (preg_match('/^https?:\\/\\//i', $preview)) {
+                                    $previewUrl = $preview;
+                                } else {
+                                    $previewUrl = \Illuminate\Support\Facades\Storage::url($preview);
+                                }
+                            @endphp
+                            <img src="{{ $previewUrl }}" alt="{{ $plantilla->nombre }}" loading="lazy"
+                                class="w-full h-40 object-cover"
+                                onerror="this.onerror=null;this.src='{{ $placeholder }}'">
                             <div
                                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                             </div>
@@ -66,11 +79,6 @@
                                 <div class="card-actions flex gap-2 items-center">
                                     <button class="btn btn-primary btn-use-template" data-id="{{ $plantilla->id }}"
                                         title="Usar plantilla">Usar</button>
-
-                                    <a href="{{ $plantilla->archivo_url }}" target="_blank" rel="noopener"
-                                        class="btn btn-secondary" title="Editar plantilla (abre archivo)">
-                                        Editar
-                                    </a>
                                 </div>
 
                                 <a href="#" class="text-xs text-gray-400">ID {{ $plantilla->id }}</a>

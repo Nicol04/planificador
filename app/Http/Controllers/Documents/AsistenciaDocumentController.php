@@ -506,6 +506,27 @@ class AsistenciaDocumentController extends DocumentController
             if (is_string($sd) && trim($sd) !== '') $selectedLookup[trim($sd)] = true;
         }
 
+        // Si la plantilla es una vista Blade (vista_segura) y es una de las vistas que quieres replicar,
+        // generamos documento "a mano" tratando de imitar la blade en lugar de usar Html::addHtml.
+        $bladeLikeViews = [
+            'filament.docente.documentos.asistencias.vista-previa-horizontal',
+            'filament.docente.documentos.asistencias.vista-previa-horizontal2',
+        ];
+
+        if ($plantilla && !empty($plantilla->vista_segura) && in_array($plantilla->vista_segura, $bladeLikeViews, true)) {
+            return $this->generarDocumentoFromBladeLike(
+                $plantilla->vista_segura,
+                $mesNombre,
+                $anioFinal,
+                $estudiantes,
+                $validDaysPerWeek,
+                $selectedLookup,
+                $docenteNombre,
+                $gradoSeccion,
+                $plantilla
+            );
+        }
+
         // Si no hay semanas, usar fallback (4 semanas x 5 días)
         if (empty($validDaysPerWeek) || !is_array($validDaysPerWeek)) {
             $validDaysPerWeek = [];
@@ -752,5 +773,156 @@ class AsistenciaDocumentController extends DocumentController
         // Fallback: reemplazo multilinea en una sola celda (si no se detectó row clonable)
         $tp->setValue('ESTUDIANTES', implode("\n", $studentsText));
         $tp->setValue('N', implode("\n", $numbers));
+    }
+
+    /**
+     * Genera .docx imitando una de las vistas blade principales (mejor fidelidad que Html::addHtml).
+     * Esta función construye el header, meta, leyenda y la tabla de asistencia con colores y marcas.
+     */
+    private function generarDocumentoFromBladeLike(string $vistaName, $mesNombre, $anioFinal, array $estudiantes, array $validDaysPerWeek, array $selectedLookup, $docenteNombre, $gradoSeccion, $plantilla = null)
+    {
+        $phpWord = new PhpWord();
+        $section = $phpWord->addSection([
+            'orientation' => 'landscape',
+            'marginLeft' => 600,
+            'marginRight' => 600,
+            'marginTop' => 600,
+            'marginBottom' => 600,
+        ]);
+
+        // Fuentes/estilos básicos
+        $titleStyle = ['name' => 'Merriweather', 'size' => 16, 'bold' => true, 'color' => '2563eb'];
+        $metaStyle = ['name' => 'Nunito', 'size' => 10, 'color' => '374151'];
+
+        // Header: logos izquierda/derecha y título center (intentar imitar blades)
+        $tableHeader = $section->addTable(['alignment' => 'center', 'cellMargin' => 80]);
+        $tableHeader->addRow();
+        // logo izquierda
+        $cellLeft = $tableHeader->addCell(2000);
+        $logoPath = public_path('assets/img/logo_colegio.png');
+        if (file_exists($logoPath)) {
+            $cellLeft->addImage($logoPath, ['width' => 80, 'height' => 80, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        } else {
+            $cellLeft->addText('', [], ['alignment' => 'center']);
+        }
+        // title center
+        $cellCenter = $tableHeader->addCell(8000);
+        $cellCenter->addText(($plantilla->titulo ?? 'Registro de asistencia'), $titleStyle, ['alignment' => 'center']);
+        $cellCenter->addText(ucfirst($mesNombre) . ' ' . ($anioFinal ?? ''), $metaStyle, ['alignment' => 'center']);
+        // logo derecha
+        $cellRight = $tableHeader->addCell(2000);
+        $logo2Path = public_path('assets/img/logo_ministerio.png');
+        if (file_exists($logo2Path)) {
+            $cellRight->addImage($logo2Path, ['width' => 150, 'height' => 50, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        }
+
+        // Espacio
+        $section->addTextBreak(1);
+
+        // Meta: docente y grado/ sección (centro)
+        $metaLine = trim(implode(' · ', array_filter([$docenteNombre, $gradoSeccion])));
+        if ($metaLine !== '') {
+            $section->addText($metaLine, $metaStyle, ['alignment' => 'center']);
+            $section->addTextBreak(1);
+        }
+
+        // Preparar tabla principal: calcular total columnas visibles
+        $totalCols = 0;
+        foreach ($validDaysPerWeek as $w) {
+            $totalCols += is_array($w) ? count($w) : 0;
+        }
+        if ($totalCols <= 0) {
+            // fallback 4 semanas * 5 dias
+            $totalCols = 20;
+            $validDaysPerWeek = [];
+            for ($w = 0; $w < 4; $w++) {
+                $validDaysPerWeek[$w] = ['L' => ['date' => null], 'Ma' => ['date' => null], 'Mi' => ['date' => null], 'J' => ['date' => null], 'V' => ['date' => null]];
+            }
+        }
+
+        // Crear estilo de tabla con bordes
+        $tableStyleName = 'AsistCustom';
+        $phpWord->addTableStyle($tableStyleName, [
+            'borderSize' => 6,
+            'borderColor' => '071030',
+            'cellMargin' => 80,
+        ], ['cellSpacing' => 0]);
+        $table = $section->addTable($tableStyleName);
+
+        // HEADERS: fila 1: N°, Nombre, mes-year (colspan totalCols), Observaciones
+        $table->addRow();
+        $table->addCell(1200, ['vMerge' => 'restart'])->addText('N°', ['bold' => true], ['alignment' => 'center']);
+        $table->addCell(8000, ['vMerge' => 'restart'])->addText('APELLIDOS Y NOMBRES', ['bold' => true], ['alignment' => 'center']);
+        $table->addCell(1000 * $totalCols, ['gridSpan' => $totalCols])->addText(strtoupper(($mesNombre ?? '') . ' - ' . ($anioFinal ?? '')), ['bold' => true], ['alignment' => 'center']);
+        $table->addCell(2500, ['vMerge' => 'restart'])->addText('OBSERVACIONES', ['bold' => true], ['alignment' => 'center']);
+
+        // Fila 2: Semanas (colspan por semana)
+        $table->addRow();
+        $table->addCell(1200, ['vMerge' => 'continue']);
+        $table->addCell(8000, ['vMerge' => 'continue']);
+        foreach ($validDaysPerWeek as $wIndex => $week) {
+            $colspan = count($week);
+            if ($colspan > 0) {
+                $table->addCell(1000 * $colspan, ['gridSpan' => $colspan])->addText('Semana ' . ($wIndex + 1), ['bold' => true], ['alignment' => 'center']);
+            }
+        }
+        $table->addCell(2500, ['vMerge' => 'continue']);
+
+        // Fila 3: Días (L, Ma, Mi, J, V)
+        $table->addRow();
+        $table->addCell(1200, ['vMerge' => 'continue']);
+        $table->addCell(8000, ['vMerge' => 'continue']);
+        foreach ($validDaysPerWeek as $week) {
+            foreach (array_keys($week) as $dKey) {
+                $table->addCell(1000)->addText($dKey, ['bold' => true], ['alignment' => 'center']);
+            }
+        }
+        $table->addCell(2500, ['vMerge' => 'continue']);
+
+        // Fila 4: Número del día
+        $table->addRow();
+        $table->addCell(1200, ['vMerge' => 'continue']);
+        $table->addCell(8000, ['vMerge' => 'continue']);
+        foreach ($validDaysPerWeek as $week) {
+            foreach ($week as $dKey => $info) {
+                $dayNum = !empty($info['date']) ? \Carbon\Carbon::parse($info['date'])->format('d') : '';
+                $isNoClass = !empty($info['date']) && isset($selectedLookup[$info['date']]);
+                $cellStyle = $isNoClass ? ['bgColor' => 'FFF3B0'] : [];
+                $table->addCell(1000, $cellStyle)->addText($dayNum, [], ['alignment' => 'center']);
+            }
+        }
+        $table->addCell(2500, ['vMerge' => 'continue']);
+
+        // Filas: estudiantes
+        if (empty($estudiantes)) {
+            $table->addRow();
+            $table->addCell(1200)->addText('');
+            $table->addCell(8000)->addText('');
+            // celdas días
+            for ($i = 0; $i < $totalCols; $i++) $table->addCell(1000)->addText('');
+            $table->addCell(2500)->addText('');
+        } else {
+            foreach ($estudiantes as $index => $est) {
+                $table->addRow();
+                $table->addCell(1200)->addText((string)($index + 1), [], ['alignment' => 'center']);
+                $table->addCell(8000)->addText($est['nombre'] ?? '', [], ['alignment' => 'left']);
+                // llenar celdas por cada día, marcar si no clase
+                foreach ($validDaysPerWeek as $week) {
+                    foreach ($week as $dKey => $info) {
+                        $isNoClass = !empty($info['date']) && isset($selectedLookup[$info['date']]);
+                        $cellStyle = $isNoClass ? ['bgColor' => 'FFF3B0'] : [];
+                        $table->addCell(1000, $cellStyle)->addText('', [], ['alignment' => 'center']);
+                    }
+                }
+                $table->addCell(2500)->addText('');
+            }
+        }
+
+        // Guardar archivo temporal
+        $rutaTemp = $this->generateTempFile('asistencia_'.( $plantilla->id ?? 'blade' ));
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($rutaTemp);
+
+        return $rutaTemp;
     }
 }
