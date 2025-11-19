@@ -67,11 +67,15 @@ class User extends Authenticatable implements HasAvatar
     public function favoritos()
     {
         return $this->belongsToMany(Plantilla::class, 'plantilla_user', 'user_id', 'plantilla_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
     public function getFilamentAvatarUrl(): ?string
     {
         $avatarColumn = config('filament-edit-profile.avatar_column', 'avatar_url');
         return $this->$avatarColumn ? Storage::url($this->$avatarColumn) : null;
+    }
+    public function fichasAprendizaje()
+    {
+        return $this->hasMany(FichaAprendizaje::class);
     }
 }

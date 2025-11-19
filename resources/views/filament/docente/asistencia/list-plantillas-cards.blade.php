@@ -79,6 +79,15 @@
                                 <div class="card-actions flex gap-2 items-center">
                                     <button class="btn btn-primary btn-use-template" data-id="{{ $plantilla->id }}"
                                         title="Usar plantilla">Usar</button>
+
+                                    <button
+                                        class="btn btn-secondary btn-view-template"
+                                        data-image="{{ $previewUrl }}"
+                                        data-name="{{ $plantilla->nombre }}"
+                                        title="Ver plantilla"
+                                    >
+                                        Ver
+                                    </button>
                                 </div>
 
                                 <a href="#" class="text-xs text-gray-400">ID {{ $plantilla->id }}</a>
@@ -129,6 +138,12 @@
                                             title="Previsualizar asistencia">
                                             Previsualizar
                                         </a>
+                                        <button
+                                            onclick="confirmarEliminacionAsistencia({{ $asistencia->id }}, '{{ addslashes($asistencia->nombre_aula) }}')"
+                                            class="inline-flex items-center gap-2 px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition">
+                                            <x-heroicon-o-trash class="w-5 h-5" />
+                                            Eliminar
+                                        </button>
                                     </div>
                                     <span class="text-xs text-gray-400 self-center">ID: {{ $asistencia->id }}</span>
                                 </div>
@@ -145,6 +160,48 @@
 
     @push('scripts')
         <script>
+            function confirmarEliminacionAsistencia(id, aula) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '🗑️ Eliminar Asistencia',
+                        html: `
+                <div style="text-align:left; padding:20px;">
+                    <p><strong>¿Deseas eliminar esta asistencia?</strong></p>
+                    <br>
+                    <div style="background:#fef2f2; padding:15px; border-radius:8px; border-left:4px solid #dc3545;">
+                        <p><strong>🏫 Aula:</strong> ${aula}</p>
+                        <p><strong>❌ Se eliminará:</strong> La asistencia completa</p>
+                    </div>
+                    <br>
+                    <p style="color:#dc3545; font-size:14px; font-weight:bold;">
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+            `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true,
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return new Promise((resolve) => {
+                                @this.call('deleteAsistencias', id).then(() => {
+                                    resolve();
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    if (confirm(`¿Eliminar asistencia del aula "${aula}"?`)) {
+                        @this.call('deleteAsistencias', {
+                            asistencia_id: id
+                        });
+                    }
+                }
+            }
             document.addEventListener('DOMContentLoaded', function() {
                 // --- Estilos & clases para los botones (coherentes y con transición) ---
                 const activeClasses = ['bg-indigo-600', 'text-white', 'shadow-md'];
@@ -189,6 +246,8 @@
                     }
                 }
 
+
+
                 btnPlantillas.addEventListener('click', () => setActiveTab('plantillas'));
                 btnMis.addEventListener('click', () => setActiveTab('mis'));
 
@@ -197,6 +256,9 @@
 
                 // --- Integración con código existente de confirmar uso de plantilla ---
                 const createUrl = @json(\App\Filament\Docente\Resources\AsistenciaResource::getUrl('create'));
+
+
+
 
                 function confirmarUsoPlantilla(plantillaId, nombrePlantilla) {
                     let targetUrl;
@@ -250,6 +312,57 @@
                             confirmarUsoPlantilla(plantillaId, nombre);
                         });
                     });
+
+                    // nuevo: abrir modal de preview al hacer click en "Ver"
+                    document.querySelectorAll('.btn-view-template').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const src = this.dataset.image || '';
+                            const name = this.dataset.name || '';
+                            const modal = document.getElementById('previewModal');
+                            const img = document.getElementById('previewImage');
+                            const title = document.getElementById('previewTitle');
+                            const backdrop = modal ? modal.querySelector('.preview-modal-backdrop') : null;
+                            // asignar contenido
+                            if (img) { img.src = src; img.alt = name; }
+                            if (title) title.textContent = name;
+                            // mostrar modal y backdrop inmediatamente (evita depender de otros listeners)
+                            if (modal) {
+                                modal.classList.remove('hidden');
+                                modal.setAttribute('aria-hidden','false');
+                                if (backdrop) backdrop.style.display = 'flex';
+                            }
+                        });
+                    });
+                    // handlers de cierre (cerrar botón y click en backdrop)
+                    const closeBtn = document.getElementById('previewClose');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', function () {
+                            const modal = document.getElementById('previewModal');
+                            if (!modal) return;
+                            const backdrop = modal.querySelector('.preview-modal-backdrop');
+                            const img = document.getElementById('previewImage');
+                            modal.classList.add('hidden');
+                            modal.setAttribute('aria-hidden','true');
+                            if (backdrop) backdrop.style.display = 'none';
+                            if (img) img.src = '';
+                        });
+                    }
+                    // click fuera del contenido -> cerrar
+                    const modal = document.getElementById('previewModal');
+                    if (modal) {
+                        const backdrop = modal.querySelector('.preview-modal-backdrop');
+                        if (backdrop) {
+                            backdrop.addEventListener('click', function (e) {
+                                if (e.target === backdrop) {
+                                    modal.classList.add('hidden');
+                                    modal.setAttribute('aria-hidden','true');
+                                    backdrop.style.display = 'none';
+                                    const img = document.getElementById('previewImage');
+                                    if (img) img.src = '';
+                                }
+                            });
+                        }
+                    }
                 }
 
                 // Cargar Swal desde CDN si no existe
@@ -268,15 +381,8 @@
     {{-- Nuevo CSS para mejorar diseño --}}
     <style>
         /* compact card helpers */
-        .tpl-card img {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-        }
-
-        .tpl-card .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .tpl-card img { border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .tpl-card .btn { display: inline-flex; align-items: center; justify-content: center; }
 
         .line-clamp-2 {
             display: -webkit-box;
@@ -291,11 +397,10 @@
             border: 1px solid transparent;
             color: #374151;
         }
-
         .tab-btn[aria-pressed="true"] {
             background: linear-gradient(90deg, #4f46e5, #06b6d4);
             color: white;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+            box-shadow: 0 4px 12px rgba(79,70,229,0.12);
         }
 
         /* Normalizar botones dentro de las tarjetas */
@@ -312,34 +417,85 @@
         .btn-primary {
             background: #2563eb;
             color: #fff;
-            border: 1px solid rgba(37, 99, 235, 0.12);
+            border: 1px solid rgba(37,99,235,0.12);
         }
-
-        .btn-primary:hover {
-            background: #1e40af;
-        }
+        .btn-primary:hover { background: #1e40af; }
 
         .btn-secondary {
             background: #ffffff;
             color: #334155;
             border: 1px solid #e6eaf0;
         }
-
-        .btn-secondary:hover {
-            background: #f8fafc;
-        }
+        .btn-secondary:hover { background: #f8fafc; }
 
         /* Ajuste para botones con iconos o texto corto */
-        .btn {
-            line-height: 1;
-        }
+        .btn { line-height: 1; }
 
         /* responsive tweaks */
         @media (max-width: 640px) {
-            .tpl-card img {
-                height: 120px;
-                object-fit: cover;
-            }
+            .tpl-card img { height: 120px; object-fit: cover; }
+        }
+
+        /* Modal (estilos reutilizables) */
+        .preview-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.6);
+            z-index: 1050;
+        }
+        .preview-modal-content {
+            max-width: 1100px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: auto;
+            border-radius: 8px;
+            background: #fff;
+            padding: 12px;
+            position: relative;
+        }
+        .preview-modal-close {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: #111;
+            color: #fff;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .preview-modal-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .preview-modal-title {
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #111827;
         }
     </style>
+
+    {{-- Modal para previsualización de imagen (único, oculto por defecto) --}}
+    <div id="previewModal" class="hidden" aria-hidden="true">
+        <div class="preview-modal-backdrop" role="dialog" aria-modal="true" style="display:none;">
+            <div class="preview-modal-content">
+                <button id="previewClose" class="preview-modal-close" aria-label="Cerrar preview"
+                        onclick="document.getElementById('previewModal').classList.add('hidden'); document.querySelector('#previewModal .preview-modal-backdrop').style.display='none';">
+                    Cerrar
+                </button>
+                <div class="p-4">
+                    <h3 id="previewTitle" class="preview-modal-title"></h3>
+                    <img id="previewImage" class="preview-modal-img" src="" alt="Previsualización">
+                </div>
+            </div>
+        </div>
+    </div>
 </x-filament-panels::page>

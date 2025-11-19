@@ -9,3 +9,188 @@
 
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+.ficha-card {
+    text-align: center;
+    padding: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.ficha-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+}
+
+.clasificacion-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 12px;
+    align-items: center;
+}
+
+.clasificacion-grid img {
+    width: 60px;
+    height: auto;
+    display: block;
+    justify-self: start;
+}
+
+.clasificacion-grid p {
+    margin: 0;
+    justify-self: end;
+}
+
+.cloze-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.cloze-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+}
+
+.cloze-item img {
+    width: 60px;
+    height: auto;
+    display: block;
+}
+
+.cloze-item .cloze-line {
+    margin: 0;
+    flex: 1;
+    padding: 4px 8px;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+@media print {
+    /* Ocultar elementos de interfaz */
+    .no-imprimir,
+    button {
+        display: none !important;
+    }
+
+    /* Ocultar el panel de controles */
+    .lg\:col-span-2 {
+        display: none !important;
+    }
+
+    /* Ajustar página */
+    body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Expandir contenedor de la ficha */
+    .max-w-7xl {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .grid.gap-6 {
+        display: block !important;
+    }
+
+    .lg\:col-span-3 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Ajustar la ficha */
+    .bg-white.rounded-lg.shadow-xl {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 20mm !important;
+        min-height: auto !important;
+    }
+
+    /* Imágenes y elementos */
+    img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+    }
+
+    .seleccion-grid,
+    .clasificacion-grid,
+    .cloze-grid,
+    .cloze-item,
+    .ficha-card {
+        page-break-inside: avoid;
+    }
+
+    /* Inputs como texto */
+    input[type="text"],
+    textarea {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+}
+
+/* Modal simple */
+#imageModal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+#imageModal.hidden {
+    display: none;
+}
+
+#modalContent {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+#modalResults {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.preview-container {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+}
+
+.preview-container img {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+.tab-btn {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: #f1f5f9;
+}

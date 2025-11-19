@@ -53,6 +53,8 @@ class Plantilla extends Model
         $whitelist = [
             'filament.docente.documentos.asistencias.vista-previa-horizontal',
             'filament.docente.documentos.asistencias.vista-previa-horizontal2',
+            'filament.docente.documentos.asistencias.vista-previa-horizontal3',
+            
         ];
 
         // Si en 'archivo' guardas la vista, validar y devolver

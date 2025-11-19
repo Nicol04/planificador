@@ -9,7 +9,7 @@ export default defineConfig({
 
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js", "resources/js/main.js"],
+            input: ["resources/css/app.css", "resources/js/app.js", "resources/js/main.js", "resources/js/generador_ia/js/main.js"],
             refresh: true,
         }),
     ],

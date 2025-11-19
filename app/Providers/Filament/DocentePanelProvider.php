@@ -33,7 +33,7 @@ class DocentePanelProvider extends PanelProvider
             ->assets([
                 Js::make('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.0/flowbite.min.js'),
                 Js::make('quill', 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js'),
-                
+
             ])
             ->id('docente')
             ->path('docente')
@@ -152,7 +152,18 @@ class DocentePanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()
-                    ->label(fn() => Auth::user()->name)
+                    ->label(function () {
+                        $persona = Auth::user()?->persona;
+
+                        if (!$persona) {
+                            return Auth::user()?->name ?? 'Usuario';
+                        }
+
+                        $primerNombre = explode(' ', trim($persona->nombre))[0];
+                        $primerApellido = explode(' ', trim($persona->apellido))[0];
+
+                        return $primerNombre . ' ' . $primerApellido;
+                    })
                     ->url(fn(): string => url('/docente/my-profile'))
                     ->icon('heroicon-m-user-circle')
                     ->visible(function (): bool {

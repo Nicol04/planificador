@@ -25,7 +25,6 @@ class Sesion extends Model
         'public' => 'boolean',
     ];
 
-
     protected static function boot()
     {
         parent::boot();
@@ -84,6 +83,16 @@ class Sesion extends Model
         return $this->hasMany(\App\Models\ListaCotejo::class, 'sesion_id');
     }
 
+    public function fichasAprendizaje()
+    {
+        return $this->belongsToMany(
+            FichaAprendizaje::class,
+            'ficha_sesion',
+            'sesion_id',
+            'ficha_aprendizaje_id'
+        )->withTimestamps();
+    }
+
     public function getInicioAttribute(): ?string
     {
         // Esto cargará los datos de la relación 'momento'
@@ -122,5 +131,10 @@ class Sesion extends Model
     {
         // Ajusta la ruta si tu aplicación usa named routes
         return url("/sesiones/{$this->id}/download");
+    }
+
+    public function fichaSesiones()
+    {
+        return $this->hasMany(FichaSesion::class);
     }
 }

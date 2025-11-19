@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Estilos - Ejercicios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos personalizados para los ejercicios */
+        .seleccion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .ficha-card {
+            text-align: center;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .ficha-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+        }
+
+        .clasificacion-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px 12px;
+            align-items: center;
+        }
+
+        .clasificacion-grid img {
+            width: 60px;
+            height: auto;
+            display: block;
+            justify-self: start;
+        }
+
+        .clasificacion-grid p {
+            margin: 0;
+            justify-self: end;
+        }
+
+        .cloze-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .cloze-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .cloze-item img {
+            width: 60px;
+            height: auto;
+            display: block;
+        }
+
+        .cloze-item .cloze-line {
+            margin: 0;
+            flex: 1;
+            padding: 4px 8px;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        @media print {
+            .no-imprimir {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen py-8 px-4">
+
+    <div class="max-w-5xl mx-auto">
+
+        <!-- Encabezado -->
+        <div class="text-center mb-8 no-imprimir">
+            <h1 class="text-4xl font-bold text-slate-800 mb-2">
+                Test de Estilos - Ejercicios
+            </h1>
+            <p class="text-slate-600 text-sm">Visualización para ajustar estilos sin llamar a Gemini</p>
+        </div>
+
+        <!-- Documento de Ficha -->
+        <div class="bg-white rounded-lg shadow-xl p-8 md:p-12">
+
+            <!-- Encabezado del Documento -->
+            <div class="border-b-2 border-slate-300 pb-4 mb-8">
+                <h2 class="text-3xl font-bold text-slate-800 text-center mb-2">
+                    Ficha de Aprendizaje
+                </h2>
+                <div class="flex justify-between text-xs text-slate-500 mt-4">
+                    <span>Institución Educativa: _____________________</span>
+                    <span>Fecha: _______________</span>
+                </div>
+            </div>
+
+            <!-- Contenedor de Ejercicios -->
+            <div id="contenedor-ejercicios" class="prose max-w-none text-slate-800">
+                <!-- Los ejercicios se generarán aquí dinámicamente -->
+            </div>
+
+            <!-- Pie del Documento -->
+            <div class="mt-12 pt-6 border-t border-slate-300">
+                <div class="grid grid-cols-2 gap-8 text-xs text-slate-600">
+                    <div>
+                        <p class="mb-1">______________________________</p>
+                        <p class="font-semibold">Firma del Docente</p>
+                    </div>
+                    <div>
+                        <p class="mb-1">______________________________</p>
+                        <p class="font-semibold">V°B° Director/Coordinador</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Botones de control -->
+        <div class="mt-4 flex justify-end gap-3 no-imprimir">
+            <button onclick="window.print()"
+                class="bg-slate-600 text-white px-5 py-2 rounded-lg hover:bg-slate-700 transition text-sm font-medium">
+                🖨️ Imprimir Vista Previa
+            </button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import SelectionExercise from './js/models/SelectionExercise.js';
+        import ClassificationExercise from './js/models/ClassificationExercise.js';
+        import ClozeExercise from './js/models/ClozeExercise.js';
+
+        const sampleImg = 'https://img.freepik.com/vector-gratis/ilustracion-sol-dibujos-animados-sonrisa-feliz_1308-179974.jpg';
+
+        const contenedor = document.getElementById('contenedor-ejercicios');
+
+        // Ejercicio 1: Selección
+        const contenedorSeleccion = document.createElement('div');
+        contenedorSeleccion.className = 'mb-8';
+
+        const selection = new SelectionExercise(
+            '1. Selecciona la respuesta correcta',
+            '¿Quién es la fuente principal de energía de nuestro planeta?'
+        );
+        selection.add(sampleImg, 'a) El viento.');
+        selection.add(sampleImg, 'b) La nube.');
+        selection.add(sampleImg, 'c) El sol.');
+        selection.renderInto(contenedorSeleccion);
+        contenedor.appendChild(contenedorSeleccion);
+
+        // Ejercicio 2: Clasificación
+        const contenedorClasificacion = document.createElement('div');
+        contenedorClasificacion.className = 'mb-8';
+
+        const classification = new ClassificationExercise(
+            '2. Clasificación de animales',
+            'Relaciona cada imagen con su descripción correspondiente.'
+        );
+        classification.add(sampleImg, 'Perro - Animal doméstico');
+        classification.add(sampleImg, 'León - Animal salvaje');
+        classification.add(sampleImg, 'Gato - Animal doméstico');
+        classification.add(sampleImg, 'Tigre - Animal salvaje');
+        classification.shuffle(); // Aleatorizar el orden de los items
+        classification.renderInto(contenedorClasificacion);
+        contenedor.appendChild(contenedorClasificacion);
+
+        // Ejercicio 3: Completar (Cloze)
+        const contenedorCloze = document.createElement('div');
+        contenedorCloze.className = 'mb-8';
+
+        const cloze = new ClozeExercise(
+            '3. Completa las oraciones',
+            'Observa las imágenes y completa con la palabra que falta.'
+        );
+        cloze.add(sampleImg, 'El _______ brilla en el cielo.');
+        cloze.add(sampleImg, 'La _______ es amarilla.');
+        cloze.add(sampleImg, 'El _______ calienta la tierra.');
+        cloze.add(sampleImg, 'Durante el día vemos el _______.');
+        cloze.add(sampleImg, 'El _______ es una estrella.');
+        cloze.add(sampleImg, 'Sin el _______ no hay vida.');
+        cloze.renderInto(contenedorCloze);
+        contenedor.appendChild(contenedorCloze);
+
+        console.log('✅ Ejercicios de prueba cargados correctamente');
+    </script>
+
+</body>
+
+</html>
