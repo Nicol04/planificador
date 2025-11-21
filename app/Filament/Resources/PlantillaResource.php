@@ -39,9 +39,12 @@ class PlantillaResource extends Resource
                     ->label('Público para docentes')
                     ->default(false),
 
-                Forms\Components\FileUpload::make('archivo')
+                Forms\Components\TextInput::make('archivo')
                     ->required()
-                    ->label('Archivo (Word)'),
+                    ->label('Enlace de documento')
+                    ->placeholder('Ej: filament.docente.documentos.asistencias.vista-previa-horizontal3')
+                    ->helperText('Ingrese el nombre de la ruta del documento')
+                    ->maxLength(255),
 
                 Forms\Components\FileUpload::make('imagen_preview')
                     ->imageEditor()

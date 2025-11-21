@@ -149,4 +149,34 @@ class ListFichaAprendizajes extends ListRecords
                 ->send();
         }
     }
+
+    public function cambiarNombreFicha($id, $nuevoNombre)
+    {
+        try {
+            if (is_array($id) && isset($id['ficha_id'])) {
+                $id = $id['ficha_id'];
+            } elseif (is_object($id) && isset($id->ficha_id)) {
+                $id = $id->ficha_id;
+            }
+
+            $ficha = FichaAprendizaje::where('user_id', Auth::id())->findOrFail($id);
+            $ficha->nombre = $nuevoNombre;
+            $ficha->save();
+
+            \Filament\Notifications\Notification::make()
+                ->title('✏️ Nombre actualizado')
+                ->body('El nombre de la ficha fue cambiado exitosamente.')
+                ->success()
+                ->duration(3000)
+                ->send();
+        } catch (\Throwable $e) {
+            Log::error('Error cambiando nombre de ficha', ['id' => $id, 'exception' => $e]);
+            \Filament\Notifications\Notification::make()
+                ->title('❌ Error al cambiar el nombre')
+                ->body('No se pudo cambiar el nombre de la ficha. ' . ($e->getMessage() ?: 'Verifica logs.'))
+                ->danger()
+                ->duration(6000)
+                ->send();
+        }
+    }
 }

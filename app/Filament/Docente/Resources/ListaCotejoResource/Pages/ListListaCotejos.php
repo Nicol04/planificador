@@ -24,6 +24,14 @@ class ListListaCotejos extends ListRecords
         ];
     }
 
+    /**
+     * Oculta el título automático de Filament
+     */
+    public function getHeading(): string
+    {
+        return '';
+    }
+
     public function getView(): string
     {
         return 'filament.docente.listas_cotejo.list-listacotejo-cards';

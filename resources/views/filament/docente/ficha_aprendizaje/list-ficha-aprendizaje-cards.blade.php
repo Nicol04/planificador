@@ -36,9 +36,11 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
             @forelse($this->getFilteredFichas() as $ficha)
-                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden group">
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden group">
                     <div class="p-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        <h3
+                            class="text-lg font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
                             {{ $ficha->nombre }}
                         </h3>
                         <div class="space-y-3 mb-4">
@@ -50,22 +52,26 @@
                                 <div class="flex items-center text-gray-600 dark:text-gray-400">
                                     <x-heroicon-o-user class="w-4 h-4 mr-2 text-purple-500" />
                                     <span class="font-medium">
-                                        {{
-                                            $ficha->user?->persona
-                                                ? explode(' ', $ficha->user->persona->nombre)[0] . ' ' . explode(' ', $ficha->user->persona->apellido)[0]
-                                                : '-'
-                                        }}
+                                        {{ $ficha->user?->persona
+                                            ? explode(' ', $ficha->user->persona->nombre)[0] . ' ' . explode(' ', $ficha->user->persona->apellido)[0]
+                                            : '-' }}
                                     </span>
                                 </div>
                             </div>
-                            @if($ficha->grado)
-                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <x-heroicon-o-academic-cap class="w-4 h-4 mr-2 text-indigo-500" />
-                                <span class="font-medium">{{ $ficha->grado }}</span>
-                            </div>
+                            @if ($ficha->grado)
+                                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                    <x-heroicon-o-academic-cap class="w-4 h-4 mr-2 text-indigo-500" />
+                                    <span class="font-medium">{{ $ficha->grado . ' de primaria' }}</span>
+                                </div>
+                            @endif
+                            @if (!empty($ficha->tipo_ejercicio))
+                                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                    <x-heroicon-o-clipboard-document-list class="w-4 h-4 mr-2 text-blue-500" />
+                                    <span class="font-medium">Tipo: {{ $ficha->tipo_ejercicio }}</span>
+                                </div>
                             @endif
                         </div>
-                        
+
                         {{-- Botones de acción --}}
                         <div class="flex flex-wrap gap-2">
                             <a href="{{ route('filament.docente.resources.ficha-aprendizajes.edit', ['record' => $ficha->id]) }}"
@@ -109,11 +115,19 @@
                                     </x-filament::button>
                                 </x-slot>
 
+
                                 <x-filament::dropdown.list>
                                     <x-filament::dropdown.list.item
                                         onclick="abrirModalPreviaFicha({{ $ficha->id }})"
                                         icon="heroicon-o-document-text">
                                         📄 Vista Previa
+                                    </x-filament::dropdown.list.item>
+
+                                    {{-- Botón: Cambiar nombre (ahora dentro del dropdown) --}}
+                                    <x-filament::dropdown.list.item
+                                        onclick="abrirModalCambiarNombreFicha({{ $ficha->id }}, '{{ addslashes($ficha->nombre) }}')"
+                                        icon="heroicon-o-pencil">
+                                        ✏️ Cambiar nombre
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
@@ -128,10 +142,12 @@
                 </div>
             @empty
                 <div class="col-span-full">
-                    <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+                    <div
+                        class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
                         <div class="mx-auto w-24 h-24 mb-6 text-gray-400">
                             <svg fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                                <path
+                                    d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                             </svg>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -168,6 +184,25 @@
                     ✓ Abrir Vista Previa
                 </button>
                 <button onclick="cerrarModalPreviaFicha()"
+                    style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    ✕ Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal para cambiar nombre --}}
+    <div id="modalCambiarNombreFicha"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 10px; padding: 30px; max-width: 400px; text-align: center;">
+            <h3 style="margin-bottom: 20px; color: #0066cc; font-size: 1.5rem; font-weight: bold;">✏️ Cambiar nombre de la ficha</h3>
+            <input id="nuevoNombreFichaInput" type="text" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 20px;" />
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="guardarNuevoNombreFicha()"
+                    style="background: #0066cc; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    ✓ Guardar
+                </button>
+                <button onclick="cerrarModalCambiarNombreFicha()"
                     style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                     ✕ Cancelar
                 </button>
@@ -291,15 +326,49 @@
                 }
             }
 
+            // Cambiar nombre ficha
+            let fichaIdCambiarNombre = null;
+
+            function abrirModalCambiarNombreFicha(fichaId, nombreActual) {
+                fichaIdCambiarNombre = fichaId;
+                document.getElementById('nuevoNombreFichaInput').value = nombreActual;
+                document.getElementById('modalCambiarNombreFicha').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('nuevoNombreFichaInput').focus();
+                }, 100);
+            }
+
+            function cerrarModalCambiarNombreFicha() {
+                fichaIdCambiarNombre = null;
+                document.getElementById('modalCambiarNombreFicha').style.display = 'none';
+            }
+
+            function guardarNuevoNombreFicha() {
+                const nuevoNombre = document.getElementById('nuevoNombreFichaInput').value.trim();
+                if (!nuevoNombre) {
+                    alert('El nombre no puede estar vacío.');
+                    return;
+                }
+                @this.call('cambiarNombreFicha', fichaIdCambiarNombre, nuevoNombre).then(() => {
+                    cerrarModalCambiarNombreFicha();
+                });
+            }
+
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
                     cerrarModalPreviaFicha();
+                    cerrarModalCambiarNombreFicha();
                 }
             });
 
             document.getElementById('modalPreviaFicha').addEventListener('click', function(event) {
                 if (event.target === this) {
                     cerrarModalPreviaFicha();
+                }
+            });
+            document.getElementById('modalCambiarNombreFicha').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    cerrarModalCambiarNombreFicha();
                 }
             });
         </script>

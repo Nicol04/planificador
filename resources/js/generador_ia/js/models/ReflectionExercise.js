@@ -52,8 +52,8 @@ class ReflectionExercise {
         try {
             console.log('🎨 [ReflectionExercise] Renderizando:', this.title);
 
-            const titleInput = document.createElement('input');
-        titleInput.type = 'text';
+            const titleInput = document.createElement('textarea');
+        titleInput.rows = 2; // Definimos las 2 filas
         titleInput.value = this.title;
         titleInput.className = 'text-3xl font-extrabold text-slate-900 mb-3 border-b-2 border-transparent focus:border-violet-600 focus:outline-none w-full px-3 py-2 transition-colors';
         titleInput.onchange = (e) => {

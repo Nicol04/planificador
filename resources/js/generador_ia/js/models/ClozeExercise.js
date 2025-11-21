@@ -28,8 +28,8 @@ class ClozeExercise {
     try {
       console.log('🎨 [ClozeExercise] Renderizando:', this.title);
 
-      const titleInput = document.createElement('input');
-    titleInput.type = 'text';
+      const titleInput = document.createElement('textarea');
+    titleInput.rows = 2; // Definimos las 2 filas
     titleInput.value = this.title;
     titleInput.className = 'text-3xl font-extrabold text-slate-900 mb-3 border-b-2 border-transparent focus:border-emerald-600 focus:outline-none w-full px-3 py-2 transition-colors';
     titleInput.onchange = (e) => {
@@ -62,7 +62,7 @@ class ClozeExercise {
     }
 
     const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+    grid.className = 'grid grid-cols-3 gap-6';
 
     this.items.forEach((it, idx) => {
       const card = document.createElement('div');

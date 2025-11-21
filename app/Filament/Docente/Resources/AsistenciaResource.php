@@ -21,7 +21,9 @@ class AsistenciaResource extends Resource
 {
     protected static ?string $model = Asistencia::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static ?int $navigationSort = 4;
+
 
     public static function form(Form $form): Form
     {

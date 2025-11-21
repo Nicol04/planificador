@@ -1,6 +1,7 @@
 <x-filament::page>
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js'])
     <div
-        class="min-h-[80vh] flex flex-col items-center justify-start bg-gradient-to-br from-amber-50 via-white to-amber-100 p-10">
+        class="min-h-[80vh] flex flex-col items-center justify-start bg-gradient-to-br p-10">
 
         {{-- CABECERA DE BIENVENIDA --}}
         <div class="text-center mb-12">
@@ -42,6 +43,13 @@
                                     {{ $aula->nombre }}
                                 </h3>
                                 <p class="text-gray-500 text-sm">Última actualización: {{ now()->format('d/m/Y') }}</p>
+                                
+                                <div class="mt-3 flex items-center gap-2 text-amber-600">
+                                    <x-heroicon-o-user-group class="w-5 h-5" />
+                                    <span class="text-sm font-semibold">
+                                        {{ $aula->estudiantes_count }} {{ $aula->estudiantes_count === 1 ? 'estudiante' : 'estudiantes' }}
+                                    </span>
+                                </div>
                             </div>
                             <div class="flex justify-between items-center">
                                 <x-filament::button tag="a" href="#" size="sm" color="amber"

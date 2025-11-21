@@ -13,6 +13,8 @@ class Publicaciones extends Page
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.docente.pages.publicaciones';
+        protected static ?int $navigationSort = 2;
+
     protected function getViewData(): array
     {
         return array_merge(parent::getViewData(), [

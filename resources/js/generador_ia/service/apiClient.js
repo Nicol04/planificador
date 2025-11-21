@@ -1,5 +1,4 @@
-export const API_KEY = window.userGeminiKey ?? null;
-
+export const API_KEY = "AIzaSyBtow2Dzgpcuuko3cSVCh4L2A5s8j32r9Y";
 export const CX = "973b1193b135e4de3";
 
 export async function searchImages(query) {

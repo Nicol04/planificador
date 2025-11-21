@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js'])
     <div class="space-y-6">
         {{-- Header --}}
         <div class="flex justify-between items-center">
@@ -212,27 +213,27 @@
             .dot-logrado {
                 background-color: #16a34a;
             }
+            /* verde - Logrado */
 
-            /* verde */
             .dot-enproceso {
                 background-color: #f59e0b;
             }
+            /* amarillo - En Proceso */
 
-            /* amarillo */
             .dot-nologrado {
                 background-color: #ef4444;
             }
+            /* rojo - No Logrado */
 
-            /* rojo */
             .dot-neutral {
                 background-color: #9ca3af;
             }
-
             /* gris por defecto */
+
             /* Asegurar contraste en dark mode (opcional) */
             @media (prefers-color-scheme: dark) {
                 .dot-enproceso {
-                    background-color: #d97706;
+                    background-color: #b6cf4d;
                 }
             }
         </style>

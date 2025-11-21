@@ -19,6 +19,8 @@ class FichaAprendizajeResource extends Resource
     protected static ?string $model = FichaAprendizaje::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Planificación de sesiones';
+
 
     public static function form(Form $form): Form
     {

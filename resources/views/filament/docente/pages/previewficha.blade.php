@@ -33,15 +33,6 @@
                     <!-- Línea de firma -->
                     <p class="text-slate-800 mb-2">_______________________________</p>
                     
-                    <!-- Nombre del docente -->
-                    <p class="font-bold text-slate-800 text-sm mb-1">
-                        @auth
-                            {{ auth()->user()->persona->nombre ?? '' }} {{ auth()->user()->persona->apellido ?? '' }}
-                        @else
-                            _________________________
-                        @endauth
-                    </p>
-                    
                     <!-- Título/Rol -->
                     <p class="text-xs text-slate-600 uppercase tracking-wide">
                         Docente Responsable
@@ -50,7 +41,6 @@
             </div>
         </div>
     </div>
-    
     
     <!-- Botón de impresión -->
     <div class="fixed bottom-8 right-8 no-print">
@@ -64,7 +54,7 @@
     <!-- Estilos para impresión -->
     <style>
         @media print {
-            .no-print {
+            .no-print, .no-imprimir {
                 display: none !important;
             }
             body {
@@ -74,6 +64,14 @@
             @page {
                 size: A4;
                 margin: 2cm;
+            }
+            
+            /* Forzar 3 columnas en SelectionExercise y ClozeExercise al imprimir */
+            .grid.grid-cols-3,
+            .grid.grid-cols-1.md\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 1rem !important;
             }
         }
     </style>
