@@ -15,18 +15,6 @@ class CreateAsistencia extends CreateRecord
     {
         // Asigna el ID del usuario autenticado a los datos antes de crear el registro
         $data['docente_id'] = Auth::id();
-
         return $data;
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\Action::make('previsualizar')
-                ->label('Previsualizar')
-                ->icon('heroicon-o-eye')
-                ->button()
-                ->extraAttributes(['id' => 'btn-preview-create']),
-        ];
     }
 }

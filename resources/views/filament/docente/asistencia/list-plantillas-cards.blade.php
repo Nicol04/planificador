@@ -80,12 +80,8 @@
                                     <button class="btn btn-primary btn-use-template" data-id="{{ $plantilla->id }}"
                                         title="Usar plantilla">Usar</button>
 
-                                    <button
-                                        class="btn btn-secondary btn-view-template"
-                                        data-image="{{ $previewUrl }}"
-                                        data-name="{{ $plantilla->nombre }}"
-                                        title="Ver plantilla"
-                                    >
+                                    <button class="btn btn-secondary btn-view-template" data-image="{{ $previewUrl }}"
+                                        data-name="{{ $plantilla->nombre }}" title="Ver plantilla">
                                         Ver
                                     </button>
                                 </div>
@@ -274,7 +270,7 @@
                     if (typeof Swal !== 'undefined') {
                         const title = '🌐 Usar plantilla';
                         const htmlMessage = `<p>¿Deseas usar la plantilla <strong>${nombrePlantilla}</strong> para crear una nueva asistencia?</p>
-											 <p class="text-muted">Se abrirá el formulario de creación con la plantilla seleccionada.</p>`;
+											<p class="text-muted">Se abrirá el formulario de creación con la plantilla seleccionada.</p>`;
 
                         Swal.fire({
                             title: title,
@@ -315,20 +311,24 @@
 
                     // nuevo: abrir modal de preview al hacer click en "Ver"
                     document.querySelectorAll('.btn-view-template').forEach(btn => {
-                        btn.addEventListener('click', function () {
+                        btn.addEventListener('click', function() {
                             const src = this.dataset.image || '';
                             const name = this.dataset.name || '';
                             const modal = document.getElementById('previewModal');
                             const img = document.getElementById('previewImage');
                             const title = document.getElementById('previewTitle');
-                            const backdrop = modal ? modal.querySelector('.preview-modal-backdrop') : null;
+                            const backdrop = modal ? modal.querySelector('.preview-modal-backdrop') :
+                                null;
                             // asignar contenido
-                            if (img) { img.src = src; img.alt = name; }
+                            if (img) {
+                                img.src = src;
+                                img.alt = name;
+                            }
                             if (title) title.textContent = name;
                             // mostrar modal y backdrop inmediatamente (evita depender de otros listeners)
                             if (modal) {
                                 modal.classList.remove('hidden');
-                                modal.setAttribute('aria-hidden','false');
+                                modal.setAttribute('aria-hidden', 'false');
                                 if (backdrop) backdrop.style.display = 'flex';
                             }
                         });
@@ -336,13 +336,13 @@
                     // handlers de cierre (cerrar botón y click en backdrop)
                     const closeBtn = document.getElementById('previewClose');
                     if (closeBtn) {
-                        closeBtn.addEventListener('click', function () {
+                        closeBtn.addEventListener('click', function() {
                             const modal = document.getElementById('previewModal');
                             if (!modal) return;
                             const backdrop = modal.querySelector('.preview-modal-backdrop');
                             const img = document.getElementById('previewImage');
                             modal.classList.add('hidden');
-                            modal.setAttribute('aria-hidden','true');
+                            modal.setAttribute('aria-hidden', 'true');
                             if (backdrop) backdrop.style.display = 'none';
                             if (img) img.src = '';
                         });
@@ -352,10 +352,10 @@
                     if (modal) {
                         const backdrop = modal.querySelector('.preview-modal-backdrop');
                         if (backdrop) {
-                            backdrop.addEventListener('click', function (e) {
+                            backdrop.addEventListener('click', function(e) {
                                 if (e.target === backdrop) {
                                     modal.classList.add('hidden');
-                                    modal.setAttribute('aria-hidden','true');
+                                    modal.setAttribute('aria-hidden', 'true');
                                     backdrop.style.display = 'none';
                                     const img = document.getElementById('previewImage');
                                     if (img) img.src = '';
@@ -381,8 +381,15 @@
     {{-- Nuevo CSS para mejorar diseño --}}
     <style>
         /* compact card helpers */
-        .tpl-card img { border-bottom: 1px solid rgba(0,0,0,0.04); }
-        .tpl-card .btn { display: inline-flex; align-items: center; justify-content: center; }
+        .tpl-card img {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .tpl-card .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .line-clamp-2 {
             display: -webkit-box;
@@ -397,10 +404,11 @@
             border: 1px solid transparent;
             color: #374151;
         }
+
         .tab-btn[aria-pressed="true"] {
             background: linear-gradient(90deg, #4f46e5, #06b6d4);
             color: white;
-            box-shadow: 0 4px 12px rgba(79,70,229,0.12);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
         }
 
         /* Normalizar botones dentro de las tarjetas */
@@ -417,23 +425,34 @@
         .btn-primary {
             background: #2563eb;
             color: #fff;
-            border: 1px solid rgba(37,99,235,0.12);
+            border: 1px solid rgba(37, 99, 235, 0.12);
         }
-        .btn-primary:hover { background: #1e40af; }
+
+        .btn-primary:hover {
+            background: #1e40af;
+        }
 
         .btn-secondary {
             background: #ffffff;
             color: #334155;
             border: 1px solid #e6eaf0;
         }
-        .btn-secondary:hover { background: #f8fafc; }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
 
         /* Ajuste para botones con iconos o texto corto */
-        .btn { line-height: 1; }
+        .btn {
+            line-height: 1;
+        }
 
         /* responsive tweaks */
         @media (max-width: 640px) {
-            .tpl-card img { height: 120px; object-fit: cover; }
+            .tpl-card img {
+                height: 120px;
+                object-fit: cover;
+            }
         }
 
         /* Modal (estilos reutilizables) */
@@ -444,9 +463,10 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1050;
         }
+
         .preview-modal-content {
             max-width: 1100px;
             width: 100%;
@@ -457,6 +477,7 @@
             padding: 12px;
             position: relative;
         }
+
         .preview-modal-close {
             position: absolute;
             right: 8px;
@@ -468,13 +489,15 @@
             border-radius: 6px;
             cursor: pointer;
         }
+
         .preview-modal-img {
             width: 100%;
             height: auto;
             display: block;
             border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
+
         .preview-modal-title {
             margin-bottom: 8px;
             font-weight: 700;
@@ -488,7 +511,7 @@
         <div class="preview-modal-backdrop" role="dialog" aria-modal="true" style="display:none;">
             <div class="preview-modal-content">
                 <button id="previewClose" class="preview-modal-close" aria-label="Cerrar preview"
-                        onclick="document.getElementById('previewModal').classList.add('hidden'); document.querySelector('#previewModal .preview-modal-backdrop').style.display='none';">
+                    onclick="document.getElementById('previewModal').classList.add('hidden'); document.querySelector('#previewModal .preview-modal-backdrop').style.display='none';">
                     Cerrar
                 </button>
                 <div class="p-4">

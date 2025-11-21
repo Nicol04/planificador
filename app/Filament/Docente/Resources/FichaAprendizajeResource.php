@@ -66,6 +66,12 @@ class FichaAprendizajeResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('preview')
+                    ->label('Vista Previa')
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->url(fn (FichaAprendizaje $record): string => route('fichas.preview', ['fichaId' => $record->id]))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

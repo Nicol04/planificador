@@ -31,6 +31,11 @@ export function openModal(query, callback) {
   window.modalCallback = callback;
   const modal = document.getElementById('imageModal');
   const searchInput = document.getElementById('modalSearchQuery');
-  searchInput.value = query;
+  // Si estamos en modo edición, el input debe estar vacío
+  if (window.location.pathname.match(/\/docente\/ficha-aprendizajes\/[0-9]+\/edit/)) {
+    searchInput.value = '';
+  } else {
+    searchInput.value = query;
+  }
   modal.classList.remove('hidden');
 }

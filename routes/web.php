@@ -7,7 +7,9 @@ use App\Http\Controllers\Documents\ListasCotejoDocumentController;
 use App\Http\Controllers\Documents\SesionDocumentController;
 use App\Http\Controllers\Documents\UnidadDocumentController;
 use App\Http\Controllers\EjercicioSessionController;
+use App\Http\Controllers\FichaAprendizajePreviewController;
 use App\Http\Controllers\FichaEjercicioController;
+use App\Http\Controllers\SesionMomentoSessionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -20,10 +22,10 @@ Route::middleware(['auth'])->group(function () {
 
     // RUTAS PARA RECUPERAR GENERACIÓN DE IA
     // Ruta AJAX para guardar valores de SesionMomento en sesión
-    Route::post('/sesion-momento/session', [\App\Http\Controllers\SesionMomentoSessionController::class, 'store'])->name('sesion-momento.session.store');
+    Route::post('/sesion-momento/session', [SesionMomentoSessionController::class, 'store'])->name('sesion-momento.session.store');
 
     // Ruta GET para obtener el momento de sesión por id
-    Route::get('/sesion-momento/{sesionId}', [\App\Http\Controllers\SesionMomentoSessionController::class, 'showById'])->name('sesion-momento.session.showById');
+    Route::get('/sesion-momento/{sesionId}', [SesionMomentoSessionController::class, 'showById'])->name('sesion-momento.session.showById');
 
     Route::get('/users/exportar', [UserController::class, 'exportarUsuarios'])->name('users.exportarUsuarios');
     //Reporte de usuarios por aula
@@ -44,10 +46,10 @@ Route::middleware(['auth'])->group(function () {
 
     //Ruta para listas de cotejo
 
-    Route::get('/listas-cotejo/{id}/vista-previa', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'vistaPreviaHtml'])
+    Route::get('/listas-cotejo/{id}/vista-previa', [ListasCotejoDocumentController::class, 'vistaPreviaHtml'])
         ->name('listas-cotejo.vista.previa');
 
-    Route::get('/listas-cotejo/{id}/previsualizar', [\App\Http\Controllers\Documents\ListasCotejoDocumentController::class, 'previsualizar'])
+    Route::get('/listas-cotejo/{id}/previsualizar', [ListasCotejoDocumentController::class, 'previsualizar'])
         ->name('listas-cotejo.previsualizar');
 
     //Ruta para la previsualización de asistencias
@@ -68,14 +70,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('docente.sesion.plantilla');
 
     // Sincronización de fichas de aprendizaje con ejercicios:
-    
-    Route::prefix('ajax/fichas-aprendizaje')->group(function () {
-        Route::get('/', [AjaxFichaAprendizajeController::class, 'index']);
-        Route::get('/{id}', [AjaxFichaAprendizajeController::class, 'show']);
-        Route::post('/', [AjaxFichaAprendizajeController::class, 'store']);
-        Route::put('/{id}', [AjaxFichaAprendizajeController::class, 'update']);
-        Route::delete('/{id}', [AjaxFichaAprendizajeController::class, 'destroy']);
-    });
 
     // Rutas para gestión de ejercicios en sesión (NO persiste en BD)
     Route::prefix('session/ejercicios')->name('session.ejercicios.')->group(function () {
@@ -87,11 +81,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [EjercicioSessionController::class, 'destroy'])->name('destroy');
         Route::delete('/', [EjercicioSessionController::class, 'clear'])->name('clear');
         Route::post('/replace-all', [EjercicioSessionController::class, 'replaceAll'])->name('replaceAll');
+        Route::post('/metadata', [EjercicioSessionController::class, 'updateMetadata'])->name('updateMetadata');
     });
 
     // Ruta para obtener ejercicios de una FichaAprendizaje desde BD
     Route::get('/fichas/{fichaId}/ejercicios', [FichaEjercicioController::class, 'getEjercicios'])->name('fichas.ejercicios');
 
+    // Ruta para previsualizar/imprimir una FichaAprendizaje
+    Route::get('/fichas/{fichaId}/preview', [FichaAprendizajePreviewController::class, 'preview'])->name('fichas.preview');
 });
 Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
 Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');

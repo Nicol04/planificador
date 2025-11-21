@@ -132,9 +132,10 @@ class AsistenciaResource extends Resource
             ]);
     }
 
+
     public static function canCreate(): bool
     {
-        return false;
+        return true;
     }
 
     public static function getRelations(): array

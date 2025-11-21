@@ -67,19 +67,41 @@
                     <!-- Botón inferior -->
                     <div
                         class="mt-8 bg-gradient-to-br from-blue-100/30 to-emerald-100/30 dark:from-blue-600/20 dark:to-emerald-600/20 border border-emerald-300 dark:border-emerald-500/30 rounded-xl p-6 backdrop-blur-sm">
+                        @php
+                            $sinClave = empty(auth()->user()->gemini_api_key);
+                        @endphp
+
                         <button id="generar-btn" onclick="generarFicha()" type="button"
-                            class="w-full bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 flex items-center justify-center gap-3 group relative overflow-hidden">
+                            @if ($sinClave) disabled @endif
+                            class="w-full bg-gradient-to-r from-blue-500 to-emerald-500
+               hover:from-blue-600 hover:to-emerald-600 text-white font-bold
+               py-4 px-6 rounded-lg shadow-lg hover:shadow-xl hover:shadow-emerald-500/20
+               transition-all duration-300 flex items-center justify-center gap-3 group
+               relative overflow-hidden
+               disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:from-blue-500 disabled:hover:to-emerald-500">
+
                             <div
-                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-500">
+                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent
+                translate-x-full group-hover:translate-x-0 transition-transform duration-500
+                pointer-events-none">
                             </div>
+
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="w-5 h-5 group-hover:rotate-12 transition-transform relative z-10" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M5 13l4 4L19 7" />
                             </svg>
+
                             <span class="relative z-10">Generar Ficha Completa con IA</span>
                         </button>
+
+                        @if ($sinClave)
+                            <p class="mt-2 text-sm text-red-600 font-semibold">
+                                ⚠️ Necesitas configurar tu clave Gemini para usar esta función.
+                            </p>
+                        @endif
+
                         <p class="text-xs text-gray-500 dark:text-white text-center mt-3">Tu ficha se generará en
                             segundos</p>
                     </div>
@@ -277,20 +299,49 @@
             const hi = document.getElementById('inicioInput');
             const hd = document.getElementById('desarrolloInput');
             const hc = document.getElementById('conclusionInput');
-            if (hi) { hi.value = inicioHtml; hi.dispatchEvent(new Event('input', { bubbles: true })); }
-            if (hd) { hd.value = desarrolloHtml; hd.dispatchEvent(new Event('input', { bubbles: true })); }
-            if (hc) { hc.value = conclusionHtml; hc.dispatchEvent(new Event('input', { bubbles: true })); }
+            if (hi) {
+                hi.value = inicioHtml;
+                hi.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
+            }
+            if (hd) {
+                hd.value = desarrolloHtml;
+                hd.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
+            }
+            if (hc) {
+                hc.value = conclusionHtml;
+                hc.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
+            }
 
-            const arr = [
-                { nombre_momento: 'Inicio', descripcion: inicioHtml, actividades: '' },
-                { nombre_momento: 'Desarrollo', descripcion: desarrolloHtml, actividades: '' },
-                { nombre_momento: 'Cierre', descripcion: conclusionHtml, actividades: '' },
+            const arr = [{
+                    nombre_momento: 'Inicio',
+                    descripcion: inicioHtml,
+                    actividades: ''
+                },
+                {
+                    nombre_momento: 'Desarrollo',
+                    descripcion: desarrolloHtml,
+                    actividades: ''
+                },
+                {
+                    nombre_momento: 'Cierre',
+                    descripcion: conclusionHtml,
+                    actividades: ''
+                },
             ];
 
-            const hidden = document.querySelector('input[name="data[momentos_data]"]') || document.getElementById('momentos_data_input');
+            const hidden = document.querySelector('input[name="data[momentos_data]"]') || document
+                .getElementById('momentos_data_input');
             if (hidden) {
                 hidden.value = JSON.stringify(arr);
-                hidden.dispatchEvent(new Event('input', { bubbles: true }));
+                hidden.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
             }
         }
 
@@ -303,7 +354,11 @@
             el.addEventListener('blur', syncMomentos);
             // observer para cambios programáticos (p. ej. Quill)
             const mo = new MutationObserver(syncMomentos);
-            mo.observe(el, { childList: true, subtree: true, characterData: true });
+            mo.observe(el, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
         });
 
         // sincronizar justo antes de enviar cualquier formulario

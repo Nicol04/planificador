@@ -26,5 +26,8 @@ class CreateFichaAprendizaje extends CreateRecord
             ->success()
             ->body('Los ejercicios han sido asociados correctamente.')
             ->send();
+
+        
+        //$this->redirect(request()->fullUrl(), navigate: true);
     }
 }

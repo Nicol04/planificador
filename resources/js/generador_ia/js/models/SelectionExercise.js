@@ -25,9 +25,10 @@ class SelectionExercise {
   }
 
   renderInto(container) {
-    console.log('🎨 [SelectionExercise] Renderizando:', this.title);
+    try {
+      console.log('🎨 [SelectionExercise] Renderizando:', this.title);
 
-    const titleInput = document.createElement('input');
+      const titleInput = document.createElement('input');
     titleInput.type = 'text';
     titleInput.value = this.title;
     titleInput.className = 'text-3xl font-extrabold text-slate-900 mb-3 border-b-2 border-transparent focus:border-amber-600 focus:outline-none w-full px-3 py-2 transition-colors';
@@ -86,6 +87,7 @@ class SelectionExercise {
       btn.textContent = '🔄';
       btn.className = 'no-imprimir absolute top-2 right-2 w-8 h-8 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10';
       btn.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
         console.log(`🖱️ [SelectionExercise] Botón clickeado para opción ${idx + 1}`);
         window.openImageModal?.(opt.searchQuery || opt.imageSrc, (newUrl) => {
@@ -127,15 +129,25 @@ class SelectionExercise {
     });
 
     container.appendChild(grid);
-    console.log(`✓ [SelectionExercise] ${this.options.length} opciones renderizadas`);
+      console.log(`✓ [SelectionExercise] ${this.options.length} opciones renderizadas`);
+    } catch (err) {
+      if (window.handleModelError) window.handleModelError('SelectionExercise', err);
+      console.error('SelectionExercise.renderInto error', err);
+    }
   }
 
   getJSON() {
-    return {
-      title: this.title,
-      description: this.description,
-      options: this.options.map(({ imageSrc, text }) => ({ imageSrc, text }))
-    };
+    try {
+      return {
+        title: this.title,
+        description: this.description,
+        options: this.options.map(({ imageSrc, text }) => ({ imageSrc, text }))
+      };
+    } catch (err) {
+      if (window.handleModelError) window.handleModelError('SelectionExercise', err);
+      console.error('SelectionExercise.getJSON error', err);
+      return { title: this.title, description: this.description, options: [] };
+    }
   }
 
   static getJSONSchemaString() {

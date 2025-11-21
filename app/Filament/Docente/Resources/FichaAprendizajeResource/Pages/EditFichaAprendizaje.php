@@ -15,7 +15,13 @@ class EditFichaAprendizaje extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            //Actions\DeleteAction::make(),
+            Actions\Action::make('preview')
+                ->label('Vista Previa / Imprimir')
+                ->icon('heroicon-o-printer')
+                ->color('info')
+                ->url(fn(): string => route('fichas.preview', ['fichaId' => $this->record->id]))
+                ->openUrlInNewTab(),
+            Actions\DeleteAction::make(),
         ];
     }
 
@@ -25,7 +31,7 @@ class EditFichaAprendizaje extends EditRecord
     protected function afterSave(): void
     {
         // Limpiar variables de sesión
-        FichaAprendizaje::limpiarSesionEjercicios();
+        //FichaAprendizaje::limpiarSesionEjercicios();
 
         // Notificación de éxito
         Notification::make()
@@ -33,5 +39,12 @@ class EditFichaAprendizaje extends EditRecord
             ->success()
             ->body('Los ejercicios han sido actualizados correctamente.')
             ->send();
+
+        $currentUrl = route('filament.docente.resources.ficha-aprendizajes.edit', ['record' => $this->record->id]);
+        $this->redirect($currentUrl, navigate: false);
+
+
+        // Refrescar la página después de guardar
+        //$this->redirect(request()->fullUrl(), navigate: true);
     }
 }

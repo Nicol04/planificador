@@ -49,9 +49,10 @@ class ReflectionExercise {
     addQuestion(question) { this.questions.push(question); }
 
     renderInto(container) {
-        console.log('🎨 [ReflectionExercise] Renderizando:', this.title);
+        try {
+            console.log('🎨 [ReflectionExercise] Renderizando:', this.title);
 
-        const titleInput = document.createElement('input');
+            const titleInput = document.createElement('input');
         titleInput.type = 'text';
         titleInput.value = this.title;
         titleInput.className = 'text-3xl font-extrabold text-slate-900 mb-3 border-b-2 border-transparent focus:border-violet-600 focus:outline-none w-full px-3 py-2 transition-colors';
@@ -104,7 +105,9 @@ class ReflectionExercise {
             const btn = document.createElement('button');
             btn.textContent = '🔄';
             btn.className = 'no-imprimir absolute top-4 right-4 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg shadow-lg font-semibold text-sm opacity-0 group-hover:opacity-100 transition-all';
-            btn.onclick = () => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('🖱️ [ReflectionExercise] Botón cambiar imagen clickeado');
                 window.openImageModal?.(this.searchQuery || this.imageSrc, (newUrl) => {
                     console.log('✓ [ReflectionExercise] Imagen actualizada:', newUrl);
@@ -184,16 +187,26 @@ class ReflectionExercise {
 
         container.appendChild(questionsList);
         console.log(`✓ [ReflectionExercise] ${this.questions.length} preguntas renderizadas`);
+        } catch (err) {
+            if (window.handleModelError) window.handleModelError('ReflectionExercise', err);
+            console.error('ReflectionExercise.renderInto error', err);
+        }
     }
 
     getJSON() {
-        return {
-            title: this.title,
-            description: this.description,
-            text: this.text,
-            imageSrc: this.imageSrc,
-            questions: this.questions
-        };
+        try {
+            return {
+                title: this.title,
+                description: this.description,
+                text: this.text,
+                imageSrc: this.imageSrc,
+                questions: this.questions
+            };
+        } catch (err) {
+            if (window.handleModelError) window.handleModelError('ReflectionExercise', err);
+            console.error('ReflectionExercise.getJSON error', err);
+            return { title: this.title, description: this.description, text: '', imageSrc: this.imageSrc, questions: [] };
+        }
     }
 
     static getJSONSchemaString() {

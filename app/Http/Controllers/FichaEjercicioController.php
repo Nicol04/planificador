@@ -33,7 +33,10 @@ class FichaEjercicioController extends Controller
                 'success' => true,
                 'data' => [
                     'ficha_id' => $ficha->id,
-                    'ficha_nombre' => $ficha->nombre,
+                    'nombre' => $ficha->nombre,
+                    'descripcion' => $ficha->descripcion ?? '',
+                    'grado' => $ficha->grado, // aqui retorna el grado del docente
+                    'tipo_ejercicio' => $ficha->tipo_ejercicio, 
                     'ejercicios' => $ejercicios,
                     'count' => $ejercicios->count()
                 ]

@@ -15,13 +15,6 @@ class ListAsistencias extends ListRecords
 {
     protected static string $resource = AsistenciaResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
-
     public function getView(): string
     {
         return 'filament.docente.asistencia.list-plantillas-cards';

@@ -25,9 +25,10 @@ class ClozeExercise {
   }
 
   renderInto(container) {
-    console.log('🎨 [ClozeExercise] Renderizando:', this.title);
+    try {
+      console.log('🎨 [ClozeExercise] Renderizando:', this.title);
 
-    const titleInput = document.createElement('input');
+      const titleInput = document.createElement('input');
     titleInput.type = 'text';
     titleInput.value = this.title;
     titleInput.className = 'text-3xl font-extrabold text-slate-900 mb-3 border-b-2 border-transparent focus:border-emerald-600 focus:outline-none w-full px-3 py-2 transition-colors';
@@ -95,7 +96,9 @@ class ClozeExercise {
       const btn = document.createElement('button');
       btn.textContent = '🔄';
       btn.className = 'no-imprimir absolute -top-2 -right-2 w-8 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity';
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         console.log(`🖱️ [ClozeExercise] Botón clickeado para item ${idx + 1}`);
         window.openImageModal?.(it.searchQuery || it.imageSrc, (newUrl) => {
           console.log(`✓ [ClozeExercise] Imagen actualizada para item ${idx + 1}:`, newUrl);
@@ -132,15 +135,25 @@ class ClozeExercise {
     });
 
     container.appendChild(grid);
-    console.log(`✓ [ClozeExercise] ${this.items.length} items renderizados`);
+      console.log(`✓ [ClozeExercise] ${this.items.length} items renderizados`);
+    } catch (err) {
+      if (window.handleModelError) window.handleModelError('ClozeExercise', err);
+      console.error('ClozeExercise.renderInto error', err);
+    }
   }
 
   getJSON() {
-    return {
-      title: this.title,
-      description: this.description,
-      items: this.items.map(({ imageSrc, placeholder }) => ({ imageSrc, placeholder }))
-    };
+    try {
+      return {
+        title: this.title,
+        description: this.description,
+        items: this.items.map(({ imageSrc, placeholder }) => ({ imageSrc, placeholder }))
+      };
+    } catch (err) {
+      if (window.handleModelError) window.handleModelError('ClozeExercise', err);
+      console.error('ClozeExercise.getJSON error', err);
+      return { title: this.title, description: this.description, items: [] };
+    }
   }
 
   static getJSONSchemaString() {

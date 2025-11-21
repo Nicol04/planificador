@@ -1,8 +1,5 @@
 import GeminiService from '../service/GeminiService.js';
-import { searchImages } from '../service/apiClient.js';
-import { showLoading, showError, renderResults, openModal } from './ui.js';
-import { getFirstImage, getCachedImages } from '../service/SearchImage.js';
-import PdfExportService from '../service/PdfExportService.js';
+import { getFirstImage } from '../service/SearchImage.js';
 import EjercicioSessionService from './services/EjercicioSessionService.js';
 
 import ClassificationExercise from './models/ClassificationExercise.js';
@@ -11,53 +8,92 @@ import SelectionExercise from './models/SelectionExercise.js';
 import ReflectionExercise from './models/ReflectionExercise.js';
 import ProgressIndicator from './ProgressIndicator.js';
 
-//const GEMINI_API_KEY = 'AIzaSyBvv7CkK1CYFzZJw6gLeJnjPF6HNkawpw8';
+// Importar controladores
+import AppController from './controllers/AppController.js';
+import ExerciseSyncController from './controllers/ExerciseSyncController.js';
 
 const GEMINI_API_KEY = window.userGeminiKey ?? null;
+const SEARCH_API_KEY = window.userGeminiKey ?? null;
+
 if (!GEMINI_API_KEY) {
-	console.warn('⚠️ No se encontró gemini_api_key del usuario. Configure una clave o use un proxy server-side.');
+    console.warn("⚠️ No se encontró la clave Gemini del usuario autenticado.");
+} else {
+    console.log("✓ Clave Gemini cargada correctamente");
+    // Ocultar la clave en producción - solo mostrar los primeros 8 caracteres
+    console.log(`🔑 Clave (parcial): ${GEMINI_API_KEY.substring(0, 8)}...`);
 }
 
+// Instanciar el servicio Gemini
 const gemini = new GeminiService(GEMINI_API_KEY);
-const pdfExporter = new PdfExportService();
+
 const ejercicioSessionService = new EjercicioSessionService();
+
+// Instanciar controlador principal de la aplicación
+const appController = new AppController();
+
+// Instanciar controlador de sincronización
+const exerciseSyncController = new ExerciseSyncController(ejercicioSessionService);
 
 // Hacer disponible globalmente para los modelos
 window.ejercicioSessionService = ejercicioSessionService;
 
 /**
- * Guardar un ejercicio en sesión de Laravel después de generarlo
+ * Guardar un ejercicio en sesión de Laravel después de generarlo o en modo edición
  * @param {Object} ejercicioInstancia - Instancia del ejercicio (SelectionExercise, etc.)
  * @param {boolean} esPrimero - Si es el primer ejercicio (para incluir descripción)
  */
 async function guardarEjercicioEnSesion(ejercicioInstancia, esPrimero = false) {
 	try {
-		const tipo = ejercicioInstancia.tipo; // Obtener tipo del modelo
+		const urlPattern = /\/docente\/ficha-aprendizajes\/(\d+)\/edit/;
+		const match = window.location.pathname.match(urlPattern);
+		const isEditMode = !!match;
+
+		const tipo = ejercicioInstancia.tipo;
 		const contenido = ejercicioInstancia.getJSON();
 
+		// Construimos payload base
 		const payload = {
 			tipo,
 			contenido
 		};
 
-		// Si es el primer ejercicio, incluir la descripción de la ficha
-		if (esPrimero) {
-			const descripcionFicha = document.getElementById('Contenido')?.value || '';
-			if (descripcionFicha) {
-				payload.descripcion_ficha = descripcionFicha;
-				console.log(`📝 [Main] Guardando descripción de ficha: "${descripcionFicha.substring(0, 50)}..."`);
+		// Si corresponde, agregar descripción
+		if (isEditMode || esPrimero) {
+			const descripcion = document.getElementById('Contenido')?.value || '';
+			if (descripcion) {
+				payload.descripcion = descripcion;
+				console.log(`📝 Guardando descripción: "${descripcion.substring(0, 50)}..."`);
 			}
 		}
 
-		const response = await ejercicioSessionService.store(payload.tipo, payload.contenido, payload.descripcion_ficha);
+		// Agregar título (si existe)
+		const nombre = document.getElementById('titulo')?.value || '';
+		if (nombre) {
+			payload.nombre = nombre;
+		}
 
-		// Asignar el ID de sesión al ejercicio para sincronización futura
+		// Capturar grado y tipo de ejercicio (estos estaban faltando en el payload)
+		payload.grado = String(document.getElementById('grado')?.value || '');
+		payload.tipo_ejercicio = String(document.getElementById('TipoFicha')?.value || '');
+
+		console.log("📦 Payload final:", payload);
+
+		const response = await ejercicioSessionService.store(
+			payload.tipo,
+			payload.contenido,
+			payload.descripcion ?? null,
+			payload.nombre ?? null,
+			payload.grado,
+			payload.tipo_ejercicio
+		);
+
 		ejercicioInstancia.setSessionId(response.data.id);
 
-		console.log(`💾 Ejercicio ${tipo} guardado en sesión con ID: ${response.data.id}`);
+		console.log(`💾 Ejercicio ${tipo} guardado con ID: ${response.data.id}`);
 		return response.data;
+
 	} catch (error) {
-		console.error(`❌ Error guardando ejercicio ${tipo} en sesión:`, error);
+		console.error(`❌ Error guardando ejercicio ${tipo}:`, error);
 		throw error;
 	}
 }
@@ -101,7 +137,37 @@ async function cargarEjerciciosSiEsEdicion() {
 		}
 
 		const data = await response.json();
-		console.log(`✓ [Main] ${data.data.count} ejercicios cargados para "${data.data.ficha_nombre}"`);
+		console.log(`✓ [Main] ${data.data.count} ejercicios cargados para "${data.data.nombre}"`);
+
+		// Prefill título y descripción de la ficha en la vista de edición
+		const tituloInput = document.getElementById('titulo');
+		if (tituloInput && data.data.nombre) {
+			tituloInput.value = data.data.nombre;
+			console.log(`📝 [Main] Título de ficha prellenado: "${data.data.nombre}"`);
+		}
+
+		const contenidoTextarea = document.getElementById('Contenido');
+		if (contenidoTextarea && data.data.descripcion) {
+			contenidoTextarea.value = data.data.descripcion;
+			console.log('📝 [Main] Contenido de ficha prellenado desde descripción');
+		}
+
+		// Prefill grado y tipo_ejercicio si están disponibles
+		const gradoSelect = document.getElementById('grado');
+		if (gradoSelect && data.data.grado) {
+			gradoSelect.value = data.data.grado;
+			console.log(`📝 [Main] Grado prellenado: "${data.data.grado}"`);
+		}
+
+		const tipoSelect = document.getElementById('TipoFicha');
+		if (tipoSelect && data.data.tipo_ejercicio) {
+			tipoSelect.value = data.data.tipo_ejercicio;
+			console.log(`📝 [Main] Tipo de ejercicio prellenado: "${data.data.tipo_ejercicio}"`);
+		}
+
+		// 🔄 Sincronizar metadatos inmediatamente en sesión
+		console.log('🔄 [Main] Sincronizando metadatos en sesión...');
+		await sincronizarMetadatosFicha();
 
 		// Limpiar contenedor
 		fichaContenido.innerHTML = '';
@@ -110,6 +176,11 @@ async function cargarEjerciciosSiEsEdicion() {
 			fichaContenido.innerHTML = '<div class="text-center text-slate-400 py-8">No hay ejercicios asociados a esta ficha</div>';
 			return;
 		}
+
+		// Sincronizar ejercicios de BD con sesión
+		console.log('🔄 [Main] Sincronizando ejercicios de BD con sesión...');
+		const syncMap = await exerciseSyncController.syncFromDatabase(data.data.ejercicios);
+		console.log(`✓ [Main] ${syncMap.size} ejercicios sincronizados con sesión`);
 
 		// Renderizar cada ejercicio
 		for (const ejercicioData of data.data.ejercicios) {
@@ -129,8 +200,8 @@ async function cargarEjerciciosSiEsEdicion() {
  * @param {HTMLElement} contenedor - Contenedor donde renderizar
  */
 async function renderizarEjercicio(ejercicioData, contenedor) {
-	const { tipo, contenido } = ejercicioData;
-	console.log(`🎨 [Main] Renderizando ejercicio tipo: ${tipo}`);
+	const { id: bdId, tipo, contenido } = ejercicioData;
+	console.log(`🎨 [Main] Renderizando ejercicio tipo: ${tipo} (BD ID: ${bdId})`);
 
 	// Crear contenedor individual
 	const contenedorEjercicio = document.createElement('div');
@@ -176,6 +247,15 @@ async function renderizarEjercicio(ejercicioData, contenedor) {
 				throw new Error(`Tipo de ejercicio desconocido: ${tipo}`);
 		}
 
+		// Obtener sessionId desde el controlador de sincronización
+		const sessionId = exerciseSyncController.getSessionId(bdId);
+		if (sessionId) {
+			ejercicioInstancia.setSessionId(sessionId);
+			console.log(`🔗 [Main] Ejercicio vinculado: BD ${bdId} -> Sesión ${sessionId}`);
+		} else {
+			console.warn(`⚠️ [Main] No se encontró sessionId para ejercicio BD ${bdId}`);
+		}
+
 		// Renderizar
 		ejercicioInstancia.renderInto(contenedorEjercicio);
 		contenedor.appendChild(contenedorEjercicio);
@@ -195,12 +275,12 @@ export async function generarFicha() {
 	const btn = document.getElementById('generar-btn');
 	const btnText = document.getElementById('btn-text');
 	const tipoFicha = document.getElementById('TipoFicha').value;
-	const gradoPrimaria = document.getElementById('GradoPrimaria').value;
+	const gradoPrimaria = document.getElementById('grado').value;
 	const contenido = document.getElementById('Contenido').value;
 	const autoAsignarImagenes = document.getElementById('AutoAsignarImagenes')?.checked || false;
-	const temperature = parseFloat(document.getElementById('Temperature').value) || 1.0;
-	const topP = parseFloat(document.getElementById('TopP').value) || 1.0;
-	const topK = parseInt(document.getElementById('topK').value) || 40;
+
+	// Obtener configuración avanzada desde el controlador
+	const { temperature, topP, topK } = appController.getAdvancedConfigController().getConfig();
 
 	if (!contenido || tipoFicha === 'Selecciona una Opción' || !gradoPrimaria) {
 		alert('Por favor, selecciona un tipo de ficha, un grado y escribe el contenido');
@@ -485,24 +565,123 @@ export async function generarFicha() {
 	}
 }
 
+/**
+ * Sincronizar metadatos de la ficha en sesión cuando cambian
+ * Esta función se invoca cuando se modifican campos críticos en modo edición
+ */
+async function sincronizarMetadatosFicha() {
+	try {
+		const nombre = document.getElementById('titulo')?.value || '';
+		const descripcion = document.getElementById('Contenido')?.value || '';
+		const grado = document.getElementById('grado')?.value || '';
+		const tipo_ejercicio = document.getElementById('TipoFicha')?.value || '';
+
+		// Enviar al backend para actualizar sesión
+		const response = await fetch('/session/ejercicios/metadata', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': 'application/json',
+				'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+				'X-Requested-With': 'XMLHttpRequest'
+			},
+			body: JSON.stringify({ nombre, descripcion, grado, tipo_ejercicio })
+		});
+
+		if (response.ok) {
+			console.log('✓ [Main] Metadatos de ficha sincronizados en sesión');
+		}
+	} catch (error) {
+		console.error('❌ [Main] Error sincronizando metadatos:', error);
+	}
+}
+
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-	// Verificar si estamos en modo edición y cargar ejercicios existentes
-	cargarEjerciciosSiEsEdicion();
+	// 🛡️ Protección contra submit no deseado del formulario de Filament
+	// Interceptar todos los formularios en la página
+	const forms = document.querySelectorAll('form');
+	forms.forEach(form => {
+		form.addEventListener('submit', (e) => {
+			// Verificar si el submit viene del botón oficial de Filament
+			const submitButton = e.submitter;
+			if (!submitButton || !submitButton.hasAttribute('data-filament-action')) {
+				// Si no es un botón oficial de Filament, verificar si es nuestro botón de generar
+				if (submitButton && submitButton.id === 'generar-btn') {
+					console.log('🚫 [Main] Submit interceptado desde botón generar - prevenido');
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				}
+			}
+		});
+	});
+	console.log('🛡️ [Main] Protección de formulario activada');
+
+	// 🛡️ Prevenir submit con Enter en inputs y textareas
+	const inputs = document.querySelectorAll('input, textarea');
+	inputs.forEach(input => {
+		// Excepto para inputs de búsqueda que sí deben permitir Enter
+		if (!input.id.includes('Search') && !input.id.includes('modal')) {
+			input.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter' && input.tagName.toLowerCase() !== 'textarea') {
+					console.log('🚫 [Main] Enter interceptado en input - prevenido');
+					e.preventDefault();
+					return false;
+				}
+			});
+		}
+	});
+	console.log('🛡️ [Main] Protección Enter en inputs activada');
+
+	// Detectar si estamos en modo creación y limpiar variables de sesión
+	if (window.location.pathname.match(/\/docente\/ficha-aprendizajes\/create$/)) {
+		console.log('[LOG][Main] MODO CREACIÓN detectado, limpiando variables de sesión...');
+		ejercicioSessionService.clear().then(() => {
+			console.log('[LOG][Main] Variables de sesión limpiadas correctamente en modo creación');
+		}).catch((err) => {
+			console.error('[LOG][Main] Error al limpiar variables de sesión en modo creación:', err);
+		});
+	} else {
+		// Verificar si estamos en modo edición y cargar ejercicios existentes
+		cargarEjerciciosSiEsEdicion();
+	}
+
+	// 🔄 Agregar listeners para sincronizar metadatos en modo edición
+	const urlPattern = /\/docente\/ficha-aprendizajes\/(\d+)\/edit/;
+	const isEditMode = window.location.pathname.match(urlPattern);
+	
+	if (isEditMode) {
+		console.log('📝 [Main] Modo edición: activando sincronización automática de metadatos');
+		
+		// Sincronizar cuando cambian los campos
+		const tituloInput = document.getElementById('titulo');
+		const contenidoTextarea = document.getElementById('Contenido');
+		const gradoSelect = document.getElementById('grado');
+		const tipoSelect = document.getElementById('TipoFicha');
+		
+		if (tituloInput) {
+			tituloInput.addEventListener('blur', sincronizarMetadatosFicha);
+		}
+		if (contenidoTextarea) {
+			contenidoTextarea.addEventListener('blur', sincronizarMetadatosFicha);
+		}
+		if (gradoSelect) {
+			gradoSelect.addEventListener('change', sincronizarMetadatosFicha);
+		}
+		if (tipoSelect) {
+			tipoSelect.addEventListener('change', sincronizarMetadatosFicha);
+		}
+		
+		console.log('✓ [Main] Listeners de sincronización de metadatos activados');
+	}
 
 	const btn = document.getElementById('generar-btn');
 	if (btn) {
 		btn.addEventListener('click', generarFicha);
 	}
 
-	// Botón de exportar PDF
-	const exportarPdfBtn = document.getElementById('exportar-pdf-btn');
-	if (exportarPdfBtn) {
-		exportarPdfBtn.addEventListener('click', () => {
-			console.log('🖨️ [Main] Botón exportar PDF clickeado');
-			pdfExporter.exportToPdf();
-		});
-	}
+
 
 	// Botón de limpiar sesión
 	const limpiarSesionBtn = document.getElementById('limpiar-sesion-btn');
@@ -542,261 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Configurar modal y búsqueda de imágenes
-	console.log('🚀 [Main] Inicializando sistema de carga de imágenes');
-
-	let currentCallback = null;
-	let selectedImageUrl = null;
-	const previewContainer = document.getElementById('previewContainer');
-	const btnConfirm = document.getElementById('btnConfirm');
-
-	function updatePreview(url) {
-		console.log(`🖼️ [Main] Actualizando vista previa:`, url.substring(0, 50) + '...');
-		selectedImageUrl = url;
-		previewContainer.innerHTML = `<img src="${url}" alt="Preview">`;
-		btnConfirm.disabled = false;
-	}
-
-	function clearPreview() {
-		console.log(`🧹 [Main] Limpiando vista previa`);
-		selectedImageUrl = null;
-		previewContainer.innerHTML = '<p class="text-gray-400 text-sm">No hay imagen seleccionada</p>';
-		btnConfirm.disabled = true;
-	}
-
-	window.openImageModal = (query, callback) => {
-		console.log(`📂 [Main] Abriendo modal con query: "${query}"`);
-		currentCallback = callback;
-		// Si estamos en modo edición, el input debe estar vacío
-		if (window.location.pathname.match(/\/docente\/ficha-aprendizajes\/[0-9]+\/edit/)) {
-			document.getElementById('modalSearchQuery').value = '';
-		} else {
-			document.getElementById('modalSearchQuery').value = query;
-		}
-		document.getElementById('imageModal').classList.remove('hidden');
-		clearPreview();
-
-		// Si hay caché para este query, mostrarlo automáticamente en el tab de búsqueda
-		const cachedItems = getCachedImages(query);
-		if (cachedItems) {
-			console.log(`💾 [Main] Mostrando ${cachedItems.length} imágenes cacheadas automáticamente`);
-			showTab('tabSearch');
-			renderResults(modalResults, cachedItems);
-
-			// Configurar callback para cada imagen cacheada
-			modalResults.querySelectorAll('img').forEach((img, idx) => {
-				img.onclick = () => {
-					console.log(`✓ [Main] Imagen ${idx + 1} seleccionada de caché`);
-					updatePreview(img.src);
-				};
-			});
-		} else {
-			showTab('tabUrl');
-		}
-	};
-
-	// Sistema de tabs
-	const tabs = ['tabUrl', 'tabFile', 'tabClipboard', 'tabSearch'];
-	const panels = {
-		tabUrl: 'panelUrl',
-		tabFile: 'panelFile',
-		tabClipboard: 'panelClipboard',
-		tabSearch: 'panelSearch'
-	};
-
-	function showTab(tabId) {
-		console.log(`📑 [Main] Cambiando a tab: ${tabId}`);
-		tabs.forEach(id => {
-			const btn = document.getElementById(id);
-			const panel = document.getElementById(panels[id]);
-			if (id === tabId) {
-				btn.className = 'tab-btn px-3 py-2 text-sm rounded-lg bg-blue-600 text-white';
-				panel.classList.remove('hidden');
-			} else {
-				btn.className = 'tab-btn px-3 py-2 text-sm rounded-lg bg-gray-200';
-				panel.classList.add('hidden');
-			}
-		});
-	}
-
-	tabs.forEach(id => {
-		document.getElementById(id)?.addEventListener('click', () => showTab(id));
-	});
-
-	// Confirmar selección
-	btnConfirm?.addEventListener('click', () => {
-		if (selectedImageUrl) {
-			console.log(`✓ [Main] Confirmando selección de imagen`);
-			currentCallback?.(selectedImageUrl);
-			closeModal();
-		}
-	});
-
-	// URL
-	document.getElementById('btnUrl')?.addEventListener('click', () => {
-		const url = document.getElementById('inputUrl').value.trim();
-		console.log(`🔗 [Main] URL ingresada:`, url);
-		if (url) {
-			updatePreview(url);
-		}
-	});
-
-	document.getElementById('inputUrl')?.addEventListener('keypress', (e) => {
-		if (e.key === 'Enter') {
-			document.getElementById('btnUrl').click();
-		}
-	});
-
-	// Archivo
-	document.getElementById('inputFile')?.addEventListener('change', () => {
-		document.getElementById('btnFile')?.click();
-	});
-
-	document.getElementById('btnFile')?.addEventListener('click', () => {
-		const input = document.getElementById('inputFile');
-		const file = input.files?.[0];
-		console.log(`📁 [Main] Archivo seleccionado:`, file?.name);
-		if (file) {
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				console.log(`✓ [Main] Archivo cargado como Base64`);
-				updatePreview(e.target.result);
-			};
-			reader.readAsDataURL(file);
-		}
-	});
-
-	// Portapapeles
-	const clipboardDropzone = document.getElementById('clipboardDropzone');
-
-	clipboardDropzone?.addEventListener('click', () => {
-		console.log(`📋 [Main] Dropzone clickeado, esperando paste...`);
-		clipboardDropzone.focus();
-	});
-
-	document.addEventListener('paste', (e) => {
-		const modal = document.getElementById('imageModal');
-		if (!modal.classList.contains('hidden')) {
-			const items = e.clipboardData?.items;
-			console.log(`📋 [Main] Evento paste detectado, items:`, items?.length);
-			for (let item of items || []) {
-				if (item.type.indexOf('image') !== -1) {
-					const file = item.getAsFile();
-					console.log(`✓ [Main] Imagen detectada en portapapeles`);
-					const reader = new FileReader();
-					reader.onload = (ev) => {
-						updatePreview(ev.target.result);
-					};
-					reader.readAsDataURL(file);
-					break;
-				}
-			}
-		}
-	});
-
-	// Búsqueda
-	const modalSearchBtn = document.getElementById('modalSearchBtn');
-	const modalResults = document.getElementById('modalResults');
-
-	document.getElementById('modalSearchQuery')?.addEventListener('keypress', (e) => {
-		if (e.key === 'Enter') {
-			modalSearchBtn?.click();
-		}
-	});
-
-	modalSearchBtn?.addEventListener('click', async () => {
-		const query = document.getElementById('modalSearchQuery').value;
-		console.log(`🔍 [Main] Buscando imágenes para: "${query}"`);
-
-		// Verificar si hay resultados cacheados
-		const cachedItems = getCachedImages(query);
-		if (cachedItems) {
-			console.log(`✓ [Main] Usando ${cachedItems.length} imágenes cacheadas`);
-			renderResults(modalResults, cachedItems);
-
-			// Configurar callback para cada imagen
-			modalResults.querySelectorAll('img').forEach((img, idx) => {
-				img.onclick = () => {
-					console.log(`✓ [Main] Imagen ${idx + 1} seleccionada de caché`);
-					updatePreview(img.src);
-				};
-			});
-			return;
-		}
-
-		// Si no hay caché, hacer búsqueda normal
-		showLoading(modalResults);
-		try {
-			const items = await searchImages(query);
-			console.log(`✓ [Main] ${items.length} imágenes encontradas`);
-			renderResults(modalResults, items);
-
-			// Configurar callback para cada imagen
-			modalResults.querySelectorAll('img').forEach((img, idx) => {
-				img.onclick = () => {
-					console.log(`✓ [Main] Imagen ${idx + 1} seleccionada de búsqueda`);
-					updatePreview(img.src);
-				};
-			});
-		} catch (error) {
-			console.error('❌ [Main] Error en búsqueda:', error);
-			showError(modalResults, 'Error al buscar imágenes');
-		}
-	});
-
-	function closeModal() {
-		console.log('❌ [Main] Cerrando modal');
-		document.getElementById('imageModal').classList.add('hidden');
-		clearPreview();
-		document.getElementById('inputUrl').value = '';
-		document.getElementById('inputFile').value = '';
-		modalResults.innerHTML = '';
-	}
-
-	document.getElementById('modalClose')?.addEventListener('click', closeModal);
-
-	// Botón de vista previa eliminado: la lógica de preview/impresión ha sido removida.
-
-	// ========== CONFIGURACIÓN AVANZADA ==========
-	const toggleAdvancedBtn = document.getElementById('toggleAdvanced');
-	const advancedConfig = document.getElementById('advancedConfig');
-	const advancedToggleText = document.getElementById('advancedToggleText');
-
-	// Toggle del panel de configuración avanzada
-	toggleAdvancedBtn?.addEventListener('click', () => {
-		const isHidden = advancedConfig.classList.contains('hidden');
-
-		if (isHidden) {
-			advancedConfig.classList.remove('hidden');
-			advancedToggleText.textContent = 'Ocultar configuración avanzada';
-			console.log('⚙️ [Main] Panel de configuración avanzada abierto');
-		} else {
-			advancedConfig.classList.add('hidden');
-			advancedToggleText.textContent = 'Mostrar configuración avanzada';
-			console.log('⚙️ [Main] Panel de configuración avanzada cerrado');
-		}
-	});
-
-	// Actualizar valores mostrados en los sliders
-	const temperatureSlider = document.getElementById('Temperature');
-	const temperatureValue = document.getElementById('temperatureValue');
-
-	temperatureSlider?.addEventListener('input', (e) => {
-		temperatureValue.textContent = parseFloat(e.target.value).toFixed(1);
-	});
-
-	const topPSlider = document.getElementById('TopP');
-	const topPValue = document.getElementById('topPValue');
-
-	topPSlider?.addEventListener('input', (e) => {
-		topPValue.textContent = parseFloat(e.target.value).toFixed(2);
-	});
-
-	const topKSlider = document.getElementById('topK');
-	const topKValue = document.getElementById('topKValue');
-
-	topKSlider?.addEventListener('input', (e) => {
-		topKValue.textContent = e.target.value;
-	});
-
-	console.log('⚙️ [Main] Sistema de configuración avanzada inicializado');
+	console.log('🚀 [Main] Inicializando sistema de controladores...');
+	appController.init();
+	console.log('✓ [Main] Sistema de controladores inicializado');
 });

@@ -39,10 +39,11 @@ class ClassificationExercise {
   }
 
   renderInto(container) {
-    container.innerHTML = "";
-    this.shuffleImages();
+    try {
+      container.innerHTML = "";
+      this.shuffleImages();
 
-    console.log('🎨 Renderizando ejercicio:', this.title);
+      console.log('🎨 Renderizando ejercicio:', this.title);
 
     const titleInput = document.createElement('input');
     titleInput.type = 'text';
@@ -103,7 +104,9 @@ class ClassificationExercise {
       const btn = document.createElement('button');
       btn.className = 'no-imprimir absolute -top-2 -right-2 w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity';
       btn.innerHTML = '🔄';
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         window.openImageModal?.(searchQuery, (newUrl) => {
           img.src = newUrl;
           this.images[idx].imageSrc = newUrl;
@@ -142,17 +145,28 @@ class ClassificationExercise {
     });
 
     container.appendChild(grid);
+    } catch (err) {
+      const errMsg = `ClassificationExercise.renderInto error: ${err?.message || err}`;
+      if (window.handleModelError) window.handleModelError('ClassificationExercise', err);
+      console.error(errMsg, err);
+    }
   }
 
   getJSON() {
-    return {
-      title: this.title,
-      description: this.description,
-      items: this.texts.map((text, i) => ({
-        imageSrc: this.images[i]?.imageSrc || "",
-        text
-      }))
-    };
+    try {
+      return {
+        title: this.title,
+        description: this.description,
+        items: this.texts.map((text, i) => ({
+          imageSrc: this.images[i]?.imageSrc || "",
+          text
+        }))
+      };
+    } catch (err) {
+      if (window.handleModelError) window.handleModelError('ClassificationExercise', err);
+      console.error('ClassificationExercise.getJSON error', err);
+      return { title: this.title, description: this.description, items: [] };
+    }
   }
 
   static getJSONSchemaString() {
