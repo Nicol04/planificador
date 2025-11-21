@@ -20,6 +20,7 @@ class FichaAprendizaje extends Model
         'user_id',
         'grado',
         'tipo_ejercicio',
+        'public',
     ];
 
     protected static function boot()

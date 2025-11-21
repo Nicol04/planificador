@@ -1,6 +1,60 @@
 @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js'])
 
-<div class="as-card">
+<div 
+    class="as-card"
+    {{-- 1. Inicializamos Alpine con los datos existentes --}}
+    x-data="{
+        selectedDates: @js($existingDias ?? []),
+
+        init() {
+            console.log('Alpine iniciado correctamente. Fechas:', this.selectedDates);
+            // Forzamos la actualización visual al cargar
+            this.$nextTick(() => {
+                this.updateVisuals();
+            });
+        },
+
+        toggleDate(date) {
+            // Lógica para añadir o quitar fecha del array
+            if (this.selectedDates.includes(date)) {
+                this.selectedDates = this.selectedDates.filter(d => d !== date);
+            } else {
+                this.selectedDates.push(date);
+            }
+
+            // 2. Mágia de Filament: Actualizamos el campo del formulario directamente
+            // No necesitas buscar IDs ni componentes, $wire sabe dónde está.
+            // Usualmente en formularios es 'data.campo'
+            this.$wire.set('data.dias_no_clase', this.selectedDates);
+
+            // Actualizamos las clases CSS (rojo/verde)
+            this.updateVisuals();
+        },
+
+        updateVisuals() {
+            // Buscamos todos los checkboxes dentro de este componente
+            const checkboxes = this.$el.querySelectorAll('.no-class-checkbox');
+            
+            checkboxes.forEach(cb => {
+                const date = cb.dataset.date;
+                const isSelected = this.selectedDates.includes(date);
+                
+                // Sincronizar el check
+                cb.checked = isSelected;
+
+                // Sincronizar la clase de la celda padre
+                const cell = cb.closest('td');
+                if (cell) {
+                    if (isSelected) {
+                        cell.classList.add('no-class-cell');
+                    } else {
+                        cell.classList.remove('no-class-cell');
+                    }
+                }
+            });
+        }
+    }"
+>
     <div class="as-header">
         <div>
             <h2 class="as-title">Calendario de Asistencia</h2>
@@ -42,8 +96,13 @@
                                         </div>
 
                                         <label class="toggle">
-                                            <input type="checkbox" id="no_class_{{ $cell['date'] }}"
-                                                class="no-class-checkbox" data-date="{{ $cell['date'] }}">
+                                            {{-- 3. Usamos @change de Alpine en lugar de onclick --}}
+                                            <input 
+                                                type="checkbox" 
+                                                class="no-class-checkbox" 
+                                                data-date="{{ $cell['date'] }}"
+                                                @change="toggleDate('{{ $cell['date'] }}')"
+                                            >
                                             <span class="toggle-slider"></span>
                                         </label>
                                     </div>
@@ -59,16 +118,13 @@
     </div>
 
     <div class="students-panel">
-        {{-- determinar lista de estudiantes disponible --}}
         @php
             $listaEst = $estudiantes ?? ($students ?? []);
         @endphp
 
-        <!-- Mostrar DOCENTE y AULA -->
         <div style="display:flex;gap:16px;align-items:center;margin-bottom:8px;">
             <div><strong>Docente:</strong> {{ $docenteNombre ?? (\Illuminate\Support\Facades\Auth::user()->name ?? \Illuminate\Support\Facades\Auth::user()->email ?? '—') }}</div>
             @php
-                // intentar obtener aula/grado-seccion del docente autenticado
                 $aulaInfo = null;
                 try {
                     $añoActual = \App\Models\Año::whereDate('fecha_inicio','<=',now())->whereDate('fecha_fin','>=',now())->first();
@@ -372,106 +428,3 @@
         }
     }
 </style>
-
-<script>
-    (function() {
-        // 1. Obtener el campo oculto de Filament (si existe) y detectar el componente Livewire
-        const diasNoClaseInput = document.getElementById('dias_no_clase_input');
-        const checkboxes = document.querySelectorAll('.no-class-checkbox');
-
-        // Buscar el elemento del componente Livewire en la página
-        const lwEl = document.querySelector(
-            '[wire\\:id]'); // primer componente Livewire en la página (Filament form)
-        let livewireComponent = null;
-        if (lwEl && window.Livewire) {
-            try {
-                livewireComponent = Livewire.find(lwEl.getAttribute('wire:id'));
-            } catch (e) {
-                livewireComponent = null;
-            }
-        }
-
-        // Función para leer qué días están marcados y actualizar el campo de Filament / Livewire
-        function updateDiasNoClase() {
-            const selectedDates = [];
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    selectedDates.push(cb.dataset.date);
-                }
-            });
-
-            // 1) Si existe el input oculto generado por Filament, actualizar su valor (JSON)
-            if (diasNoClaseInput) {
-                diasNoClaseInput.value = JSON.stringify(selectedDates);
-                // Notificar a Livewire/FILAMENT del cambio mediante evento 'input'
-                diasNoClaseInput.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
-            }
-
-            // 2) Intentar setear la propiedad directamente en el componente Livewire.
-            // Intentamos tanto la propiedad directa como dentro de 'data' por compatibilidad con Filament.
-            if (livewireComponent && typeof livewireComponent.set === 'function') {
-                try {
-                    livewireComponent.set('dias_no_clase', selectedDates);
-                } catch (e) {
-                    livewireComponent = null;
-                }
-                try {
-                    livewireComponent.set('data.dias_no_clase', selectedDates);
-                } catch (e) {
-                    livewireComponent = null;
-                }
-            }
-
-            // 3) Emitir un evento global por si alguna otra lógica lo necesita
-            window.dispatchEvent(new CustomEvent('diasNoClaseActualizados', {
-                detail: selectedDates
-            }));
-        }
-
-        // Inicialización y eventos
-        checkboxes.forEach(function(cb) {
-            const date = cb.dataset.date;
-            const cell = cb.closest('td');
-
-            // Lógica para precargar estados (si vienes de edición)
-            let existingDiasRaw = @json($existingDias ?? []);
-
-            let existingDias = [];
-
-            // Si viene como string JSON, decodificarlo
-            if (typeof existingDiasRaw === 'string') {
-                try {
-                    existingDias = JSON.parse(existingDiasRaw);
-                } catch (e) {
-                    existingDias = [];
-                }
-            } else if (Array.isArray(existingDiasRaw)) {
-                existingDias = existingDiasRaw;
-            }
-            if (Array.isArray(existingDias) && existingDias.includes(date)) {
-                cb.checked = true;
-                if (cell) cell.classList.add('no-class-cell');
-            }
-
-            // Agregar listener para cambios
-            cb.addEventListener('change', function() {
-                if (this.closest) {
-                    this.closest('td').classList.toggle('no-class-cell', this.checked);
-                }
-                updateDiasNoClase(); // Llama a la función de actualización
-            });
-
-            // Prevención de doble clic (mantener la lógica original)
-            if (cb.parentNode) {
-                cb.parentNode.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-            }
-        });
-
-        // Llama a la función al cargar para asegurar que el valor inicial esté correcto
-        updateDiasNoClase();
-    })();
-</script>

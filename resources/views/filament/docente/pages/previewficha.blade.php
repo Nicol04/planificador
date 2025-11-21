@@ -12,31 +12,44 @@
             </h1>
 
             <div class="flex justify-between text-xs text-slate-500 mt-4">
-                <span>Institución Educativa: _____________________</span>
-                <span>Fecha: _______________</span>
+                <span>Institución Educativa: Ann Goulden</span>
+                <span>Fecha: {{ $ficha->created_at ? $ficha->created_at->format('d/m/Y') : \Carbon\Carbon::now()->format('d/m/Y') }}</span>
             </div>
         </div>
 
         <!-- Contenido Dinámico de la Ficha -->
         <div id="ficha-contenido" class="prose max-w-none text-slate-800">
-            @foreach($ejerciciosHtml as $ejercicioHtml)
+            @forelse($ejerciciosHtml as $ejercicioHtml)
                 {!! $ejercicioHtml !!}
-            @endforeach
+            @empty
+                <p class="text-gray-500 italic">No hay ejercicios disponibles.</p>
+            @endforelse
         </div>
 
-        <!-- Pie del Documento -->
-        <div class="mt-12 pt-6 border-t border-slate-300">
-            <div class="grid grid-cols-2 gap-8 text-xs text-slate-600">
-                <div>
-                    <p class="mb-1">______________________________</p>
-                    <p class="font-semibold">Firma del Docente</p>
-                </div>
-                <div>
-                    <p class="mb-1">______________________________</p>
-                    <p class="font-semibold">V°B° Director/Coordinador</p>
+        <!-- Sección de Firma del Docente -->
+        <div class="mt-16 pt-8 border-t-2 border-slate-300">
+            <div class="flex justify-end">
+                <div class="text-center" style="min-width: 280px;">
+                    <!-- Línea de firma -->
+                    <p class="text-slate-800 mb-2">_______________________________</p>
+                    
+                    <!-- Nombre del docente -->
+                    <p class="font-bold text-slate-800 text-sm mb-1">
+                        @auth
+                            {{ auth()->user()->persona->nombre ?? '' }} {{ auth()->user()->persona->apellido ?? '' }}
+                        @else
+                            _________________________
+                        @endauth
+                    </p>
+                    
+                    <!-- Título/Rol -->
+                    <p class="text-xs text-slate-600 uppercase tracking-wide">
+                        Docente Responsable
+                    </p>
                 </div>
             </div>
         </div>
+    </div>
     
     
     <!-- Botón de impresión -->

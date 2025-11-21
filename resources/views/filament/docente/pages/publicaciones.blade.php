@@ -19,11 +19,12 @@
             <button class="panel-btn active" data-filter="all">Todos</button>
             <button class="panel-btn" data-filter="unidades">Unidades</button>
             <button class="panel-btn" data-filter="sesiones">Sesiones</button>
+            <button class="panel-btn" data-filter="fichas">Fichas</button>
             <button class="panel-btn" data-filter="plantillas">Plantillas</button>
             <button class="panel-btn" data-filter="otros">Otros</button>
         </nav>
 
-        <!-- UN SOLO GRID que contiene sesiones y unidades -->
+        <!-- UN SOLO GRID que contiene sesiones, unidades y fichas -->
         <div class="grid">
             @foreach ($sesiones as $sesion)
                 <article class="card" data-id="{{ $sesion->id }}" data-type="sesiones">
@@ -242,6 +243,67 @@
                             </a>
 
                             <span class="time">{{ $unidad->duracion ?? '' }}</span>
+                        </div>
+                    </div>
+                </article>
+            @endforeach
+
+            {{-- Fichas de Aprendizaje Públicas --}}
+            @foreach ($fichas as $ficha)
+                <article class="card" data-id="{{ $ficha->id }}" data-type="fichas">
+                    <div class="card-thumb">
+                        <img src="{{ $ficha->imagen_url ?? 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1200&auto=format&fit=crop' }}"
+                            alt="{{ $ficha->nombre ?? 'Ficha' }}">
+                        <!-- Badge tipo -->
+                        <div class="badge badge--ficha" style="background: #10b981;">Ficha</div>
+                        <!-- Círculo de identificación para fichas (letra F) -->
+                        <div class="date date--ficha" style="background: #10b981;">
+                            <div class="label">F</div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="meta">
+                            <span class="tema">
+                                {{ $ficha->grado ?? '—' }}
+                            </span>
+                            @php
+                                $docentePersona = optional(optional($ficha->user)->persona);
+                                $docenteName = trim(
+                                    ($docentePersona->nombre ?? '') . ' ' . ($docentePersona->apellido ?? ''),
+                                );
+                                $isYou = auth()->check() && auth()->id() == $ficha->user_id;
+
+                                $fichaEditUrl = route('filament.docente.resources.ficha-aprendizajes.edit', ['record' => $ficha->id]);
+                            @endphp
+
+                            <span class="docente">
+                                @if ($isYou)
+                                    <span class="you-label">(Tú)</span>
+                                @else
+                                    {{ $docenteName ?: 'Docente' }}
+                                @endif
+                            </span>
+                        </div>
+
+                        <h3 class="title">{{ $ficha->nombre ?? 'Sin título' }}</h3>
+                        <p class="subtitle">{{ Str::limit($ficha->descripcion ?? '', 80) }}</p>
+
+                        <div class="card-meta-info" style="font-size:13px;color:#6b7280;margin-bottom:10px;">
+                            <div style="margin-bottom:6px;"><strong>Tipo:</strong> {{ $ficha->tipo_ejercicio ?? 'General' }}</div>
+                            <div style="margin-bottom:6px;"><strong>Ejercicios:</strong> {{ $ficha->ejercicios->count() ?? 0 }}</div>
+                            <div style="margin-bottom:6px;"><strong>Creada:</strong> {{ $ficha->created_at->format('d M Y') }}</div>
+                        </div>
+
+                        <div class="card-actions">
+                            @if ($isYou)
+                                <a class="btn btn-edit" href="{{ $fichaEditUrl }}" title="Editar publicación">Editar publicación</a>
+                            @else
+                                <a class="btn btn-download" href="/fichas/{{ $ficha->id }}/preview"
+                                    target="_blank" title="Vista Previa">
+                                    Vista Previa
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </article>

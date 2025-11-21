@@ -313,8 +313,7 @@
                             class="titulo-documento w-full text-3xl font-bold text-slate-800 text-center mb-2 bg-transparent border-0 focus:outline-none focus:ring-0" />
 
                         <div class="flex justify-between text-xs text-slate-500 mt-4">
-                            <span>Institución Educativa: _____________________</span>
-                            <span>Fecha: _______________</span>
+                            <span>Institución Educativa: Ann Goulden</span>
                         </div>
                     </div>
 
@@ -322,21 +321,6 @@
                     <!-- Contenido Dinámico de la Ficha -->
                     <div id="ficha-contenido" class="prose max-w-none text-slate-800">
                         <!-- Aquí se insertará el contenido generado dinámicamente -->
-                    </div>
-
-
-                    <!-- Pie del Documento -->
-                    <div class="mt-12 pt-6 border-t border-slate-300">
-                        <div class="grid grid-cols-2 gap-8 text-xs text-slate-600">
-                            <div>
-                                <p class="mb-1">______________________________</p>
-                                <p class="font-semibold">Firma del Docente</p>
-                            </div>
-                            <div>
-                                <p class="mb-1">______________________________</p>
-                                <p class="font-semibold">V°B° Director/Coordinador</p>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
