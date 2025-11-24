@@ -11,10 +11,96 @@
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <!-- Panel Izquierdo: Formulario de Entrada -->
             <div class="lg:col-span-2">
+                <!-- Botón Crear ficha de aprendizaje -->
+                @php
+                    // 1. Detectar si estamos en el paso correcto
+                    // Usamos str_contains para ser más flexibles con la URL
+                    $isEditMomentos = request()->is('*/edit') && request('step') === 'momentos-de-la-sesion';
+
+                    // 2. Obtener ID de la sesión
+                    // IMPORTANTE: Filament suele llamar al parámetro de ruta 'record', probamos ambos por si acaso.
+                    $sesionId = request()->route('record') ?? request()->route('sesion');
+
+                    // 3. Construir la URL manualmente para asegurar que el ?sesion_id se pegue sí o sí
+                    $baseUrl = \App\Filament\Docente\Resources\FichaAprendizajeResource::getUrl('create');
+
+                    // Si tenemos ID, lo concatenamos, si no, dejamos la base
+                    $urlFinal = $sesionId ? "{$baseUrl}?sesion_id={$sesionId}" : '#';
+
+                    // Verificar si existe una ficha asociada a esta sesión
+                    $existeFichaSesion = false;
+                    if ($sesionId) {
+                        $existeFichaSesion = \App\Models\FichaSesion::where('sesion_id', $sesionId)->exists();
+                    }
+                @endphp
+
+                @if ($existeFichaSesion)
+                    @php
+                        // Obtener el id de la ficha asociada
+                        $fichaSesion = \App\Models\FichaSesion::where('sesion_id', $sesionId)->first();
+                        $fichaId = $fichaSesion?->ficha_aprendizaje_id;
+                        $editUrl = $fichaId
+                            ? \App\Filament\Docente\Resources\FichaAprendizajeResource::getUrl('edit', [
+                                'record' => $fichaId,
+                            ])
+                            : '#';
+                        $previewUrl = $fichaId ? url("/fichas/{$fichaId}/preview") : '#';
+                    @endphp
+                    <div class="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
+                        Ya existe una ficha de aprendizaje asociada a esta sesión.
+                    </div>
+                    @if ($fichaId)
+                        <div class="flex flex-col sm:flex-row gap-2 mb-6">
+                            <button type="button"
+                                class="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 text-base"
+                                style="border: 2px solid #fbbf24;" onclick="window.location.href='{{ $editUrl }}'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
+                                </svg>
+                                Editar ficha
+                            </button>
+                            <button type="button"
+                                class="flex-1 bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 text-base"
+                                onclick="window.open('{{ $previewUrl }}', 'vistaPreviaFicha', 'width=1200,height=800,scrollbars=yes,resizable=yes');">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Previsualizar
+                            </button>
+                        </div>
+                    @endif
+                @else
+                    <button type="button"
+                        class="w-full mb-6 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 text-lg
+                        @unless ($isEditMomentos && $sesionId) opacity-50 cursor-not-allowed @endunless"
+                        {{-- Usamos la URL concatenada manualmente --}}
+                        onclick="@if ($isEditMomentos && $sesionId) window.location.href='{{ $urlFinal }}' @else return false; @endif"
+                        @unless ($isEditMomentos && $sesionId) disabled @endunless>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Crear ficha de aprendizaje
+                    </button>
+                @endif
+
+                @unless ($isEditMomentos)
+                    <div class="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
+                        Solo puedes crear una ficha de aprendizaje cuando estés editando una sesión.
+                    </div>
+                @endunless
+
                 <h2 class="titulo-documento text-2xl font-bold text-slate-800 dark:text-white mb-1">
                     Datos de la Sesión
                 </h2>
-                <p class="text-sm text-slate-500 dark:text-white mb-6">Complete los campos para generar la ficha</p>
+                <p class="text-sm text-slate-500 dark:text-white mb-6">Complete los campos para generar la ficha
+                </p>
 
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 gap-3">
@@ -115,7 +201,8 @@
 
                     <!-- Encabezado del Documento -->
                     <div class="border-b-2 border-slate-300 pb-4 mb-8">
-                        <h2 class="titulo-documento text-3xl font-bold text-slate-800 dark:text-white text-center mb-2">
+                        <h2
+                            class="titulo-documento text-3xl font-bold text-slate-800 dark:text-white text-center mb-2">
                             Momentos de la sesión de aprendizaje
                         </h2>
                     </div>
@@ -365,6 +452,7 @@
         document.addEventListener('submit', syncMomentos, true);
         syncMomentos();
     });
+    
 </script>
 
 @forelse($datosSesion['competencias'] ?? [] as $comp)

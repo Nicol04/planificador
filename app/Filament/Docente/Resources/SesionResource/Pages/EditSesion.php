@@ -274,17 +274,29 @@ class EditSesion extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        if (! $this->sessionHasListaCotejo()) {
-            return [];
-        }
+        $actions = [];
 
-        return [
-            Actions\Action::make('previsualizar_listas')
+        // Acción para Lista de cotejo
+        if ($this->sessionHasListaCotejo()) {
+            $actions[] = Actions\Action::make('previsualizar_listas')
                 ->label('Listas de cotejo')
                 ->icon('heroicon-o-eye')
                 ->url(route('listas-cotejo.vista.previa', $this->record->id))
-                ->openUrlInNewTab(),
-        ];
+                ->openUrlInNewTab();
+        }
+
+        // Buscar ficha relacionada a la sesión actual
+        $fichaSesion = \App\Models\FichaSesion::where('sesion_id', $this->record->id)->latest()->first();
+        if ($fichaSesion && $fichaSesion->fichaAprendizaje) {
+            $actions[] = Actions\Action::make('preview')
+                ->label('Vista previa ficha de aprendizaje')
+                ->icon('heroicon-o-eye')
+                ->color('info')
+                ->url(fn() => route('fichas.preview', ['fichaId' => $fichaSesion->fichaAprendizaje->id]))
+                ->openUrlInNewTab();
+        }
+
+        return $actions;
     }
     protected function sessionHasListaCotejo(): bool
     {

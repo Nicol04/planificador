@@ -37,9 +37,6 @@ class CompetenciaResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->label('Nombre de la Competencia'),
-                        Forms\Components\Textarea::make('descripcion')
-                            ->columnSpanFull()
-                            ->label('Descripción'),
                     ]),
 
                 Forms\Components\Section::make('Capacidades')
@@ -51,10 +48,7 @@ class CompetenciaResource extends Resource
                                     ->required()
                                     ->maxLength(255)
                                     ->label('Nombre de la Capacidad'),
-                                Forms\Components\Textarea::make('descripcion')
-                                    ->label('Descripción de la Capacidad'),
                             ])
-                            ->columns(2)
                             ->defaultItems(0)
                             ->addActionLabel('Agregar Capacidad')
                             ->label('Capacidades'),

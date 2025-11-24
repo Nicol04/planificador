@@ -9,7 +9,7 @@ class Competencia extends Model
 {
     use HasFactory;
     protected $table = 'competencias';
-    protected $fillable = ['curso_id', 'nombre', 'descripcion'];
+    protected $fillable = ['curso_id', 'nombre'];
 
     public function curso()
     {

@@ -10,7 +10,7 @@ class Capacidad extends Model
     use HasFactory;
     protected $table = 'capacidades';
 
-    protected $fillable = ['competencia_id', 'nombre', 'descripcion'];
+    protected $fillable = ['competencia_id', 'nombre'];
 
     public function competencia()
     {

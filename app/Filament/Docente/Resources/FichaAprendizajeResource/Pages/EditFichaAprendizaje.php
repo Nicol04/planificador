@@ -21,7 +21,6 @@ class EditFichaAprendizaje extends EditRecord
                 ->color('info')
                 ->url(fn(): string => route('fichas.preview', ['fichaId' => $this->record->id]))
                 ->openUrlInNewTab(),
-            
         ];
     }
 

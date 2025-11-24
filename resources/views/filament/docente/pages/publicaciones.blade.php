@@ -351,11 +351,14 @@
                         </div>
 
                         <div class="card-actions">
-                            <button class="btn btn-duplicate" data-id="{{ $plantilla->id }}"
-                                data-titulo="{{ $plantilla->nombre }}" title="Usar plantilla">
-                                Usar plantilla
+                            <button class="btn btn-primary btn-use-template"
+                                data-id="{{ $plantilla->id }}"
+                                title="Usar plantilla"
+                                style="background: #ffca3a; color: #fff; border-radius: 8px; padding: 8px 18px; font-weight: 600; box-shadow: 0 2px 8px rgba(37,99,235,0.08); border: none; transition: background 0.2s;"
+                                onmouseover="this.style.background='#1e40af'"
+                                onmouseout="this.style.background='#ffca3a'">
+                                <i class="fas fa-magic" style="margin-right:6px"></i>Usar
                             </button>
-
                             <a class="btn btn-download" href="{{ $plantilla->archivo ?? '#' }}"
                                 data-id="{{ $plantilla->id }}" target="_blank" title="Descargar">
                                 Descargar
@@ -369,6 +372,59 @@
     </div>
     @push('scripts')
         <script>
+            // Define la URL de creación de asistencia para usar en la función
+            const createUrl = @json(\App\Filament\Docente\Resources\AsistenciaResource::getUrl('create'));
+
+            document.querySelectorAll('.btn-use-template').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const plantillaId = this.dataset.id;
+                    const nombre = this.closest('div').querySelector('h3')?.innerText ?? `#${plantillaId}`;
+                    confirmarUsoPlantilla(plantillaId, nombre);
+                });
+            });
+
+            function confirmarUsoPlantilla(plantillaId, nombrePlantilla) {
+                let targetUrl;
+                try {
+                    const urlObj = new URL(createUrl, window.location.origin);
+                    urlObj.searchParams.set('plantilla_id', plantillaId);
+                    targetUrl = urlObj.toString();
+                } catch (e) {
+                    targetUrl = createUrl + (createUrl.includes('?') ? '&' : '?') + 'plantilla_id=' + encodeURIComponent(plantillaId);
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    const title = '🌐 Usar plantilla';
+                    const htmlMessage = `<p>¿Deseas usar la plantilla <strong>${nombrePlantilla}</strong> para crear una nueva asistencia?</p>
+                        <p class="text-muted">Se abrirá el formulario de creación con la plantilla seleccionada.</p>`;
+
+                    Swal.fire({
+                        title: title,
+                        html: htmlMessage,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-check-circle"></i> Sí, usar plantilla',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#0066cc',
+                        cancelButtonColor: '#6c757d',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return new Promise((resolve) => {
+                                setTimeout(() => {
+                                    window.location.href = targetUrl;
+                                    resolve();
+                                }, 400);
+                            });
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    });
+                } else {
+                    if (confirm(`Usar plantilla "${nombrePlantilla}" para crear asistencia?`)) {
+                        window.location.href = targetUrl;
+                    }
+                }
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 

@@ -85,8 +85,8 @@ class FichaAprendizaje extends Model
                 Log::info("✓ Ejercicios asociados correctamente");
             }
 
-            // Asociar FichaSesion si existe sesion_id en la sesión
-            $sesionId = Session::get('sesion_id');
+            // Asociar FichaSesion si existe sesion_id en la sesión o en el modelo
+            $sesionId = $ficha->sesion_id ?? Session::get('sesion_id');
             if ($sesionId) {
                 try {
                     \App\Models\FichaSesion::create([

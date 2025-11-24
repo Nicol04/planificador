@@ -253,9 +253,6 @@
                 // --- Integración con código existente de confirmar uso de plantilla ---
                 const createUrl = @json(\App\Filament\Docente\Resources\AsistenciaResource::getUrl('create'));
 
-
-
-
                 function confirmarUsoPlantilla(plantillaId, nombrePlantilla) {
                     let targetUrl;
                     try {

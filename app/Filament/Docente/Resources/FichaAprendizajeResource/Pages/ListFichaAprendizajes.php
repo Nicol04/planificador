@@ -74,8 +74,8 @@ class ListFichaAprendizajes extends ListRecords
 
             $nombreFicha = null;
 
-            DB::transaction(function () use ($id, &$nombreFicha) {
-                $ficha = FichaAprendizaje::with(['ejercicios', 'fichaSesiones'])->findOrFail($id);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($id, &$nombreFicha) {
+                $ficha = \App\Models\FichaAprendizaje::with(['ejercicios', 'fichaSesiones'])->findOrFail($id);
                 $nombreFicha = $ficha->nombre;
 
                 // eliminar ejercicios asociados
@@ -88,6 +88,9 @@ class ListFichaAprendizajes extends ListRecords
                     $fichaSesion->delete();
                 }
 
+                // Eliminar relaciones directas en ficha_sesion por si acaso
+                \App\Models\FichaSesion::where('ficha_aprendizaje_id', $id)->delete();
+
                 // finalmente eliminar la ficha
                 $ficha->delete();
             });
@@ -99,7 +102,7 @@ class ListFichaAprendizajes extends ListRecords
                 ->duration(4000)
                 ->send();
         } catch (\Throwable $e) {
-            Log::error('Error eliminando ficha', ['id' => $id, 'exception' => $e]);
+            \Illuminate\Support\Facades\Log::error('Error eliminando ficha', ['id' => $id, 'exception' => $e]);
 
             \Filament\Notifications\Notification::make()
                 ->title('❌ Error al eliminar la ficha')

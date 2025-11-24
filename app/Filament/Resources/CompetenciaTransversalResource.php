@@ -36,10 +36,7 @@ class CompetenciaTransversalResource extends Resource
                                     ->required()
                                     ->maxLength(255)
                                     ->label('Nombre de la Capacidad'),
-                                Forms\Components\Textarea::make('descripcion')
-                                    ->label('Descripción de la Capacidad'),
                             ])
-                            ->columns(2)
                             ->defaultItems(0)
                             ->addActionLabel('Agregar Capacidad')
                             ->label('Capacidades'),

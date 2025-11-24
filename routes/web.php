@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Docente\Resources\FichaAprendizajeResource\Pages\ListFichaAprendizajes;
 use App\Http\Controllers\AjaxFichaAprendizajeController;
 use App\Http\Controllers\Docente\PlantillaController;
 use App\Http\Controllers\Documents\AsistenciaDocumentController;
@@ -89,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Ruta para previsualizar/imprimir una FichaAprendizaje
     Route::get('/fichas/{fichaId}/preview', [FichaAprendizajePreviewController::class, 'preview'])->name('fichas.preview');
+
 });
 Route::get('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'showLoginForm'])->name('docente.login');
 Route::post('/docente/login', [App\Http\Controllers\Auth\CustomLoginController::class, 'login'])->name('docente.login.submit');

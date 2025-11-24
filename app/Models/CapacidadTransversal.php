@@ -13,7 +13,6 @@ class CapacidadTransversal extends Model
     protected $fillable = [
         'competencia_transversal_id',
         'nombre',
-        'descripcion',
     ];
 
     // Relación: una capacidad pertenece a una competencia
