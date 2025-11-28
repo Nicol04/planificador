@@ -269,7 +269,7 @@
 
             // 🆕 FUNCIÓN PARA DESCARGAR WORD DIRECTAMENTE
             function descargarWord(unidadId, orientacion) {
-                const url = `/unidades/${unidadId}/previsualizar?orientacion=${orientacion}`;
+                const url = `/unidades/${unidadId}/previsualizar?orientacion=${orientacion}&descargar=1&raw=1`;
 
                 // Crear un enlace temporal para forzar la descarga
                 const link = document.createElement('a');

@@ -44,6 +44,7 @@ class CreateUnidad extends CreateRecord
             'enfoques' => $this->data['enfoques'] ?? [],
             'materiales_basicos' => $this->data['materiales_basicos'] ?? '',
             'recursos' => $this->data['recursos'] ?? '',
+            'cronograma' => $this->data['cronograma'] ?? [],
         ]);
     }
 }

@@ -42,6 +42,7 @@ class CreateUnidad extends CreateRecord
         $unidad->detalles()->create([
             'contenido' => $this->data['contenido'] ?? [],
             'enfoques' => $this->data['enfoques'] ?? [],
+            'cronograma' => $this->data['cronograma'] ?? [],
             'materiales_basicos' => $this->data['materiales_basicos'] ?? '',
             'recursos' => $this->data['recursos'] ?? '',
         ]);

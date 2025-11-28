@@ -29,6 +29,7 @@ class EditUnidad extends EditRecord
             $data['contenido'] = $detalle->contenido ?? [];
             $data['enfoques'] = $detalle->enfoques ?? [];
             $data['materiales_basicos'] = $detalle->materiales_basicos ?? '';
+            $data['cronograma'] = $detalle->cronograma ?? [];
             $data['recursos'] = $detalle->recursos ?? '';
         }
 
@@ -48,6 +49,7 @@ class EditUnidad extends EditRecord
                 'contenido' => $this->data['contenido'] ?? [],
                 'enfoques' => $this->data['enfoques'] ?? [],
                 'materiales_basicos' => $this->data['materiales_basicos'] ?? '',
+                'cronograma' => $this->data['cronograma'] ?? [],
                 'recursos' => $this->data['recursos'] ?? '',
             ]
         );

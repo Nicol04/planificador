@@ -14,15 +14,58 @@
             </span>
         </div>
 
-        <!-- Panel de botones -->
-        <nav class="panel">
-            <button class="panel-btn active" data-filter="all">Todos</button>
-            <button class="panel-btn" data-filter="unidades">Unidades</button>
-            <button class="panel-btn" data-filter="sesiones">Sesiones</button>
-            <button class="panel-btn" data-filter="fichas">Fichas</button>
-            <button class="panel-btn" data-filter="plantillas">Plantillas</button>
-            <button class="panel-btn" data-filter="otros">Otros</button>
-        </nav>
+        <!-- Panel de botones + buscador y selector de grados en la misma fila -->
+        <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 22px; flex-wrap: wrap;">
+            <nav class="panel" style="flex-shrink:0;">
+                <button class="panel-btn active" data-filter="all">Todos</button>
+                <button class="panel-btn" data-filter="unidades">Unidades</button>
+                <button class="panel-btn" data-filter="sesiones">Sesiones</button>
+                <button class="panel-btn" data-filter="fichas">Fichas</button>
+                <button class="panel-btn" data-filter="plantillas">Plantillas</button>
+                <button class="panel-btn" data-filter="otros">Otros</button>
+            </nav>
+            <div style="display: flex; gap: 12px; align-items: center; flex: 1; min-width: 320px;">
+                <div style="position: relative; flex: 1; max-width: 320px;">
+                    <input
+                        type="text"
+                        id="search-docente"
+                        placeholder="🔍 Buscar por docente..."
+                        style="width: 100%; padding: 10px 38px 10px 14px; border-radius: 8px; border: 1.5px solid #bfc9d1; background: #f8fafc; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: border 0.2s;"
+                        onfocus="this.style.borderColor='#2563eb'"
+                        onblur="this.style.borderColor='#bfc9d1'"
+                    >
+                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;">
+                        <i class="fas fa-search"></i>
+                    </span>
+                </div>
+                <div style="position: relative;">
+                    <select
+                        id="filter-grado"
+                        style="padding: 10px 36px 10px 14px; border-radius: 8px; border: 1.5px solid #bfc9d1; background: #f8fafc; font-size: 15px; min-width: 170px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: border 0.2s;"
+                        onfocus="this.style.borderColor='#2563eb'"
+                        onblur="this.style.borderColor='#bfc9d1'"
+                    >
+                        <option value="">Todos los grados</option>
+                        @php
+                            // Listar todos los grados únicos de la tabla aulas
+                            $grados = \App\Models\Aula::query()
+                                ->select('grado')
+                                ->distinct()
+                                ->orderBy('grado')
+                                ->pluck('grado')
+                                ->filter()
+                                ->values();
+                        @endphp
+                        @foreach($grados as $grado)
+                            <option value="{{ $grado }}">{{ $grado }} Primaria</option>
+                        @endforeach
+                    </select>
+                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; pointer-events: none;">
+                        <i class="fas fa-chevron-down"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
 
         <!-- UN SOLO GRID que contiene sesiones, unidades y fichas -->
         <div class="grid">
@@ -573,6 +616,85 @@
                             }
                         });
                     });
+                });
+
+                // NUEVO: Filtro por grado y búsqueda por docente
+                const searchInput = document.getElementById('search-docente');
+                const gradoSelect = document.getElementById('filter-grado');
+
+                function normalize(str) {
+                    return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                }
+
+                function filterCards() {
+                    const search = normalize(searchInput.value);
+                    const grado = gradoSelect.value;
+                    // Obtener filtro de tipo activo
+                    const activeType = document.querySelector('.panel-btn.active')?.dataset.filter || 'all';
+
+                    document.querySelectorAll('.grid .card').forEach(card => {
+                        let show = true;
+
+                        // Filtrar por tipo (panel)
+                        if (activeType !== 'all' && (card.dataset.type !== activeType)) {
+                            show = false;
+                        }
+
+                        // Filtrar por grado
+                        if (show && grado) {
+                            // Buscar grado en los elementos visibles de la tarjeta
+                            let cardGrado = '';
+                            // Sesiones
+                            if (card.dataset.type === 'sesiones') {
+                                const tema = card.querySelector('.tema')?.innerText || '';
+                                cardGrado = tema.split('·')[0].trim();
+                            }
+                            // Unidades
+                            else if (card.dataset.type === 'unidades') {
+                                const tema = card.querySelector('.tema')?.innerText || '';
+                                cardGrado = tema.split('·')[0].trim();
+                            }
+                            // Fichas
+                            else if (card.dataset.type === 'fichas') {
+                                cardGrado = card.querySelector('.tema')?.innerText.trim() || '';
+                            }
+                            // Plantillas: no filtrar por grado
+                            if (card.dataset.type !== 'plantillas' && normalize(cardGrado) !== normalize(grado)) {
+                                show = false;
+                            }
+                        }
+
+                        // Filtrar por búsqueda de docente
+                        if (show && search) {
+                            let docente = '';
+                            // Sesiones y fichas
+                            if (card.querySelector('.docente')) {
+                                docente = card.querySelector('.docente').innerText || '';
+                            }
+                            // Unidades: buscar en profesores responsables
+                            else if (card.dataset.type === 'unidades') {
+                                docente = Array.from(card.querySelectorAll('.card-meta-info div'))
+                                    .map(d => d.innerText).join(' ');
+                            }
+                            // Plantillas: buscar en "Por:"
+                            else if (card.dataset.type === 'plantillas') {
+                                docente = card.querySelector('.card-meta-info')?.innerText || '';
+                            }
+                            if (!normalize(docente).includes(search)) {
+                                show = false;
+                            }
+                        }
+
+                        card.style.display = show ? '' : 'none';
+                    });
+                }
+
+                searchInput.addEventListener('input', filterCards);
+                gradoSelect.addEventListener('change', filterCards);
+
+                // Integrar con filtro de tipo (panel)
+                document.querySelectorAll('.panel-btn').forEach(btn => {
+                    btn.addEventListener('click', filterCards);
                 });
             });
         </script>

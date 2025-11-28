@@ -8,6 +8,7 @@ use App\Filament\Docente\Resources\UnidadResource\Schemas\EnfoquesSchema;
 use App\Filament\Docente\Resources\UnidadResource\Schemas\MaterialesSchema;
 use App\Filament\Docente\Resources\UnidadResource\Pages;
 use App\Filament\Docente\Resources\UnidadResource\RelationManagers;
+use App\Filament\Docente\Resources\UnidadResource\Schemas\CronogramaSchema;
 use App\Models\Unidad;
 use Filament\Forms;
 use Filament\Forms\Components\Hidden;
@@ -52,6 +53,12 @@ class UnidadResource extends Resource
                     ->icon('heroicon-o-light-bulb')
                     ->completedIcon('heroicon-o-check-circle'),
 
+                Step::make('Cronograma de Sesiones')
+                    ->schema(CronogramaSchema::schema())
+                    ->description('🗓️ Programación de sesiones de la unidad')
+                    ->icon('heroicon-o-calendar')
+                    ->completedIcon('heroicon-o-check-circle'),
+                
                 Step::make('Materiales y Recursos')
                     ->schema(MaterialesSchema::schema())
                     ->description('🎨 Recursos necesarios para la unidad')

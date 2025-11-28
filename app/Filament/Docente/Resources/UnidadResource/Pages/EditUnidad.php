@@ -26,6 +26,7 @@ class EditUnidad extends EditRecord
             $data['enfoques'] = $detalle->enfoques ?? [];
             $data['materiales_basicos'] = $detalle->materiales_basicos ?? '';
             $data['recursos'] = $detalle->recursos ?? '';
+            $data['cronograma'] = $detalle->cronograma ?? [];
         }
 
         return $data;
@@ -42,6 +43,7 @@ class EditUnidad extends EditRecord
                 'enfoques' => $this->data['enfoques'] ?? [],
                 'materiales_basicos' => $this->data['materiales_basicos'] ?? '',
                 'recursos' => $this->data['recursos'] ?? '',
+                'cronograma' => $this->data['cronograma'] ?? [],
             ]
         );
     }
@@ -68,16 +70,23 @@ class EditUnidad extends EditRecord
                     ->icon('heroicon-o-light-bulb')
                     ->completedIcon('heroicon-o-check-circle'),
 
+                \Filament\Forms\Components\Wizard\Step::make('Cronograma de Actividades')
+                    ->schema(\App\Filament\Docente\Resources\UnidadResource\Schemas\CronogramaSchema::schema())
+                    ->description('📅 Secuencia de sesiones')
+                    ->icon('heroicon-o-calendar-days')
+                    ->completedIcon('heroicon-o-check-circle'),
+                // ---------------------------------------------------------------
+
                 \Filament\Forms\Components\Wizard\Step::make('Materiales y Recursos')
                     ->schema(\App\Filament\Docente\Resources\UnidadResource\Schemas\MaterialesSchema::schema())
                     ->description('🎨 Recursos necesarios para la unidad')
                     ->icon('heroicon-o-cube')
                     ->completedIcon('heroicon-o-check-circle'),
             ])
-            ->columnSpanFull()
-            ->persistStepInQueryString()
-            ->startOnStep(1)
-            ->skippable()
+                ->columnSpanFull()
+                ->persistStepInQueryString()
+                ->startOnStep(1)
+                ->skippable()
         ];
     }
 }
