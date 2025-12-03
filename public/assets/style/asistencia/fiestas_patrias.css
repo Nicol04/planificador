@@ -1,0 +1,761 @@
+/* --- IMPORTAR FUENTES --- */
+/* Cinzel: Para títulos solemnes (estilo escudo nacional) */
+/* Montserrat: Para lectura clara en la tabla */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+:root {
+    /* Paleta Perú Festivo */
+    --peru-red: #D91023;       /* Rojo Bandera intenso */
+    --peru-dark: #960b18;      /* Rojo sangre/oscuro para contrastes */
+    --peru-gold: #c5a059;      /* Dorado Incaico */
+    --peru-gold-light: #e6d3a3;
+    --paper-white: #ffffff;    
+    --paper-cream: #fffdf5;    /* Crema muy suave para filas alternas */
+    
+    /* Textos */
+    --text-main: #2d0e10;      /* Casi negro con tinte rojizo */
+    --text-light: #6b5b4c;
+    
+    /* Variables funcionales */
+    --border-gold: 2px solid var(--peru-gold);
+    --border-dark: 1.5px solid #2d0e10; /* Bordes de tabla oscuros para impresión */
+    --radius: 12px;
+}
+
+/* --- ANIMACIONES --- */
+@keyframes flagWave {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* --- ESTRUCTURA GENERAL --- */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-main);
+    
+    /* FONDO ANIMADO PATRIÓTICO */
+    /* Capa inferior: Imagen fija. Capa superior: Gradiente animado */
+    background: 
+        linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,240,240,0.8) 50%, rgba(255,255,255,0.85) 100%),
+        url('/assets/img/asistencia_peru/fondo4peru.jpg'); 
+    background-size: 200% 200%, cover;
+    background-position: center;
+    background-attachment: fixed;
+    animation: flagWave 15s ease infinite; /* Sutil movimiento del brillo */
+}
+
+.document-preview {
+    width: 100%;
+    padding: 30px;
+    box-sizing: border-box;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- MARCO TIPO DOCUMENTO OFICIAL --- */
+.document-frame {
+    width: 100%;
+    max-width: 98%; /* Aprovechar ancho de pantalla */
+    background: var(--paper-white);
+    
+    /* Doble borde: Rojo fino exterior, Dorado interior */
+    border: 4px double var(--peru-red); 
+    border-radius: 16px;
+    padding: 25px;
+    
+    /* Sombra elegante */
+    box-shadow: 
+        0 20px 60px rgba(150, 11, 24, 0.25), 
+        inset 0 0 0 2px var(--peru-gold); /* Borde dorado interno */
+    
+    position: relative;
+    margin-top: 20px;
+}
+
+/* Banderola Colgante (Elemento decorativo superior) */
+.decoration-banderola {
+    position: absolute;
+    top: -50px; /* Ajustar según la altura de la imagen */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 600px;
+    height: 100px;
+    background-image: url('/assets/img/asistencia_peru/banderola.png');
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: contain;
+    z-index: 20;
+    pointer-events: none;
+    filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
+}
+
+/* --- HEADER / ENCABEZADO --- */
+.header-banner {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, #ffffff, #fffafa);
+    padding: 30px 40px 20px 40px;
+    border-radius: var(--radius);
+    border-bottom: 3px solid var(--peru-red);
+    margin-bottom: 25px;
+    margin-top: 20px; /* Espacio para no chocar con la banderola */
+    position: relative;
+}
+
+.header-logo {
+    width: 90px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.header-title {
+    text-align: center;
+    flex-grow: 1;
+}
+
+.header-title h1 {
+    margin: 0;
+    font-family: 'Cinzel', serif; /* Fuente patriótica */
+    font-size: 32px;
+    color: var(--peru-red);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: 1px 1px 0px var(--peru-gold-light);
+}
+
+.header-title p {
+    margin: 8px 0 0 0;
+    font-size: 14px;
+    color: var(--text-main);
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    border-top: 1px solid var(--peru-gold);
+    border-bottom: 1px solid var(--peru-gold);
+    display: inline-block;
+    padding: 4px 20px;
+}
+
+/* Mascota (Niña Perú) */
+.header-mascot {
+    height: 110px;
+    width: auto;
+    animation: gentleFloat 4s ease-in-out infinite;
+    margin: 0 15px;
+}
+
+/* Mascota (Niña/Ñiño Perú) más grande */
+.header-mascot.mascot-big {
+    height: 140px;
+    width: auto;
+    margin: 0 18px;
+}
+
+/* --- TOOLBAR (Botones) --- */
+.preview-toolbar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end; /* Botones a la derecha */
+    gap: 10px;
+    margin-bottom: 15px;
+    z-index: 50;
+    position: relative;
+}
+
+.btn-primary {
+    background: linear-gradient(to bottom, var(--peru-red), var(--peru-dark));
+    color: #fff;
+    border: 1px solid var(--peru-dark);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(217, 16, 35, 0.2);
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(217, 16, 35, 0.3);
+}
+
+.btn-ghost, .btn-outline {
+    background: white;
+    color: var(--peru-dark);
+    border: 1px solid var(--peru-red);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* --- INFO CARD & LEYENDA --- */
+.info-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-left: 6px solid var(--peru-red); /* Borde lateral rojo */
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-left-width: 6px; /* Restaurar borde ancho */
+}
+
+.info-meta .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--peru-gold);
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+}
+
+.info-meta .value {
+    font-size: 16px;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+/* Leyenda Chips */
+.legend-card {
+    display: flex;
+    gap: 12px;
+}
+
+.legend-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.legend-dot.att { background: #2E7D32; } /* Verde */
+.legend-dot.abs { background: #D32F2F; } /* Rojo */
+.legend-dot.exc { background: #1565C0; } /* Azul */
+.legend-dot.lat { background: #F9A825; } /* Amarillo Oscuro */
+
+.legend-label {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.1;
+}
+
+/* --- TABLA (El corazón del diseño) --- */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--peru-gold); /* Marco dorado para la tabla */
+}
+
+.table {
+    width: 100%;
+    min-width: 1200px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+}
+
+.table th, .table td {
+    border-bottom: var(--border-dark);
+    border-right: var(--border-dark);
+    padding: 8px 4px;
+    vertical-align: middle;
+    font-size: 12px;
+}
+
+/* Cabecera (Thead) */
+thead th {
+    background: linear-gradient(180deg, var(--peru-red) 0%, var(--peru-dark) 100%);
+    color: #ffffff;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    border-color: rgba(0,0,0,0.3); /* Bordes más sutiles dentro del rojo */
+}
+
+/* Nombres de estudiantes (Sticky Column) */
+th.sticky-col, td.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    border-right: 3px solid var(--peru-dark) !important; /* Separador fuerte */
+}
+
+/* Estilo específico para la celda de nombres */
+td.sticky-col.name {
+    text-align: left;
+    padding-left: 10px;
+    font-weight: 700;
+    color: var(--text-main);
+    background-color: #fff; /* Fondo base por defecto */
+}
+
+/* Filas Alternas */
+tbody tr:nth-child(odd) td {
+    background-color: var(--paper-white);
+}
+
+tbody tr:nth-child(even) td {
+    background-color: var(--paper-cream); /* Crema muy suave */
+}
+
+/* Asegurar que el sticky tenga el color correcto al scrollear */
+tbody tr:nth-child(odd) td.sticky-col { background-color: var(--paper-white); }
+tbody tr:nth-child(even) td.sticky-col { background-color: var(--paper-cream); }
+
+/* Hover */
+tbody tr:hover td {
+    background-color: #fff0f0 !important; /* Rojo muy pálido al pasar mouse */
+    color: #000;
+}
+
+/* Columnas SIN CLASE (Sábados/Domingos/Feriados) */
+th.no-class-column, td.no-class-column {
+    background-color: #ffd6d6 !important; /* Fondo rojo más intenso */
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 5px,
+        rgba(217, 16, 35, 0.12) 5px,
+        rgba(217, 16, 35, 0.12) 10px
+    );
+}
+
+/* Textos Verticales */
+th.vertical-col {
+    height: 100px;
+    vertical-align: bottom;
+    padding-bottom: 10px;
+    max-width: 40px;
+}
+
+th.vertical-col .vertical-header {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Marca de Agua (Llama) */
+.watermark-llama {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* --- MARCAS DE AGUA DENTRO DE LA TABLA --- */
+.watermark-machupicchu {
+    position: absolute;
+    left: 30px;
+    bottom: 30px;
+    width: 180px;
+    opacity: 0.13;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.watermark-bandera {
+    position: absolute;
+    right: 30px;
+    top: 30px;
+    width: 120px;
+    opacity: 0.13;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* --- RECTÁNGULO DOCENTE CON BORDE CORTADO ALUSIVO A PERÚ --- */
+.peru-dashed-rect {
+    border: 3px dashed var(--peru-red);
+    border-radius: 12px;
+    background: linear-gradient(90deg, #fff 80%, #ffe8e8 100%);
+    box-shadow: 0 2px 8px rgba(217,16,35,0.07);
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+/* --- RECTÁNGULO DOCENTE EN UNA SOLA FILA --- */
+.peru-dashed-rect .info-meta {
+    flex-direction: row !important;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+.peru-dashed-rect .info-meta .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--peru-gold);
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+    margin-right: 4px;
+}
+
+.peru-dashed-rect .info-meta .value {
+    font-size: 16px;
+    color: var(--text-main);
+    font-weight: 700;
+    margin-right: 18px;
+}
+
+/* --- LEYENDA DEBAJO DEL TÍTULO CENTRAL --- */
+.legend-under-title {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* Insignia más grande */
+.logo-big {
+    width: 140px !important;
+    max-width: none !important;
+    height: auto;
+}
+
+/* Logo MINEDU más grande */
+.header-logo.right-logo {
+    width: 140px !important;
+    max-width: none !important;
+    height: auto;
+}
+
+/* Bandera en la fila del docente */
+.docente-bandera {
+    height: 48px;
+    width: auto;
+    margin-left: 24px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(217,16,35,0.10);
+    object-fit: contain;
+}
+
+/* --- MEDIA QUERIES --- */
+@media (max-width: 900px) {
+    .header-banner { flex-direction: column; text-align: center; }
+    .header-mascot { margin: 10px 0; }
+    .decoration-banderola { width: 95%; }
+}
+
+/* --- IMPRESIÓN (PRINT) MEJORADA --- */
+@media print {
+    @page { size: landscape; margin: 0.5cm; }
+
+    body {
+        background: 
+            linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,240,240,0.8) 50%, rgba(255,255,255,0.85) 100%),
+            url('/assets/img/asistencia_peru/fondo4peru.jpg') !important;
+        background-size: 200% 200%, cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .document-preview { 
+        padding: 30px !important; 
+        min-height: 100vh !important; 
+        display: flex !important; 
+        flex-direction: column !important; 
+        align-items: center !important;
+    }
+    .document-frame {
+        border: 4px double #D91023 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 20px 60px rgba(150, 11, 24, 0.25), inset 0 0 0 2px #c5a059 !important;
+        margin-top: 20px !important;
+        padding: 25px !important;
+        background: #fff !important;
+        max-width: 98% !important;
+        position: relative !important;
+    }
+
+    /* Mostrar decoraciones y marcas de agua */
+    .decoration-banderola,
+    .watermark-llama,
+    .watermark-machupicchu,
+    .watermark-bandera {
+        display: block !important;
+    }
+
+    /* Mostrar toolbar solo si quieres imprimir botones, si no, puedes ocultar */
+    .no-print, .preview-toolbar, .btn-primary, #download-word-form {
+        display: none !important;
+    }
+
+    /* Encabezado igual que pantalla */
+    .header-banner {
+        border-bottom: 3px solid #D91023 !important;
+        border-radius: 16px !important;
+        background: linear-gradient(180deg, #ffffff, #fffafa) !important;
+        box-shadow: none !important;
+        padding: 30px 40px 20px 40px !important;
+        margin-bottom: 25px !important;
+        margin-top: 20px !important;
+        display: flex !important;
+        gap: 20px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    .header-logo.logo-big {
+        width: 140px !important;
+        height: auto !important;
+        max-width: none !important;
+    }
+    .header-logo.right-logo {
+        width: 90px !important;
+        height: auto !important;
+    }
+    .header-title h1 {
+        color: #D91023 !important;
+        font-size: 32px !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.5px !important;
+        text-shadow: 1px 1px 0px #e6d3a3 !important;
+        margin: 0 !important;
+    }
+    .header-title p {
+        color: #2d0e10 !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        border-top: 1px solid #c5a059 !important;
+        border-bottom: 1px solid #c5a059 !important;
+        display: inline-block !important;
+        padding: 4px 20px !important;
+        margin: 8px 0 0 0 !important;
+    }
+    .header-mascot {
+        height: 110px !important;
+        width: auto !important;
+        margin: 0 15px !important;
+    }
+
+    /* Leyenda debajo del título */
+    .legend-under-title {
+        margin-top: 10px !important;
+        display: flex !important;
+        justify-content: center !important;
+        gap: 12px !important;
+    }
+    .legend-dot.att { background: #2E7D32 !important; }
+    .legend-dot.abs { background: #D32F2F !important; }
+    .legend-dot.exc { background: #1565C0 !important; }
+    .legend-dot.lat { background: #F9A825 !important; }
+    .legend-dot {
+        color: #fff !important;
+        border: 2px solid #fff !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+    }
+
+    /* Docente fila y bandera */
+    .peru-dashed-rect {
+        border: 3px dashed #D91023 !important;
+        border-radius: 12px !important;
+        background: linear-gradient(90deg, #fff 80%, #ffe8e8 100%) !important;
+        box-shadow: 0 2px 8px rgba(217,16,35,0.07) !important;
+        padding: 15px 20px !important;
+        margin-bottom: 20px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    .peru-dashed-rect .info-meta {
+        flex-direction: row !important;
+        gap: 40px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        display: flex !important;
+    }
+    .peru-dashed-rect .info-meta .label {
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        color: #c5a059 !important;
+        font-weight: 700 !important;
+        font-family: 'Cinzel', serif !important;
+        margin-right: 4px !important;
+    }
+    .peru-dashed-rect .info-meta .value {
+        font-size: 16px !important;
+        color: #2d0e10 !important;
+        font-weight: 700 !important;
+        margin-right: 18px !important;
+    }
+    .docente-bandera {
+        height: 48px !important;
+        width: auto !important;
+        margin-left: 24px !important;
+        border-radius: 6px !important;
+        box-shadow: 0 2px 8px rgba(217,16,35,0.10) !important;
+        object-fit: contain !important;
+        display: inline-block !important;
+    }
+
+    /* Tabla igual que pantalla */
+    .table-responsive {
+        border-radius: 8px !important;
+        border: 1px solid #c5a059 !important;
+        overflow-x: auto !important;
+    }
+    .table {
+        width: 100% !important;
+        min-width: 1200px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        background: #fff !important;
+    }
+    .table th, .table td {
+        border-bottom: 1.5px solid #2d0e10 !important;
+        border-right: 1.5px solid #2d0e10 !important;
+        padding: 8px 4px !important;
+        vertical-align: middle !important;
+        font-size: 12px !important;
+    }
+    thead th {
+        background: linear-gradient(180deg, #D91023 0%, #960b18 100%) !important;
+        color: #fff !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        text-align: center !important;
+        border-color: rgba(0,0,0,0.3) !important;
+    }
+    th.sticky-col, td.sticky-col {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 10 !important;
+        border-right: 3px solid #960b18 !important;
+        background-color: #fff !important;
+    }
+    td.sticky-col.name {
+        text-align: left !important;
+        padding-left: 10px !important;
+        font-weight: 700 !important;
+        color: #2d0e10 !important;
+        background-color: #fff !important;
+    }
+    tbody tr:nth-child(odd) td {
+        background-color: #fff !important;
+    }
+    tbody tr:nth-child(even) td {
+        background-color: #fffdf5 !important;
+    }
+    tbody tr:nth-child(odd) td.sticky-col { background-color: #fff !important; }
+    tbody tr:nth-child(even) td.sticky-col { background-color: #fffdf5 !important; }
+    tbody tr:hover td {
+        background-color: #fff0f0 !important;
+        color: #000 !important;
+    }
+    th.no-class-column, td.no-class-column {
+        background-color: #ffd6d6 !important;
+        background-image: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 5px,
+            rgba(217, 16, 35, 0.12) 5px,
+            rgba(217, 16, 35, 0.12) 10px
+        ) !important;
+    }
+    th.vertical-col {
+        height: 100px !important;
+        vertical-align: bottom !important;
+        padding-bottom: 10px !important;
+        max-width: 40px !important;
+    }
+    th.vertical-col .vertical-header {
+        writing-mode: vertical-rl !important;
+        transform: rotate(180deg) !important;
+        white-space: nowrap !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+    }
+
+    /* Mostrar todas las imágenes decorativas */
+    .decoration-banderola {
+        position: absolute !important;
+        top: -50px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 80% !important;
+        max-width: 600px !important;
+        height: 100px !important;
+        background-image: url('/assets/img/asistencia_peru/banderola.png') !important;
+        background-repeat: no-repeat !important;
+        background-position: center top !important;
+        background-size: contain !important;
+        z-index: 20 !important;
+        pointer-events: none !important;
+        filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)) !important;
+        display: block !important;
+    }
+    .watermark-llama {
+        position: absolute !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        width: 120px !important;
+        opacity: 0.15 !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+        display: block !important;
+    }
+    .watermark-machupicchu {
+        position: absolute !important;
+        left: 30px !important;
+        bottom: 30px !important;
+        width: 180px !important;
+        opacity: 0.13 !important;
+        pointer-events: none !important;
+        z-index: 1 !important;
+        display: block !important;
+    }
+    .watermark-bandera {
+        position: absolute !important;
+        right: 30px !important;
+        top: 30px !important;
+        width: 120px !important;
+        opacity: 0.13 !important;
+        pointer-events: none !important;
+        z-index: 1 !important;
+        display: block !important;
+    }
+}

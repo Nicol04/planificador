@@ -54,7 +54,8 @@ class Plantilla extends Model
             'filament.docente.documentos.asistencias.vista-previa-horizontal',
             'filament.docente.documentos.asistencias.vista-previa-horizontal2',
             'filament.docente.documentos.asistencias.vista-previa-horizontal3',
-            
+            'filament.docente.documentos.asistencias.vista-previa-horizontal4',            'filament.docente.documentos.asistencias.vista-previa-horizontal4',
+            'filament.docente.documentos.asistencias.vista-previa-horizontal5',
         ];
 
         // Si en 'archivo' guardas la vista, validar y devolver

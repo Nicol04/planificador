@@ -1,0 +1,401 @@
+:root {
+    --bg: #f7faf7;
+    --paper: #ffffff;
+    --muted: #6b7280;
+    --accent-dark: #064e3b;
+    /* verde oscuro */
+    --accent-warm: #ff7a18;
+    /* naranja */
+    --soft: #eef6f2;
+    --shadow: 0 10px 28px rgba(6, 78, 59, 0.06);
+    --radius: 14px;
+    --line-dark: rgba(6, 78, 59, 0.18);
+    /* línea oscura para separar */
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    background: linear-gradient(180deg, var(--soft), #fbfcfb);
+    font-family: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color: #042f26;
+}
+
+.document-preview {
+    width: 100%;
+    padding: 26px;
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+/* Marco alrededor de la vista previa */
+.document-frame {
+    background: var(--paper);
+    border: 2px solid var(--accent-dark);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 18px 40px rgba(4, 47, 38, 0.08);
+    /* pequeño separador visual con el fondo de la página */
+    margin: 8px 0;
+}
+
+/* Cabecera renovada: fondo claro, título serif */
+.header-banner {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, #ffffff, #f3fbf8);
+    padding: 18px 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(6, 78, 59, 0.06);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+/* Línea divisoria oscura debajo del header */
+.header-banner {
+    border-bottom: 3px solid var(--line-dark);
+}
+
+.header-title h1 {
+    margin: 0;
+    font-family: 'Merriweather', serif;
+    font-size: 28px;
+    color: var(--accent-dark);
+    font-weight: 900;
+}
+
+.header-title p {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.header-logo {
+    width: 88px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Toolbar simplificado */
+.preview-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 12px;
+}
+
+.btn-primary {
+    background: var(--accent-dark);
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(4, 47, 38, 0.06);
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: var(--accent-dark);
+}
+
+/* Info card: avatar circular y leyenda tipo chips */
+.info-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    padding: 14px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, #fff, #fbfffb);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(6, 78, 59, 0.04);
+    margin-bottom: 18px;
+}
+
+.info-left {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.teacher-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent-warm));
+    box-shadow: 0 8px 18px rgba(6, 78, 59, 0.08);
+}
+
+.teacher-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.info-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-meta .label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.info-meta .value {
+    font-size: 15px;
+    color: var(--accent-dark);
+    font-weight: 800;
+}
+
+/* Nueva leyenda: chips verticales con icono y texto debajo */
+.legend-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.legend-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    padding: 6px 8px;
+    min-width: 92px;
+}
+
+.legend-dot {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 8px 16px rgba(2, 6, 23, 0.06);
+}
+
+.legend-dot.att {
+    background: linear-gradient(135deg, #10b981, #047857);
+}
+
+/* asistió */
+.legend-dot.abs {
+    background: linear-gradient(135deg, #f97316, #ff4d4f);
+}
+
+/* falta */
+.legend-dot.exc {
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+}
+
+/* justificado */
+.legend-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Tabla: estética más suave, pero con líneas oscuras visibles y marco interno */
+.table {
+    min-width: 1200px;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--line-dark);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid rgba(4, 47, 38, 0.08);
+    padding: 10px 8px;
+    vertical-align: middle;
+}
+
+thead th {
+    background: linear-gradient(180deg, #f0fff7, #f7fbfb);
+    color: var(--accent-dark);
+    font-weight: 800;
+    font-size: 13px;
+    text-align: center;
+    border-bottom: 3px solid var(--line-dark);
+}
+
+tbody tr:nth-child(even) td {
+    background: #fcfffb;
+}
+
+tbody td {
+    background: #fff;
+    color: #02352b;
+}
+
+/* añadir líneas verticales oscuras entre columnas importantes */
+.table td:not(:last-child),
+.table th:not(:last-child) {
+    border-right: 1px solid rgba(4, 47, 38, 0.06);
+}
+
+th.sticky-col,
+td.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 7;
+    background: #fff;
+    box-shadow: 3px 0 6px rgba(2, 6, 23, 0.02);
+    border-right: 2px solid var(--line-dark);
+}
+
+/* Columnas "no clase": marcar con borde naranja suave */
+td.no-class-column,
+td.no-class-column * {
+    background: linear-gradient(180deg, #fff7f2, #fff9f4) !important;
+    color: #7a2b00 !important;
+}
+
+td.no-class-column {
+    border-left: 3px solid rgba(255, 122, 24, 0.95) !important;
+}
+
+.day-header-number {
+    font-weight: 800;
+    color: var(--accent-dark);
+    font-size: 13px;
+    padding: 6px;
+}
+
+@media (max-width:900px) {
+    .table {
+        min-width: 900px;
+    }
+
+    .teacher-avatar {
+        width: 56px;
+        height: 56px;
+    }
+
+    .header-title h1 {
+        font-size: 20px;
+    }
+
+    .info-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+/* imprimir: ocultar botones y elementos interactivos, simplificar marco/estilos */
+@media print {
+
+    /* ocultar toolbar y controles */
+    .no-print,
+    .preview-toolbar,
+    .preview-actions,
+    #download-word-form,
+    .btn-ghost,
+    .btn-primary,
+    #toggle-fullscreen,
+    a.btn-primary {
+        display: none !important;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
+    .document-frame,
+    .table-responsive,
+    .table {
+        page-break-before: auto !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+        break-before: auto !important;
+        break-inside: auto !important;
+        break-after: auto !important;
+    }
+
+    /* Permitir que la tabla empiece en la primera hoja */
+    .table {
+        page-break-before: auto !important;
+        break-before: auto !important;
+        /* Elimina o comenta la línea que dice "page-break-before: avoid" */
+    }
+
+    /* limpiar sombras/bordes para impresión */
+    .document-frame {
+        box-shadow: none !important;
+        border: 1px solid #00000020 !important;
+        padding: 8px !important;
+    }
+
+    .header-banner {
+        box-shadow: none !important;
+        border-bottom: 1px solid #00000020 !important;
+    }
+
+    .info-card {
+        box-shadow: none !important;
+        border: 1px solid #00000010 !important;
+    }
+
+    /* tabla: evitar cortes indeseados y ajustar colores para impresión */
+    .table {
+        page-break-inside: avoid;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+
+    thead th {
+        background: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+    }
+
+    tbody td {
+        background: #ffffff !important;
+    }
+
+    /* fondo blanco */
+    html,
+    body {
+        background: #fff !important;
+    }
+
+    /* asegurar que sticky columns se impriman correctamente */
+    th.sticky-col,
+    td.sticky-col {
+        position: static !important;
+    }
+
+    /* eliminar efectos visuales no necesarios en papel */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+}

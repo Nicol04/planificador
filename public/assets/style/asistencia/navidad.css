@@ -1,0 +1,423 @@
+/* --- IMPORTAR FUENTES NAVIDEÑAS --- */
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root {
+    /* Paleta Navidad */
+    --xmas-red: #BB2528;       /* Rojo Santa */
+    --xmas-green: #146B3A;     /* Verde Pino */
+    --xmas-gold: #F8B229;      /* Dorado */
+    --ice-blue: #f0f8ff;       /* Azul hielo suave */
+    --text-main: #1a472a;      /* Verde oscuro para texto */
+    --text-light: #5d6d63;
+    
+    /* Variables de estructura */
+    --radius: 16px;
+}
+
+/* --- ESTRUCTURA GENERAL --- */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-main);
+    
+    /* FONDO ESTATICO */
+    background: url('/assets/img/navidad/navidad_fondo.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.document-preview {
+    width: 100%;
+    padding: 30px;
+    box-sizing: border-box;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- MARCO TIPO CARTA A SANTA --- */
+.document-frame {
+    width: 100%;
+    max-width: 98%;
+    /* Textura de papel arrugado/antiguo */
+    background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url('/assets/img/navidad/navidad_f2.jpg');
+    background-size: cover;
+    
+    /* Borde verde y rojo */
+    border: 5px solid var(--xmas-green); 
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 20px 60px rgba(20, 107, 58, 0.25), inset 0 0 0 3px var(--xmas-red); 
+    
+    position: relative;
+    margin-top: 50px; /* Espacio para que Santa no se corte */
+}
+
+/* --- DECORACIÓN: PAPÁ NOEL (Arriba Derecha) --- */
+.decoration-santa {
+    position: absolute;
+    top: -95px;  /* Ajusta para que asome por arriba */
+    right: -25px; /* Ajusta para que asome por la derecha */
+    width: 180px;
+    height: auto;
+    z-index: 20;
+    filter: drop-shadow(-5px 5px 8px rgba(0,0,0,0.2));
+}
+
+/* --- ENCABEZADO --- */
+.header-banner {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, #ffffff, #fdf2f2);
+    padding: 15px 30px;
+    border-radius: var(--radius);
+    border-bottom: 4px solid var(--xmas-red);
+    border-top: 4px solid var(--xmas-green);
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 10;
+}
+
+.header-logo { width: 80px; height: auto; object-fit: contain; }
+.logo-big { width: 110px; }
+
+.header-title { text-align: center; flex-grow: 1; display: flex; flex-direction: column; align-items: center; }
+
+.header-title h1 {
+    margin: 0;
+    font-family: 'Mountains of Christmas', cursive;
+    font-size: 42px;
+    color: var(--xmas-red);
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 2px 2px 0px #fff;
+}
+
+.header-title p {
+    margin: 5px 0 0 0;
+    font-size: 15px;
+    color: var(--xmas-green);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Contenedor central título + mascotas */
+.title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.header-mascot {
+    height: 110px;
+    width: auto;
+    filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
+}
+
+/* Mascotas navideñas más grandes en el encabezado */
+.header-mascot.chico-navidad,
+.header-mascot.chica-navidad {
+    height: 140px;
+    width: auto;
+    margin: 0 18px;
+}
+
+/* --- LEYENDA (ESFERAS) --- */
+.legend-card {
+    display: flex;
+    gap: 15px;
+    margin-top: 8px;
+    background: rgba(255,255,255,0.6);
+    padding: 5px 15px;
+    border-radius: 30px;
+    border: 1px dashed var(--xmas-gold);
+}
+.legend-chip { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.legend-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 12px;
+    box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2);
+    position: relative;
+}
+/* Gancho dorado de la esfera */
+.legend-dot::before {
+    content: ''; position: absolute; top: -3px; left: 50%; transform: translateX(-50%);
+    width: 6px; height: 6px; background: var(--xmas-gold); border-radius: 2px;
+}
+.legend-dot.att { background: radial-gradient(circle at 30% 30%, #4CAF50, #1B5E20); }
+.legend-dot.abs { background: radial-gradient(circle at 30% 30%, #F44336, #B71C1C); }
+.legend-dot.exc { background: radial-gradient(circle at 30% 30%, #2196F3, #0D47A1); }
+.legend-dot.lat { background: radial-gradient(circle at 30% 30%, #FFC107, #FF6F00); }
+.legend-label { font-size: 11px; font-weight: 700; color: var(--text-light); }
+
+
+/* --- DOCENTE: CAJA DE REGALO --- */
+.gift-box-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+.gift-box {
+    position: relative;
+    background-color: #ffffff;
+    border: 3px solid var(--xmas-green);
+    border-radius: 12px;
+    padding: 15px 50px;
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    /* Patrón sutil */
+    background-image: repeating-linear-gradient(45deg, #fff, #fff 10px, #f4fff4 10px, #f4fff4 20px);
+}
+
+/* Cinta Roja Vertical */
+.gift-box::before {
+    content: '';
+    position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 30px; background: var(--xmas-red); border-left: 1px dashed #fff; border-right: 1px dashed #fff;
+    opacity: 0.9; z-index: 0;
+}
+
+/* Lazo (Bow) CSS */
+.gift-bow {
+    position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+    width: 50px; height: 25px; background: var(--xmas-red); border-radius: 10px; z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.gift-bow::after, .gift-bow::before {
+    content: ''; position: absolute; top: 5px; width: 20px; height: 20px;
+    background: var(--xmas-red); border-radius: 50%; z-index: -1;
+}
+.gift-bow::before { left: -8px; } .gift-bow::after { right: -8px; }
+
+.gift-content {
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,0.85); /* Fondo para leer sobre la cinta */
+    padding: 5px 15px; border-radius: 8px;
+    display: flex; gap: 40px;
+}
+
+.info-item { text-align: center; }
+.info-label { font-family: 'Mountains of Christmas', cursive; font-size: 18px; color: var(--xmas-red); font-weight: 700; }
+.info-value { font-size: 16px; color: var(--xmas-green); font-weight: 800; }
+
+
+/* --- TABLA --- */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 2px solid var(--xmas-green);
+    position: relative;
+    background: rgba(255,255,255,0.95);
+    min-height: 400px;
+}
+
+/* IMÁGENES DENTRO DE LA TABLA (Marcas de agua) */
+.watermark-overlay {
+    position: absolute;
+    z-index: 10; /* Todas las marcas de agua con z-index alto */
+    pointer-events: none;
+    opacity: 0.25;
+    mix-blend-mode: multiply;
+}
+
+.img-cookies {
+    bottom: 140px;
+    left: 290px;
+    width: 180px;
+    z-index: 11;
+}
+
+/* Árbol navideño en la tabla */
+.img-arbol-navideno {
+    left: 600px;
+    bottom: 580px;
+    width: 400px;
+    z-index: 12;
+    opacity: 0.28;
+}
+
+.img-snowman {
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    z-index: 11;
+}
+
+.table {
+    width: 100%;
+    min-width: 1200px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+    position: relative;
+    z-index: 2; /* Texto encima de imágenes */
+}
+
+.table th, .table td {
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 6px 4px;
+    vertical-align: middle;
+    font-size: 12px;
+}
+
+/* Estilos de la tabla heredados y adaptados a Navidad */
+thead th {
+    background: linear-gradient(180deg, var(--xmas-green) 0%, #0d4a26 100%);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+    border-color: rgba(255,255,255,0.2);
+}
+
+th.sticky-col, td.sticky-col {
+    position: sticky; left: 0; z-index: 10;
+    border-right: 3px solid var(--xmas-red) !important;
+}
+td.sticky-col.name {
+    text-align: left; padding-left: 10px; font-weight: 700;
+    color: var(--text-main); background-color: #fff;
+}
+
+/* Filas alternas */
+tbody tr:nth-child(odd) td { background-color: rgba(255,255,255,0.6); }
+tbody tr:nth-child(even) td { background-color: rgba(240, 248, 255, 0.6); }
+
+/* Sticky Background Fix */
+tbody tr:nth-child(odd) td.sticky-col { background-color: #fff; }
+tbody tr:nth-child(even) td.sticky-col { background-color: var(--ice-blue); }
+
+/* Columnas Bastón de Caramelo (días sin clase) más rojo */
+th.no-class-column, td.no-class-column {
+    background-color: #ffb3b3 !important; /* Rojo más fuerte */
+    background-image: repeating-linear-gradient(
+        45deg,
+        #fff,
+        #fff 10px,
+        rgba(187, 37, 40, 0.25) 10px,
+        rgba(187, 37, 40, 0.25) 20px
+    ) !important;
+}
+
+th.vertical-col { height: 100px; vertical-align: bottom; padding-bottom: 10px; max-width: 40px; }
+th.vertical-col .vertical-header { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+
+/* Botones */
+.preview-toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; }
+.btn-primary { background: var(--xmas-red); border: none; padding: 8px 16px; border-radius: 20px; font-weight: 700; color: white; }
+.btn-ghost { background: white; border: 2px solid var(--xmas-green); color: var(--xmas-green); padding: 8px 16px; border-radius: 20px; font-weight: 700; }
+.btn-outline { background: transparent; border: 1px solid var(--xmas-gold); padding: 8px 16px; border-radius: 20px; }
+
+/* Leyenda al lado del regalo del docente */
+.legend-gift-side {
+    margin-top: 0 !important;
+    margin-left: 30px !important;
+    gap: 15px;
+    background: rgba(255,255,255,0.6);
+    padding: 5px 15px;
+    border-radius: 30px;
+    border: 1px dashed var(--xmas-gold);
+    display: flex;
+    align-items: center;
+}
+
+/* PRINT */
+@media print {
+    @page { size: landscape; margin: 0.5cm; }
+    .no-print, .preview-toolbar { display: none !important; }
+
+    /* Fuerza la impresión de fondos y colores */
+    html, body {
+        /* background-color y background-image para impresión */
+        background: url('/assets/img/navidad/navidad_fondo.jpg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color: var(--text-main) !important;
+    }
+    .document-frame {
+        border: 5px solid var(--xmas-green) !important;
+        box-shadow: 0 20px 60px rgba(20, 107, 58, 0.25), inset 0 0 0 3px var(--xmas-red) !important;
+        margin: 0 !important;
+        padding: 25px !important;
+        background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url('/assets/img/navidad/navidad_f2.jpg') !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .decoration-santa {
+        display: block !important;
+        position: absolute !important;
+        top: -95px !important;
+        right: -25px !important;
+        width: 180px !important;
+        height: auto !important;
+        z-index: 20 !important;
+        filter: drop-shadow(-5px 5px 8px rgba(0,0,0,0.2)) !important;
+    }
+    .img-cookies, .img-snowman, .img-arbol-navideno {
+        opacity: 0.25 !important;
+        display: block !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    thead th {
+        background: linear-gradient(180deg, var(--xmas-green) 0%, #0d4a26 100%) !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .gift-box {
+        border: 3px solid var(--xmas-green) !important;
+        background-color: #ffffff !important;
+        background-image: repeating-linear-gradient(45deg, #fff, #fff 10px, #f4fff4 10px, #f4fff4 20px) !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .gift-box::before, .gift-bow {
+        display: block !important;
+    }
+    .legend-card, .legend-gift-side {
+        background: rgba(255,255,255,0.6) !important;
+        border: 1px dashed var(--xmas-gold) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    th.no-class-column, td.no-class-column {
+        background-color: #ffb3b3 !important;
+        background-image: repeating-linear-gradient(
+            45deg,
+            #fff,
+            #fff 10px,
+            rgba(187, 37, 40, 0.25) 10px,
+            rgba(187, 37, 40, 0.25) 20px
+        ) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    tbody tr:nth-child(odd) td { background-color: rgba(255,255,255,0.6) !important; }
+    tbody tr:nth-child(even) td { background-color: rgba(240, 248, 255, 0.6) !important; }
+    tbody tr:nth-child(odd) td.sticky-col { background-color: #fff !important; }
+    tbody tr:nth-child(even) td.sticky-col { background-color: var(--ice-blue) !important; }
+}
+
+/* Recomendación para el usuario:
+   Para que los fondos y colores se impriman correctamente, asegúrate de activar la opción "Imprimir fondos (colores e imágenes)" en la configuración de impresión de tu navegador.
+*/

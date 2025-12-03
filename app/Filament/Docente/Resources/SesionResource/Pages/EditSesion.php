@@ -281,7 +281,7 @@ class EditSesion extends EditRecord
             $actions[] = Actions\Action::make('previsualizar_listas')
                 ->label('Listas de cotejo')
                 ->icon('heroicon-o-eye')
-                ->url(route('listas-cotejo.vista.previa', $this->record->id))
+                ->url(url("/listas-cotejo/{$this->record->id}/vista-previa?orientacion=horizontal"))
                 ->openUrlInNewTab();
         }
 

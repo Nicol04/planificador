@@ -13,9 +13,10 @@
             <div class="lg:col-span-2">
                 <!-- Botón Crear ficha de aprendizaje -->
                 @php
+                    use Illuminate\Support\Str;
                     // 1. Detectar si estamos en el paso correcto
-                    // Usamos str_contains para ser más flexibles con la URL
-                    $isEditMomentos = request()->is('*/edit') && request('step') === 'momentos-de-la-sesion';
+                    // Mejoramos la detección usando Str::contains para la URL y comprobamos el parámetro step
+                    $isEditMomentos = Str::contains(request()->url(), '/edit') && request('step') === 'momentos-de-la-sesion';
 
                     // 2. Obtener ID de la sesión
                     // IMPORTANTE: Filament suele llamar al parámetro de ruta 'record', probamos ambos por si acaso.
