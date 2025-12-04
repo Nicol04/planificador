@@ -11,6 +11,10 @@ use App\Models\SesionMomento;
 class CreateSesion extends CreateRecord
 {
     protected static string $resource = SesionResource::class;
+    protected function getFormActions(): array
+    {
+        return [];
+    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {

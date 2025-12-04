@@ -20,7 +20,7 @@ class UnidadResource extends Resource
 {
     protected static ?string $model = Unidad::class;
     protected static ?string $label = 'Unidades';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
     use Translatable;
     public static function form(Form $form): Form
     {

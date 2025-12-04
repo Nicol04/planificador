@@ -19,7 +19,7 @@ class CompetenciaTransversalResource extends Resource
     protected static ?string $model = CompetenciaTransversal::class;
     protected static ?string $navigationGroup = 'Currículo';
     protected static ?string $navigationLabel = 'Competencias transversales';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-light-bulb';
     use Translatable;
     public static function form(Form $form): Form
     {

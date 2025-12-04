@@ -7,6 +7,7 @@ use App\Filament\Docente\Resources\SesionResource\Schemas\DatosSesionSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\EnfoquesSchema;
 use App\Filament\Docente\Resources\SesionResource\Schemas\ProposAprSchema;
 use App\Models\Sesion;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\ViewField;
@@ -56,6 +57,15 @@ class SesionResource extends Resource
                     ->statePath('data')
                     ->columnSpanFull()
                     ->persistStepInQueryString()
+                    ->skippable(fn() => $form->getOperation() === 'edit')
+
+                    ->submitAction(
+                        Action::make('create')
+                            ->label(fn() => $form->getOperation() === 'create' ? 'Crear Sesión' : 'Guardar Cambios')
+                            ->icon('heroicon-o-check')
+                            ->submit('create')
+                            ->keyBindings(['mod+s'])
+                    )
             ]);
     }
 

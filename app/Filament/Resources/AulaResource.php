@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\AulaResource\RelationManagers\CursosRelationMan
 use App\Filament\Admin\Resources\AulaResource\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\AulaResource\Pages;
 use App\Filament\Resources\AulaResource\RelationManagers;
+use App\Filament\Resources\AulaResource\RelationManagers\EstudiantesRelationManager;
 use App\Models\Aula;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -102,6 +103,7 @@ class AulaResource extends Resource
     public static function getRelations(): array
     {
         return [
+            EstudiantesRelationManager::class,
             UsersRelationManager::class,
             CursosRelationManager::class,
         ];
@@ -110,6 +112,7 @@ class AulaResource extends Resource
     {
         return [
             UsersRelationManager::class,
+            EstudiantesRelationManager::class,
             CursosRelationManager::class,
         ];
     }

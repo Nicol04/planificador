@@ -19,7 +19,7 @@ class EnfoqueTransversalResource extends Resource
     protected static ?string $model = EnfoqueTransversal::class;
     protected static ?string $navigationGroup = 'Currículo';
     protected static ?string $navigationLabel = 'Enfoques transversales';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
     use Translatable;
     public static function form(Form $form): Form
     {

@@ -24,7 +24,7 @@ class EstandarResource extends Resource
     protected static ?string $navigationGroup = 'Currículo';
     protected static ?string $navigationLabel = 'Estándares';
     use Translatable;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-scale';
 
     public static function form(Form $form): Form
     {

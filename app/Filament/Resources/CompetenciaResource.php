@@ -19,7 +19,7 @@ class CompetenciaResource extends Resource
     protected static ?string $model = Competencia::class;
     protected static ?string $navigationGroup = 'Currículo';
     protected static ?string $navigationLabel = 'Competencias';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     use Translatable;
     public static function form(Form $form): Form
     {

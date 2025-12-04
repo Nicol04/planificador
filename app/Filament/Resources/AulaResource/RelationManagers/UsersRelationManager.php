@@ -22,8 +22,8 @@ class UsersRelationManager extends RelationManager
 {
     protected static string $relationship = 'users';
 
-    protected static ?string $title = 'Usuarios del Aula';
-    protected static ?string $modelLabel = 'Usuario';
+    protected static ?string $title = 'Docente';
+    protected static ?string $modelLabel = 'Docente';
     protected static ?string $pluralModelLabel = 'Usuarios';
 
     public function form(Form $form): Form
@@ -67,73 +67,7 @@ class UsersRelationManager extends RelationManager
                     })
             ])
             ->headerActions([
-                Action::make('agregarEstudiantes')
-                    ->label('Agregar / Vincular Estudiantes')
-                    ->icon('heroicon-m-user-plus')
-                    ->form([
-                        Forms\Components\Select::make('existing_estudiante_ids')
-                            ->label('Estudiantes existentes (sin aula)')
-                            ->multiple()
-                            ->options(fn() => \App\Models\Estudiante::whereNull('aula_id')
-                                ->orderBy('nombres')
-                                ->get()
-                                ->mapWithKeys(fn($e) => [$e->id => "{$e->nombres} {$e->apellidos}"])
-                                ->toArray())
-                            ->helperText('Selecciona estudiantes ya registrados que no tengan aula asignada.'),
-                        Forms\Components\TextInput::make('cantidad')
-                            ->label('¿Cuántos quieres agregar?')
-                            ->numeric()
-                            ->reactive()
-                            ->afterStateUpdated(fn($state, callable $set) => $set('registros', array_fill(0, max(0, (int) $state), ['nombres' => '', 'apellidos' => '']))),
-                        Forms\Components\Repeater::make('registros')
-                            ->label('Nuevos Estudiantes')
-                            ->schema([
-                                Forms\Components\TextInput::make('nombres')
-                                    ->label('Nombres')
-                                    ->required()
-                                    ->maxLength(255),
-                                Forms\Components\TextInput::make('apellidos')
-                                    ->label('Apellidos')
-                                    ->required()
-                                    ->maxLength(255),
-                            ])
-                            ->columns(1)
-                            ->minItems(0)
-                            ->dehydrated(true),
-                    ])
-                    ->action(function (array $data, RelationManager $livewire) {
-                        $aula = $livewire->getOwnerRecord();
-
-                        // Vincular estudiantes existentes: asignar aula_id
-                        $existingIds = $data['existing_estudiante_ids'] ?? [];
-                        if (!empty($existingIds)) {
-                            \App\Models\Estudiante::whereIn('id', $existingIds)
-                                ->update(['aula_id' => $aula->id]);
-                        }
-
-                        // Crear nuevos estudiantes y asignar aula_id
-                        foreach ($data['registros'] ?? [] as $item) {
-                            $nombres = trim($item['nombres'] ?? '');
-                            $apellidos = trim($item['apellidos'] ?? '');
-                            if ($nombres === '' && $apellidos === '') {
-                                continue;
-                            }
-
-                            \App\Models\Estudiante::create([
-                                'nombres'  => $nombres,
-                                'apellidos'=> $apellidos,
-                                'aula_id'  => $aula->id,
-                            ]);
-                        }
-
-                        // actualizar el conteo en el aula
-                        $aula->actualizarCantidadUsuarios();
-
-                        Notification::make()
-                            ->title('Estudiantes vinculados/creados correctamente.')
-                            ->success()
-                            ->send();
-                    }),
+                
                 Action::make('exportarPorAula')
                     ->label('Exportar Usuarios por Aula')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -169,7 +103,7 @@ class UsersRelationManager extends RelationManager
                         $aula->actualizarCantidadUsuarios();
 
                         Notification::make()
-                            ->title('Usuario desvinculado correctamente.')
+                            ->title('Docente desvinculado correctamente.')
                             ->success()
                             ->send();
                     }),

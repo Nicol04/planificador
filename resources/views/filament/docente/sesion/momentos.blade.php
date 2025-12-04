@@ -265,17 +265,6 @@
 
                 </div>
 
-                <!-- Botón de impresión/exportación -->
-                <div class="mt-4 flex justify-end gap-3 no-imprimir">
-                    <button onclick="exportarWord()"
-                        class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium">
-                        📄 Exportar Word
-                    </button>
-                    <button onclick="window.print()"
-                        class="bg-slate-600 text-white px-5 py-2 rounded-lg hover:bg-slate-700 transition text-sm font-medium">
-                        🖨️ Imprimir Ficha
-                    </button>
-                </div>
             </div>
 
         </div>
