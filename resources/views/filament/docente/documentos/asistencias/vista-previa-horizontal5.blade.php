@@ -77,18 +77,19 @@
         <!-- MARCO DEL DOCUMENTO -->
         <div class="document-frame">
 
-            <!-- DECORACIÓN 1: Papá Noel (Arriba Derecha) -->
-            <img src="{{ url('assets/img/navidad/papanuel.png') }}" class="decoration-santa" alt="Santa Claus">
-
             {{-- Encabezado --}}
             <div class="header-banner">
                 <!-- Logo Izquierda -->
                 <img src="{{ url('assets/img/logo_colegio.png') }}" alt="Logo colegio"
-                    class="header-logo left-logo logo-big">
+                    class="header-logo left-logo logo-big"
+                    style="width: 150px; height: auto;"> <!-- Aumentar tamaño -->
 
                 <!-- Título Central con Mascotas Navideñas -->
                 <div class="header-title">
                     <div class="title-container">
+                        <!-- Papá Noel dentro del contenedor del título -->
+                        <img src="{{ url('assets/img/navidad/papanuel.png') }}" class="decoration-santa" alt="Santa Claus"
+                            style="position: absolute; top: -20px; right: -100px; width: 120px; height: auto; z-index: 10;">
                         <!-- Mascota Navidad según género -->
                         @if ($docenteGenero === 'Femenino')
                             <div
@@ -124,7 +125,8 @@
 
                 <!-- Logo Derecha -->
                 <img src="{{ url('assets/img/logo_ministerio.png') }}" alt="Logo MINEDU"
-                    class="header-logo right-logo">
+                    class="header-logo right-logo"
+                    style="width: 150px; height: auto;"> <!-- Aumentar tamaño -->
             </div>
 
             {{-- Información Docente: CAJA DE REGALO --}}

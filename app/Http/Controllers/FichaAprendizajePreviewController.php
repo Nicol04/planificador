@@ -128,6 +128,21 @@ class FichaAprendizajePreviewController extends Controller
         $description = $contenido['description'] ?? '';
         $items = $contenido['items'] ?? [];
 
+        // Shuffle images and texts separately to add difficulty
+        $images = array_column($items, 'imageSrc');
+        $texts = array_column($items, 'text');
+        shuffle($images);
+        shuffle($texts);
+        // Rebuild items with shuffled pairs
+        $shuffledItems = [];
+        foreach ($images as $idx => $image) {
+            $shuffledItems[] = [
+                'imageSrc' => $image,
+                'text' => $texts[$idx]
+            ];
+        }
+        $items = $shuffledItems;
+
         $html = "<div class='mb-8'>";
         
         // Título

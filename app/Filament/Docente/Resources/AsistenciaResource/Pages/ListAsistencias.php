@@ -19,6 +19,7 @@ class ListAsistencias extends ListRecords
     {
         return 'filament.docente.asistencia.list-plantillas-cards';
     }
+    
 
     protected function getViewData(): array
     {

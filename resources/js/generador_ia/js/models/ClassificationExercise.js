@@ -32,21 +32,17 @@ class ClassificationExercise {
   }
 
   shuffleImages() {
-    // Crear un array de pares para barajar juntos
-    const pairs = this.images.map((image, idx) => ({
-      image,
-      text: this.texts[idx]
-    }));
+    // Función auxiliar para barajar un array
+    const shuffleArray = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    };
 
-    // Barajar los pares
-    for (let i = pairs.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
-    }
-
-    // Asignar de vuelta a los arrays originales
-    this.images = pairs.map(pair => pair.image);
-    this.texts = pairs.map(pair => pair.text);
+    // Barajar las imágenes y los textos por separado para agregar dificultad
+    shuffleArray(this.images);
+    shuffleArray(this.texts);
   }
 
   renderInto(container) {
