@@ -24,8 +24,6 @@ class CapacidadesRelationManager extends RelationManager
                             ->required()
                             ->maxLength(255)
                             ->label('Nombre de la Capacidad'),
-                        Forms\Components\Textarea::make('descripcion')
-                            ->label('Descripción'),
                     ]),
 
                 Forms\Components\Section::make('Desempeños')
