@@ -21,7 +21,7 @@ use Filament\Tables\Table;
 class SesionResource extends Resource
 {
     protected static ?string $model = Sesion::class;
-    protected static ?string $label = 'Sesiones';
+    protected static ?string $label = '📅 Mis Sesiones';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Planificación de sesiones';
 

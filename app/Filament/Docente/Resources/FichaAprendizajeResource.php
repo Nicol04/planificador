@@ -20,24 +20,14 @@ class FichaAprendizajeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Planificación de sesiones';
-
+    protected static ?string $label = 'Mis fichas de aprendizaje';
+    protected static ?string $navigationLabel = 'Mis fichas de aprendizaje';
+    protected static ?string $pluralLabel = 'Mis fichas de aprendizaje';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                /*Forms\Components\TextInput::make('sesion_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('titulo')
-                    ->maxLength(255)
-                    ->default(null),
-                Forms\Components\Textarea::make('contenido')
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('tipo')
-                    ->maxLength(255)
-                    ->default(null),
-                */
                 View::make('filament.docente.pages.ficha')
                     ->columnSpanFull(),
             ]);

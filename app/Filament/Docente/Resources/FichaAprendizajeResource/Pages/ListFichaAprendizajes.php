@@ -21,7 +21,9 @@ class ListFichaAprendizajes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Crear una nueva ficha de aprendizaje')
+                ->icon('heroicon-o-plus'),
         ];
     }
 
@@ -59,7 +61,7 @@ class ListFichaAprendizajes extends ListRecords
         }
 
         // Solo relaciones existentes en el modelo
-        return $query->with(['user'])->simplePaginate(12);
+        return $query->with(['user'])->paginate(12);
     }
 
     public function deleteFicha($id)
@@ -181,5 +183,16 @@ class ListFichaAprendizajes extends ListRecords
                 ->duration(6000)
                 ->send();
         }
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
+
+
+    public function getTitle(): string
+    {
+        return 'Mis fichas de aprendizaje';
     }
 }

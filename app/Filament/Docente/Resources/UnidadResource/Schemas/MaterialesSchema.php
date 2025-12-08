@@ -11,7 +11,7 @@ class MaterialesSchema
     public static function schema(): array
     {
         return [
-            Forms\Components\Section::make('🎨 Materiales y Recursos')
+            Forms\Components\Section::make('Materiales y Recursos')
                 ->description('¿Qué necesitarás para desarrollar esta unidad?')
                 ->icon('heroicon-o-cube')
                 ->schema([

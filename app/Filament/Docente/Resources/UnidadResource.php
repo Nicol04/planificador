@@ -58,16 +58,25 @@ class UnidadResource extends Resource
                     ->description('🗓️ Programación de sesiones de la unidad')
                     ->icon('heroicon-o-calendar')
                     ->completedIcon('heroicon-o-check-circle'),
-                
+
                 Step::make('Materiales y Recursos')
                     ->schema(MaterialesSchema::schema())
                     ->description('🎨 Recursos necesarios para la unidad')
                     ->icon('heroicon-o-cube')
                     ->completedIcon('heroicon-o-check-circle'),
             ])
-            ->columnSpanFull()
-            ->persistStepInQueryString()
-            ->startOnStep(1)
+                ->columnSpanFull()
+                ->persistStepInQueryString()
+                ->skippable(fn() => $form->getOperation() === 'edit')
+                ->startOnStep(1)
+
+                ->submitAction(
+                    Action::make('create')
+                        ->label(fn() => $form->getOperation() === 'create' ? 'Crear Unidad' : 'Guardar Cambios')
+                        ->icon('heroicon-o-check')
+                        ->submit('create')
+                        ->keyBindings(['mod+s'])
+                )
         ]);
     }
 

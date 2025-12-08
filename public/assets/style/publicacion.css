@@ -205,28 +205,137 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
+
+/* Estilo base de botones mejorado */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 600;
   text-decoration: none;
   color: #fff;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.btn-duplicate { background: linear-gradient(90deg,#0ea5a4,#06b6d4); }
-.btn-download { background: #2563eb; }
-.btn:hover { opacity: .95; transform: translateY(-1px); }
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Iconos en botones */
+.btn i,
+.btn svg {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Botón Usar plantilla / Duplicar */
+.btn-duplicate {
+  background: #0ea5a4;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+}
+.btn-duplicate:hover {
+  background: #0d9695;
+  box-shadow: 0 6px 22px rgba(6, 182, 212, 0.45);
+}
+
+/* Botón Descargar */
+.btn-download {
+  background: #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+.btn-download:hover {
+  background: #1d4ed8;
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45);
+}
+
+/* Botón Previsualizar */
+.btn-preview {
+  background: #8b5cf6;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+}
+.btn-preview:hover {
+  background: #7c3aed;
+  box-shadow: 0 6px 22px rgba(139, 92, 246, 0.45);
+}
+
+/* Botón Principal / Usar plantilla */
+.btn-primary {
+  background: #6366f1;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+.btn-primary:hover {
+  background: #4f46e5;
+  box-shadow: 0 6px 22px rgba(99, 102, 241, 0.45);
+}
+
 .time { margin-left: auto; font-size: 12px; color: #9aa0ad; }
 
 /* Botón de edición */
 .btn-edit {
-  background: linear-gradient(90deg,#f97316,#fb923c); /* naranja */
-  color: #fff;
+  background: #f97316;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+}
+.btn-edit:hover {
+  background: #ea580c;
+  box-shadow: 0 6px 22px rgba(249, 115, 22, 0.45);
+}
+
+/* Botón Ver / Vista previa */
+.btn-view {
+  background: #10b981;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+.btn-view:hover {
+  background: #059669;
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.45);
+}
+
+/* Botones solo icono (compactos) */
+.btn-icon {
+  padding: 10px;
+  min-width: 40px;
+}
+
+/* Botones pequeños */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.btn-sm i {
+  font-size: 12px;
 }
 
 /* Panel de botones (navegación rápida) */
@@ -243,19 +352,48 @@ body {
 .panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 6px; }
 
 .panel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #f3f4f6;
-  color: #111827;
-  border: 1px solid rgba(15,23,42,0.04);
-  padding: 8px 12px;
+  color: #374151;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
+
+.panel-btn i {
+  font-size: 13px;
+  transition: transform 0.2s ease;
+}
+
+.panel-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.panel-btn:hover i {
+  transform: scale(1.1);
+}
+
 .panel-btn.active {
-  background: linear-gradient(90deg,#06b6d4,#0ea5a4);
+  background: #06b6d4;
   color: #fff;
-  box-shadow: 0 8px 20px rgba(6,182,212,0.12);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+}
+
+.panel-btn.active:hover {
+  background: #0891b2;
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
 }
 
 /* Etiqueta para indicar que el docente es el usuario autenticado */
@@ -264,6 +402,53 @@ body {
   font-weight: 700;
   margin-left: 8px;
   font-size: 12px;
+}
+
+.card-actions.second-row {
+    margin-top: 10px;
+}
+
+/* Contenedor de filas de acciones */
+.card-actions-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Tooltip para botones */
+.btn[title] {
+  position: relative;
+}
+
+/* Estados de botones deshabilitados */
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Animación de carga en botones */
+.btn.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.btn.loading::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.8s linear infinite;
+  margin-left: 6px;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Responsive tweaks */

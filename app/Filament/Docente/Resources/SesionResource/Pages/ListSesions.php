@@ -26,7 +26,7 @@ class ListSesions extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Nueva Sesión')
+                ->label('Crear una nueva sesión')
                 ->icon('heroicon-o-plus'),
         ];
     }

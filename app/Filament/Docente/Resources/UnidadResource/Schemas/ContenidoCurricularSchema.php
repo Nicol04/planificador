@@ -11,7 +11,7 @@ class ContenidoCurricularSchema
     public static function schema(): array
     {
         return [
-            Forms\Components\Section::make('📚 Contenido Curricular')
+            Forms\Components\Section::make('Contenido Curricular')
                 ->description('Configura los cursos y competencias de tu unidad')
                 ->icon('heroicon-o-academic-cap')
                 ->schema([

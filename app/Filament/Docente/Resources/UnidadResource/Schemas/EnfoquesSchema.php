@@ -9,7 +9,7 @@ class EnfoquesSchema
     public static function schema(): array
     {
         return [
-            Forms\Components\Section::make('🌟 Enfoques Transversales')
+            Forms\Components\Section::make('Enfoques Transversales')
                 ->description('Valores y actitudes para esta unidad')
                 ->icon('heroicon-o-star')
                 ->schema([

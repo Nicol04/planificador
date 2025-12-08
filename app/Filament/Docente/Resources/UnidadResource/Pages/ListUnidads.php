@@ -190,4 +190,8 @@ class ListUnidads extends ListRecords
                 ->send();
         }
     }
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
 }

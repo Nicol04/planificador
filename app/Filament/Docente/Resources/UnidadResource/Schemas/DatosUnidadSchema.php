@@ -12,7 +12,7 @@ class DatosUnidadSchema
     public static function schema(): array
     {
         return [
-            Forms\Components\Section::make('📋 Datos de la Unidad')
+            Forms\Components\Section::make('Datos de la Unidad')
                 ->description('Configuración básica de tu unidad de aprendizaje')
                 ->icon('heroicon-o-document-text')
                 ->schema([

@@ -3,7 +3,6 @@
         {{-- Header con título --}}
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📚 Mis Unidades Didácticas</h1>
                 <p class="text-gray-600 dark:text-gray-400">Gestiona y organiza tus unidades de aprendizaje</p>
             </div>
         </div>
@@ -131,31 +130,31 @@
                                 <x-filament::dropdown.list>
                                     <x-filament::dropdown.list.item onclick="abrirModalPrevia({{ $unidad->id }})"
                                         icon="heroicon-o-document-text">
-                                        📄 Vista Previa
+                                        Vista Previa
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
                                         onclick="descargarWord({{ $unidad->id }}, 'vertical')"
                                         icon="heroicon-o-arrow-down-tray">
-                                        💾 Descargar Word Vertical
+                                        Descargar Word Vertical
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
                                         onclick="descargarWord({{ $unidad->id }}, 'horizontal')"
                                         icon="heroicon-o-arrow-down-tray">
-                                        💾 Descargar Word Horizontal
+                                        Descargar Word Horizontal
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
                                         onclick="confirmarDuplicacion({{ $unidad->id }}, '{{ $unidad->nombre }}')"
                                         icon="heroicon-o-document-duplicate">
-                                        📋 Duplicar
+                                        Duplicar
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
                                         onclick="confirmarEliminacion({{ $unidad->id }}, '{{ $unidad->nombre }}')"
                                         icon="heroicon-o-trash" color="danger">
-                                        🗑️ Eliminar
+                                        Eliminar
                                     </x-filament::dropdown.list.item>
                                 </x-filament::dropdown.list>
                             </x-filament::dropdown>
@@ -181,7 +180,7 @@
                         </p>
                         <x-filament::button href="{{ route('filament.docente.resources.unidads.create') }}"
                             icon="heroicon-o-plus" size="lg">
-                            Crear Primera Unidad
+                            Crear primera unidad
                         </x-filament::button>
                     </div>
                 </div>
@@ -206,18 +205,18 @@
             <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px;">
                 <button id="btnVertical" onclick="abrirVistaPrevia('vertical')"
                     style="background: #0066cc; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    📄 Vista Previa Vertical
+                    Vista Previa Vertical
                 </button>
 
                 <button id="btnHorizontal" onclick="abrirVistaPrevia('horizontal')"
                     style="background: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    📄 Vista Previa Horizontal
+                    Vista Previa Horizontal
                 </button>
             </div>
 
             <button onclick="cerrarModalPrevia()"
                 style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">
-                ❌ Cancelar
+                Cancelar
             </button>
         </div>
     </div>
@@ -376,7 +375,7 @@
                 } else {
                     // Fallback sin SweetAlert
                     if (confirm(
-                        `⚠️ ¿Estás seguro de que quieres eliminar "${nombreUnidad}"? Esta acción no se puede deshacer.`)) {
+                            `⚠️ ¿Estás seguro de que quieres eliminar "${nombreUnidad}"? Esta acción no se puede deshacer.`)) {
                         @this.call('deleteUnidad', unidadId);
                     }
                 }
