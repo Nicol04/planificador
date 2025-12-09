@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Docente\Resources;
 
-use App\Filament\Resources\TutorialResource\Pages;
-use App\Filament\Resources\TutorialResource\RelationManagers;
+use App\Filament\Docente\Resources\TutorialResource\Pages;
+use App\Filament\Docente\Resources\TutorialResource\RelationManagers;
 use App\Models\Tutorial;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -16,44 +16,28 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class TutorialResource extends Resource
 {
     protected static ?string $model = Tutorial::class;
-    protected static ?string $navigationLabel = 'Tutoriales';
-    protected static ?string $navigationIcon = 'heroicon-o-play-circle';
 
+    protected static ?string $navigationIcon = 'heroicon-o-play-circle';
+    protected static ?string $label = 'Tutoriales';
+    protected static ?string $navigationGroup = 'Configuración';
+    protected static ?int $navigationSort = 2;
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('titulo')
-                    ->label('Título')
                     ->required()
                     ->maxLength(255),
-
                 Forms\Components\Textarea::make('descripcion')
-                    ->label('Descripción')
-                    ->rows(4)
-                    ->nullable(),
-
-                Forms\Components\Select::make('categoria')
-                    ->label('Categoría')
-                    ->options([
-                        'Unidad' => 'Unidad',
-                        'Sesión' => 'Sesión',
-                        'Perfil IA' => 'Perfil IA',
-                        'Ficha de aprendizaje' => 'Ficha de aprendizaje',
-                        'Asistencias' => 'Asistencias',
-                        'Registro de estudiantes' => 'Registro de estudiantes',
-                        'Listas de cotejo' => 'Listas de cotejo',
-                        'Publicaciones' => 'Publicaciones',
-                    ])
-                    ->nullable(),
-
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('categoria')
+                    ->maxLength(255)
+                    ->default(null),
                 Forms\Components\TextInput::make('video_url')
-                    ->label('URL del Video')
-                    ->nullable(),
-
+                    ->maxLength(255)
+                    ->default(null),
                 Forms\Components\Toggle::make('public')
-                    ->label('Público')
-                    ->default(false),
+                    ->required(),
             ]);
     }
 

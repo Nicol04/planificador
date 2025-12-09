@@ -342,34 +342,31 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                // Activar usuario inactivo
-                Tables\Actions\Action::make('activar')
-                    ->label('Activar')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn($record) => $record->estado === 'Inactivo')
+                Tables\Actions\Action::make('cambiar_estado')
+                    ->label(fn($record) => $record->estado === 'Activo' ? 'Desactivar' : 'Activar')
+                    ->icon(fn($record) => $record->estado === 'Activo' ? 'heroicon-o-user-minus' : 'heroicon-o-check-circle')
+                    ->color(fn($record) => $record->estado === 'Activo' ? 'warning' : 'success')
                     ->requiresConfirmation()
-                    ->action(fn($record) => $record->update(['estado' => 'Activo'])),
+                    ->modalHeading(fn($record) => $record->estado === 'Activo' ? '¿Desactivar usuario?' : '¿Activar usuario?')
+                    ->modalDescription(fn($record) => $record->estado === 'Activo'
+                        ? 'El usuario perderá acceso al sistema.'
+                        : 'El usuario recuperará el acceso al sistema.')
+                    // Lógica de visibilidad unificada:
+                    // Siempre visible EXCEPTO si es el usuario actual O es super_admin y está intentando desactivarse
+                    ->visible(function ($record) {
+                        // Si está inactivo, siempre se puede activar (asumiendo permisos generales)
+                        if ($record->estado === 'Inactivo') return true;
 
-                // Desactivar usuario activo
-                Tables\Actions\Action::make('desactivar')
-                    ->label('Desactivar')
-                    ->icon('heroicon-o-user-minus')
-                    ->color('warning')
-                    ->visible(
-                        fn($record) =>
-                        $record->estado === 'Activo' &&
-                            Auth::user()->id !== $record->id &&
-                            !$record->roles->pluck('name')->contains('super_admin')
-                    )
-                    ->requiresConfirmation()
+                        // Si está activo, aplicamos las reglas de restricción para desactivar
+                        if (Auth::user()->id === $record->id) return false; // No te puedes desactivar a ti mismo
+                        if ($record->roles->pluck('name')->contains('super_admin')) return false; // No tocar super admins
+
+                        return true;
+                    })
                     ->action(function ($record) {
-                        if ($record->roles->pluck('name')->contains('super_admin')) {
-                            return;
-                        }
-                        $record->update(['estado' => 'Inactivo']);
+                        $nuevoEstado = $record->estado === 'Activo' ? 'Inactivo' : 'Activo';
+                        $record->update(['estado' => $nuevoEstado]);
                     }),
-
 
             ])->headerActions([
                 Tables\Actions\Action::make('exportar')

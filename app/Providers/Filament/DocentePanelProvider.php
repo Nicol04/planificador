@@ -140,6 +140,7 @@ class DocentePanelProvider extends PanelProvider
                     ->setNavigationLabel('Mi perfil')
                     ->setNavigationGroup('Configuración')
                     ->setIcon('heroicon-o-user')
+                    ->setSort(1)
                     ->customProfileComponents([
                         \App\Livewire\CustomProfileComponent::class,
                     ])
