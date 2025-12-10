@@ -9,6 +9,7 @@
             $usuarioAula && $usuarioAula->aula && !empty($usuarioAula->aula->grado) ? $usuarioAula->aula->grado : '';
     }
 @endphp
+
 <div>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/generador_ia/js/main.js'])
     @if (empty(auth()->user()->gemini_api_key))
@@ -334,4 +335,6 @@
 </div>
 <script>
     window.userGeminiKey = @json($user?->gemini_api_key);
+    window.userSearchApiKey = @json(auth()->user()->search_api_key);
+    window.userIdSearch = @json(auth()->user()->id_search);
 </script>

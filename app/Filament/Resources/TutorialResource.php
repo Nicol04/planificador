@@ -35,6 +35,7 @@ class TutorialResource extends Resource
 
                 Forms\Components\Select::make('categoria')
                     ->label('Categoría')
+                    ->required()
                     ->options([
                         'Unidad' => 'Unidad',
                         'Sesión' => 'Sesión',
@@ -49,11 +50,17 @@ class TutorialResource extends Resource
 
                 Forms\Components\TextInput::make('video_url')
                     ->label('URL del Video')
+                    ->required()
                     ->nullable(),
 
-                Forms\Components\Toggle::make('public')
-                    ->label('Público')
-                    ->default(false),
+                Forms\Components\Select::make('public')
+                    ->label('¿Es público?')
+                    ->options([
+                        0 => 'Para administrativos',
+                        1 => 'Para docentes',
+                    ])
+                    ->required()
+                    ->default(0),
             ]);
     }
 

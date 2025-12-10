@@ -132,8 +132,7 @@
                                     class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
                                     <x-heroicon-s-user class="w-4 h-4" />
                                     <span class="text-xs font-medium truncate max-w-[100px]">
-                                        {{ $ficha->user?->persona ? explode(' ', $ficha->user->persona->nombre)[0] : '-' }}
-                                    </span>
+{{ $ficha->user?->persona ? explode(' ', $ficha->user->persona->nombre)[0] . ' ' . explode(' ', $ficha->user->persona->apellido)[0] : '-' }}                                    </span>
                                 </div>
                             </div>
 

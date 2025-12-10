@@ -23,6 +23,8 @@ class User extends Authenticatable implements HasAvatar
         'persona_id',
         'avatar_url',
         'gemini_api_key',
+        'search_api_key',
+        'id_search',
     ];
 
     protected $hidden = [
@@ -36,6 +38,7 @@ class User extends Authenticatable implements HasAvatar
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'gemini_api_key' => 'encrypted',
+            'search_api_key' => 'encrypted',
         ];
     }
 

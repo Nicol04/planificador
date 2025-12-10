@@ -8,16 +8,24 @@ import { getSesionIdFromEditUrl, SesionMomentoService } from "./services/SesionM
 console.log('🎯 main.js cargado correctamente');
 
 const API_KEY = window.userGeminiKey ?? null;
-const SEARCH_API_KEY = window.userGeminiKey ?? null;
-const fichaController = new FichaController(API_KEY);
-const aprendizajeController = new AprendizajeController();
-const quillManager = new QuillEditorManager();
-const wordExportService = new WordExportService(quillManager);
+const SEARCH_API_KEY = window.userSearchApiKey ?? null; // Clave de búsqueda
+const SEARCH_ID = window.userIdSearch ?? null; // ID de búsqueda
 
 if (!API_KEY) {
     console.warn("⚠️ No se encontró la clave Gemini del usuario autenticado.");
 }
-console.log(window.userGeminiKey);
+if (!SEARCH_API_KEY || !SEARCH_ID) {
+    console.warn("⚠️ No se encontraron las claves de búsqueda del usuario autenticado.");
+}
+
+console.log('🔑 Claves detectadas:', { API_KEY, SEARCH_API_KEY, SEARCH_ID });
+
+// Deshabilitar el botón si no hay claves configuradas
+const generarBtn = document.getElementById('generar-btn');
+if (!API_KEY || !SEARCH_API_KEY) {
+    generarBtn.disabled = true;
+    generarBtn.title = "⚠️ Necesitas configurar tus claves Gemini y de búsqueda para usar esta función.";
+}
 
 console.log('✅ Controladores inicializados:', {
   fichaController,
