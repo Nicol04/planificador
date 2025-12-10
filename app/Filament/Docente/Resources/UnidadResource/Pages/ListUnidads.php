@@ -190,6 +190,35 @@ class ListUnidads extends ListRecords
                 ->send();
         }
     }
+
+    public function togglePublicacion($id)
+    {
+        try {
+            $unidad = Unidad::findOrFail($id);
+            $unidad->public = !$unidad->public;
+            $unidad->save();
+
+            $estado = $unidad->public ? 'publicada' : 'despublicada';
+            $icono = $unidad->public ? '🌐' : '🔒';
+
+            \Filament\Notifications\Notification::make()
+                ->title("{$icono} Unidad {$estado}")
+                ->body($unidad->public 
+                    ? "La unidad \"{$unidad->nombre}\" ahora está visible para el grupo docente."
+                    : "La unidad \"{$unidad->nombre}\" ahora es privada.")
+                ->success()
+                ->duration(4000)
+                ->send();
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('❌ Error al cambiar el estado de publicación')
+                ->body('No se pudo cambiar el estado. Inténtalo nuevamente.')
+                ->danger()
+                ->duration(5000)
+                ->send();
+        }
+    }
+
     public function getBreadcrumbs(): array
     {
         return [];

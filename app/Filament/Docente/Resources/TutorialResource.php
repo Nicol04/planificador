@@ -86,8 +86,8 @@ class TutorialResource extends Resource
     {
         return [
             'index' => Pages\ListTutorials::route('/'),
-            'create' => Pages\CreateTutorial::route('/create'),
-            'edit' => Pages\EditTutorial::route('/{record}/edit'),
+            //'create' => Pages\CreateTutorial::route('/create'),
+            //'edit' => Pages\EditTutorial::route('/{record}/edit'),
         ];
     }
 }

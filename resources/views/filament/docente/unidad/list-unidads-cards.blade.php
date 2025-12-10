@@ -1,4 +1,6 @@
 <x-filament-panels::page>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <div class="space-y-6">
         {{-- Header con título --}}
         <div class="flex justify-between items-center">
@@ -45,10 +47,24 @@
                     <div
                         class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b">
                         <div class="flex justify-between items-center">
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $this->getEstadoColor($unidad) }}">
-                                {{ $this->getEstadoTexto($unidad) }}
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $this->getEstadoColor($unidad) }}">
+                                    {{ $this->getEstadoTexto($unidad) }}
+                                </span>
+                                {{-- Badge de publicación --}}
+                                @if ($unidad->public)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/90 text-white shadow-sm">
+                                        <span class="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>
+                                        Publicado
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/90 text-white shadow-sm">
+                                        <x-heroicon-s-lock-closed class="w-3 h-3 mr-1" />
+                                        Privado
+                                    </span>
+                                @endif
+                            </div>
                             <span
                                 class="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 shadow-sm">
                                 {{ $unidad->grado }}
@@ -105,26 +121,46 @@
                         @endif
 
                         {{-- Botones de acción --}}
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700/50">
                             {{-- Botón principal: Editar --}}
                             <a href="{{ route('filament.docente.resources.unidads.edit', ['record' => $unidad->id]) }}"
-                                class="flex-1 px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition">
-                                <x-heroicon-o-pencil-square class="w-5 h-5 inline-block mr-2" />
+                                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                                <x-heroicon-s-pencil-square class="w-4 h-4" />
                                 Editar
                             </a>
 
                             {{-- Botón: Ver vista previa --}}
-                            <x-filament::button color="info" size="sm" icon="heroicon-o-eye"
-                                onclick="abrirModalPrevia({{ $unidad->id }})">
+                            <button onclick="abrirModalPrevia({{ $unidad->id }})"
+                                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                                <x-heroicon-s-eye class="w-4 h-4" />
                                 Ver
-                            </x-filament::button>
+                            </button>
+
+                            {{-- Botón publicar/quitar --}}
+                            @if ($unidad->public)
+                                <button
+                                    onclick="confirmarTogglePublicacionUnidad({{ $unidad->id }}, '{{ addslashes($unidad->nombre) }}', true)"
+                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-all duration-200"
+                                    title="Quitar publicación">
+                                    <x-heroicon-s-lock-closed class="w-4 h-4" />
+                                    Quitar
+                                </button>
+                            @else
+                                <button
+                                    onclick="confirmarTogglePublicacionUnidad({{ $unidad->id }}, '{{ addslashes($unidad->nombre) }}', false)"
+                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-all duration-200"
+                                    title="Publicar">
+                                    <x-heroicon-s-globe-alt class="w-4 h-4" />
+                                    Publicar
+                                </button>
+                            @endif
 
                             {{-- Menú dropdown --}}
-                            <x-filament::dropdown>
+                            <x-filament::dropdown placement="bottom-end">
                                 <x-slot name="trigger">
-                                    <x-filament::button color="gray" size="sm"
-                                        icon="heroicon-o-ellipsis-horizontal">
-                                    </x-filament::button>
+                                    <button class="inline-flex items-center justify-center w-9 h-9 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-all duration-200">
+                                        <x-heroicon-s-ellipsis-vertical class="w-5 h-5" />
+                                    </button>
                                 </x-slot>
 
                                 <x-filament::dropdown.list>
@@ -136,23 +172,23 @@
                                     <x-filament::dropdown.list.item
                                         onclick="descargarWord({{ $unidad->id }}, 'vertical')"
                                         icon="heroicon-o-arrow-down-tray">
-                                        Descargar Word Vertical
+                                        Word Vertical
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
                                         onclick="descargarWord({{ $unidad->id }}, 'horizontal')"
                                         icon="heroicon-o-arrow-down-tray">
-                                        Descargar Word Horizontal
+                                        Word Horizontal
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
-                                        onclick="confirmarDuplicacion({{ $unidad->id }}, '{{ $unidad->nombre }}')"
+                                        onclick="confirmarDuplicacion({{ $unidad->id }}, '{{ addslashes($unidad->nombre) }}')"
                                         icon="heroicon-o-document-duplicate">
                                         Duplicar
                                     </x-filament::dropdown.list.item>
 
                                     <x-filament::dropdown.list.item
-                                        onclick="confirmarEliminacion({{ $unidad->id }}, '{{ $unidad->nombre }}')"
+                                        onclick="confirmarEliminacion({{ $unidad->id }}, '{{ addslashes($unidad->nombre) }}')"
                                         icon="heroicon-o-trash" color="danger">
                                         Eliminar
                                     </x-filament::dropdown.list.item>
@@ -377,6 +413,69 @@
                     if (confirm(
                             `⚠️ ¿Estás seguro de que quieres eliminar "${nombreUnidad}"? Esta acción no se puede deshacer.`)) {
                         @this.call('deleteUnidad', unidadId);
+                    }
+                }
+            }
+
+            // 🆕 FUNCIÓN PARA CONFIRMAR PUBLICACIÓN/DESPUBLICACIÓN
+            function confirmarTogglePublicacionUnidad(unidadId, nombreUnidad, isCurrentlyPublic) {
+                if (typeof Swal !== 'undefined') {
+                    const title = isCurrentlyPublic ? '🔒 Quitar publicación' : '🌐 Publicar Unidad';
+                    const confirmText = isCurrentlyPublic ? '<i class="fas fa-times-circle"></i> Sí, quitar' :
+                        '<i class="fas fa-globe"></i> Sí, publicar';
+                    const htmlMessage = isCurrentlyPublic ?
+                        `<div style="text-align: left; padding: 20px;">
+                            <p><strong>¿Deseas quitar la publicación de esta unidad?</strong></p>
+                            <br>
+                            <div style="background: #fef3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                <p><strong>📚 Unidad:</strong> ${nombreUnidad}</p>
+                                <p><strong>🔒 Estado:</strong> Pasará a ser privada</p>
+                            </div>
+                            <br>
+                            <p style="color: #666; font-size: 14px;">
+                                La unidad dejará de estar visible para el grupo docente de la institución.
+                            </p>
+                        </div>` :
+                        `<div style="text-align: left; padding: 20px;">
+                            <p><strong>¿Deseas publicar esta unidad?</strong></p>
+                            <br>
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                                <p><strong>📚 Unidad:</strong> ${nombreUnidad}</p>
+                                <p><strong>🌐 Estado:</strong> Será visible públicamente</p>
+                            </div>
+                            <br>
+                            <p style="color: #666; font-size: 14px;">
+                                Estará visible para el grupo docente de la institución en la sección de Publicaciones.
+                            </p>
+                        </div>`;
+
+                    Swal.fire({
+                        title: title,
+                        html: htmlMessage,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: confirmText,
+                        cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+                        confirmButtonColor: isCurrentlyPublic ? '#ffc107' : '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true,
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return new Promise((resolve) => {
+                                @this.call('togglePublicacion', unidadId).then(() => {
+                                    resolve();
+                                }).catch(() => {
+                                    resolve();
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    const ok = confirm(isCurrentlyPublic ?
+                        `¿Quitar publicación de "${nombreUnidad}"?` :
+                        `¿Publicar "${nombreUnidad}"?`);
+                    if (ok) {
+                        @this.call('togglePublicacion', unidadId);
                     }
                 }
             }

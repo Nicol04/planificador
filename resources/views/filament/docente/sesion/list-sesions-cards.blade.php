@@ -1,6 +1,6 @@
 {{-- filepath: c:\xampp\htdocs\planificador-v2\resources\views\filament\docente\sesion\list-sesions-cards.blade.php --}}
 <x-filament-panels::page>
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/generador_ia/js/main.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <div class="space-y-6">
         {{-- Header con título --}}
