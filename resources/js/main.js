@@ -8,24 +8,16 @@ import { getSesionIdFromEditUrl, SesionMomentoService } from "./services/SesionM
 console.log('🎯 main.js cargado correctamente');
 
 const API_KEY = window.userGeminiKey ?? null;
-const SEARCH_API_KEY = window.userSearchApiKey ?? null; // Clave de búsqueda
-const SEARCH_ID = window.userIdSearch ?? null; // ID de búsqueda
+const SEARCH_API_KEY = window.userGeminiKey ?? null;
+const fichaController = new FichaController(API_KEY);
+const aprendizajeController = new AprendizajeController();
+const quillManager = new QuillEditorManager();
+const wordExportService = new WordExportService(quillManager);
 
 if (!API_KEY) {
     console.warn("⚠️ No se encontró la clave Gemini del usuario autenticado.");
 }
-if (!SEARCH_API_KEY || !SEARCH_ID) {
-    console.warn("⚠️ No se encontraron las claves de búsqueda del usuario autenticado.");
-}
-
-console.log('🔑 Claves detectadas:', { API_KEY, SEARCH_API_KEY, SEARCH_ID });
-
-// Deshabilitar el botón si no hay claves configuradas
-const generarBtn = document.getElementById('generar-btn');
-if (!API_KEY || !SEARCH_API_KEY) {
-    generarBtn.disabled = true;
-    generarBtn.title = "⚠️ Necesitas configurar tus claves Gemini y de búsqueda para usar esta función.";
-}
+console.log(window.userGeminiKey);
 
 console.log('✅ Controladores inicializados:', {
   fichaController,
@@ -70,6 +62,7 @@ function actualizarDatosSesionDesdeLabels() {
   const genero = getText('generoLabel', 'Género:') || '';
   const gradoAula = getText('gradoAulaLabel', 'Grado del Aula:') || '';
   const evidencias = getText('evidenciasLabel', 'Evidencias:') || '';
+  const tema = document.getElementById('tema') ? document.getElementById('tema').value : '';
 
   const competenciaItems = document.querySelectorAll('.competencia-item');
   const competencias = Array.from(competenciaItems).map(item => {
@@ -102,7 +95,8 @@ function actualizarDatosSesionDesdeLabels() {
     genero,
     grado_aula: gradoAula,
     evidencias,
-    competencias
+    competencias,
+    tema
   };
 
   console.log('🌟 Datos de sesión actualizados desde labels:', window.datosSesion);
@@ -183,28 +177,31 @@ const observer = new MutationObserver((mutations) => {
 observer.observe(document.body, { childList: true, subtree: true });
 
 function renderFicha() {
-  quillManager.setMarkdown('#inicio-editor', fichaController.inicio.texto || "");
-  quillManager.setMarkdown('#desarrollo-editor', fichaController.desarrollo.texto || "");
-  quillManager.setMarkdown('#conclusion-editor', fichaController.conclusion.texto || "");
+  // Usamos setHTML porque Gemini devuelve HTML, no Markdown
+  quillManager.setHTML('#inicio-editor', fichaController.inicio.texto || "");
+  quillManager.setHTML('#desarrollo-editor', fichaController.desarrollo.texto || "");
+  quillManager.setHTML('#conclusion-editor', fichaController.conclusion.texto || "");
 
-  try {
-    const setHidden = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.value = value || '';
-    };
-
-    setHidden('inicioInput', fichaController.inicio && fichaController.inicio.texto ? fichaController.inicio.texto : '');
-    setHidden('desarrolloInput', fichaController.desarrollo && fichaController.desarrollo.texto ? fichaController.desarrollo.texto : '');
-    setHidden('conclusionInput', fichaController.conclusion && fichaController.conclusion.texto ? fichaController.conclusion.texto : '');
-  } catch (e) {
-    console.warn('No se pudieron sincronizar los campos ocultos:', e);
-  }
+  // Sincronización manual inicial de los inputs ocultos
+  document.getElementById('inicioInput').value = fichaController.inicio.texto || "";
+  document.getElementById('desarrolloInput').value = fichaController.desarrollo.texto || "";
+  document.getElementById('conclusionInput').value = fichaController.conclusion.texto || "";
 }
 
 window.renderFicha = renderFicha;
 
 window.generarFicha = async () => {
   console.log('🚀 Iniciando generación de ficha...');
+
+  // Verificar si hay API_KEY
+  if (!API_KEY) {
+    const errorMsg = 'No se encontró la clave Gemini. Configúrala en tu perfil.';
+    console.error(errorMsg);
+    quillManager.setContent('#inicio-editor', errorMsg);
+    quillManager.setContent('#desarrollo-editor', errorMsg);
+    quillManager.setContent('#conclusion-editor', errorMsg);
+    return;
+  }
 
   const btn = document.getElementById('generar-btn');
   btn.disabled = true;
@@ -220,6 +217,19 @@ window.generarFicha = async () => {
 
   guardarAprendizaje();
 
+  // Verificar que hay datos suficientes
+  const aprendizaje = fichaController.aprendizajes[0];
+  if (!aprendizaje || !aprendizaje.tema || !aprendizaje.proposito) {
+    const errorMsg = 'Faltan datos básicos como el tema o propósito. Completa el formulario.';
+    console.error(errorMsg);
+    quillManager.setContent('#inicio-editor', errorMsg);
+    quillManager.setContent('#desarrollo-editor', errorMsg);
+    quillManager.setContent('#conclusion-editor', errorMsg);
+    btn.disabled = false;
+    btn.innerHTML = `<span>🚀</span><span>Generar Ficha Completa</span>`;
+    return;
+  }
+
   try {
     console.log('📝 Aprendizajes guardados:', aprendizajeController.obtenerAprendizajes());
     await fichaController.generarTodo();
@@ -228,9 +238,10 @@ window.generarFicha = async () => {
 
   } catch (error) {
     console.error('❌ Error al generar ficha:', error);
-    quillManager.setContent('#inicio-editor', "Error al generar. Ver consola.");
-    quillManager.setContent('#desarrollo-editor', "Error al generar. Ver consola.");
-    quillManager.setContent('#conclusion-editor', "Error al generar. Ver consola.");
+    const errorMsg = error.message || 'Error desconocido al generar contenido.';
+    quillManager.setContent('#inicio-editor', `Error al generar contenido: ${errorMsg}`);
+    quillManager.setContent('#desarrollo-editor', `Error al generar contenido: ${errorMsg}`);
+    quillManager.setContent('#conclusion-editor', `Error al generar contenido: ${errorMsg}`);
   }
 
   btn.disabled = false;
@@ -250,35 +261,62 @@ async function enviarMomentosASession() {
   }
 }
 
-window.regenerar = async (seccion, e) => {
-  const btn = e && e.target
-    ? e.target
-    : document.querySelector(`button[onclick^="regenerar('${seccion}")`) // intento de fallback
-    || document.querySelector(`button[onclick*="regenerar('${seccion}')"]`)
-    || null;
+window.regenerar = async (seccion, event) => {
+  const btn = event ? event.currentTarget : null; // Obtener botón desde el evento
+  let originalText = "";
 
   if (btn) {
+    originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.textContent = "⏳ Generando...";
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">↻</span> Generando...`;
   }
 
-  guardarAprendizaje();
+  // Verificar si hay API_KEY
+  if (!API_KEY) {
+    const errorMsg = 'No se encontró la clave Gemini. Configúrala en tu perfil.';
+    console.error(errorMsg);
+    quillManager.setHTML(`#${seccion}-editor`, `<p class="text-red-500">${errorMsg}</p>`);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+    return;
+  }
 
-  if (seccion === "inicio") quillManager.setContent('#inicio-editor', "Generando...");
-  else if (seccion === "desarrollo") quillManager.setContent('#desarrollo-editor', "Generando...");
-  else if (seccion === "conclusion") quillManager.setContent('#conclusion-editor', "Generando...");
+  // 1. Mostrar estado de carga en el editor específico
+  const selector = `#${seccion}-editor`;
+  quillManager.setHTML(selector, "<p><em>Generando nueva propuesta con IA...</em></p>");
+
+  // 2. Asegurar que tenemos el contexto más reciente
+  guardarAprendizaje(); 
+
+  // Verificar que hay datos suficientes
+  const aprendizaje = fichaController.aprendizajes[0];
+  if (!aprendizaje || !aprendizaje.tema || !aprendizaje.proposito) {
+    throw new Error('Faltan datos básicos como el tema o propósito. Completa el formulario.');
+  }
 
   try {
+    // 3. Llamada a la API según la sección
     if (seccion === "inicio") await fichaController.generarInicio();
     else if (seccion === "desarrollo") await fichaController.generarDesarrollo();
     else if (seccion === "conclusion") await fichaController.generarConclusion();
+
+    // 4. ¡IMPORTANTE! Guardar en backend automáticamente tras regenerar
+    // Esto evita que si recarga la página se pierda lo regenerado
+    await enviarMomentosASession(); 
+    
+    console.log(`✅ Sección ${seccion} regenerada y guardada.`);
+
   } catch (err) {
     console.error('Error regenerando sección', seccion, err);
-  }
-
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = `↻ Regenerar`;
+    const errorMsg = err.message || 'Error desconocido al generar contenido.';
+    quillManager.setHTML(selector, `<p class="text-red-500">Error al generar contenido: ${errorMsg}</p>`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
   }
 };
 

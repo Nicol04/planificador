@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Admin\Resources\AulaResource\RelationManagers\CursosRelationManager;
-use App\Filament\Admin\Resources\AulaResource\RelationManagers\UsersRelationManager;
+use App\Filament\Resources\AulaResource\RelationManagers\CursosRelationManager;
+use App\Filament\Resources\AulaResource\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\AulaResource\Pages;
 use App\Filament\Resources\AulaResource\RelationManagers;
 use App\Filament\Resources\AulaResource\RelationManagers\EstudiantesRelationManager;

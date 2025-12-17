@@ -16,7 +16,8 @@
                     use Illuminate\Support\Str;
                     // 1. Detectar si estamos en el paso correcto
                     // Mejoramos la detección usando Str::contains para la URL y comprobamos el parámetro step
-                    $isEditMomentos = Str::contains(request()->url(), '/edit') && request('step') === 'momentos-de-la-sesion';
+                    $isEditMomentos =
+                        Str::contains(request()->url(), '/edit') && request('step') === 'momentos-de-la-sesion';
 
                     // 2. Obtener ID de la sesión
                     // IMPORTANTE: Filament suele llamar al parámetro de ruta 'record', probamos ambos por si acaso.
@@ -212,35 +213,42 @@
                     <section class="documento-seccion mb-8">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-xl font-bold text-blue-800 uppercase">I. Inicio</h3>
-                            <button onclick="regenerar('inicio')"
-                                class="no-imprimir text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md">↻
-                                Regenerar</button>
+                            <button type="button" onclick="regenerar('inicio', event)"
+                                class="no-imprimir text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 transition-colors">
+                                ↻ Regenerar
+                            </button>
                         </div>
                         <div class="pl-6 border-l-4 border-blue-200">
-                            <div wire:ignore wire:key="inicio-editor" class="pl-0">
-                                <div id="inicio-editor" data-quill="true" contenteditable="true"
+                            <div wire:ignore>
+                                <div id="inicio-editor"
                                     class="campo-editable w-full text-slate-700 text-sm leading-relaxed"
-                                    style="min-height:120px;">{!! $datosSesion['inicio'] ?? '' !!}</div>
+                                    style="min-height:120px;">
+                                    {!! $datosSesion['inicio'] ?? '' !!}
+                                </div>
                             </div>
+                            <textarea id="inicioInput" name="data[inicio]" class="hidden">{{ $datosSesion['inicio'] ?? '' }}</textarea>
                         </div>
                     </section>
 
                     <div class="linea-separadora"></div>
 
-                    <!-- Sección: Desarrollo -->
                     <section class="documento-seccion mb-8">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-xl font-bold text-blue-800 uppercase">II. Desarrollo</h3>
-                            <button onclick="regenerar('desarrollo')"
-                                class="no-imprimir text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md">↻
-                                Regenerar</button>
+                            <button type="button" onclick="regenerar('desarrollo', event)"
+                                class="no-imprimir text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 transition-colors">
+                                ↻ Regenerar
+                            </button>
                         </div>
                         <div class="pl-6 border-l-4 border-blue-200">
-                            <div wire:ignore wire:key="desarrollo-editor" class="pl-0">
-                                <div id="desarrollo-editor" data-quill="true" contenteditable="true"
+                            <div wire:ignore>
+                                <div id="desarrollo-editor"
                                     class="campo-editable w-full text-slate-700 text-sm leading-relaxed"
-                                    style="min-height:220px;">{!! $datosSesion['desarrollo'] ?? '' !!}</div>
+                                    style="min-height:120px;">
+                                    {!! $datosSesion['desarrollo'] ?? '' !!}
+                                </div>
                             </div>
+                            <textarea id="desarrolloInput" name="data[desarrollo]" class="hidden">{{ $datosSesion['desarrollo'] ?? '' }}</textarea>
                         </div>
                     </section>
 
@@ -250,16 +258,20 @@
                     <section class="documento-seccion mb-8">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-xl font-bold text-blue-800 uppercase">III. Cierre</h3>
-                            <button onclick="regenerar('conclusion')"
-                                class="no-imprimir text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md">↻
-                                Regenerar</button>
+                            <button type="button" onclick="regenerar('conclusion', event)"
+                                class="no-imprimir text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 transition-colors">
+                                ↻ Regenerar
+                            </button>
                         </div>
                         <div class="pl-6 border-l-4 border-blue-200">
-                            <div wire:ignore wire:key="conclusion-editor" class="pl-0">
-                                <div id="conclusion-editor" data-quill="true" contenteditable="true"
+                            <div wire:ignore>
+                                <div id="conclusion-editor"
                                     class="campo-editable w-full text-slate-700 text-sm leading-relaxed"
-                                    style="min-height:120px;">{!! $datosSesion['cierre'] ?? '' !!}</div>
+                                    style="min-height:120px;">
+                                    {!! $datosSesion['conclusion'] ?? '' !!}
+                                </div>
                             </div>
+                            <textarea id="conclusionInput" name="data[conclusion]" class="hidden">{{ $datosSesion['conclusion'] ?? '' }}</textarea>
                         </div>
                     </section>
 
@@ -442,7 +454,6 @@
         document.addEventListener('submit', syncMomentos, true);
         syncMomentos();
     });
-    
 </script>
 
 @forelse($datosSesion['competencias'] ?? [] as $comp)

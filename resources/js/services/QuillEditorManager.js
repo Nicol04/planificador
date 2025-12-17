@@ -5,7 +5,6 @@ import { marked } from "marked";
 export class QuillEditorManager {
   constructor() {
     this.editors = {};
-    // mapeo por defecto editor -> hidden input para sincronizar
     this._hiddenMap = {
       '#inicio-editor': 'inicioInput',
       '#desarrollo-editor': 'desarrolloInput',
@@ -14,59 +13,44 @@ export class QuillEditorManager {
   }
 
   // Cambiado: aceptar opciones (placeholder, modules, etc.)
-  initializeEditor(selector, theme = 'bubble', options = {}) {
-    // Si ya existe un editor para este selector y el elemento sigue en el DOM, devolverlo
-    if (this.editors[selector]) {
-      const existing = this.editors[selector];
-      if (existing && existing.root && document.body.contains(existing.root)) {
-        try { existing.enable(true); existing.root.setAttribute('contenteditable','true'); } catch (e) {}
-        return existing;
-      } else {
-        // Si el elemento ya no está en DOM, eliminar referencia para recrearlo
-        try { delete this.editors[selector]; } catch (e) {}
-      }
-    }
-
+  initializeEditor(selector, theme = 'snow', options = {}) {
+    // Si el elemento no existe, salir
     const el = document.querySelector(selector);
-    if (!el) {
-      console.warn(`QuillEditorManager: No se encontró el elemento para selector "${selector}" — se omitirá la inicialización por ahora.`);
-      return null;
-    }
+    if (!el) return null;
 
-    const config = { theme, modules: options.modules ?? { toolbar: false } };
-    if (options.placeholder) config.placeholder = options.placeholder;
+    // Si ya existe instancia en este elemento, devolverla (evita duplicados)
+    if (this.editors[selector]) {
+        return this.editors[selector];
+    }const config = {
+        theme,
+        modules: options.modules ?? { toolbar: false },
+        placeholder: options.placeholder ?? 'Escribe aquí...'
+    };
 
-    // IMPORTANT: pasar el elemento DOM a Quill (evita problemas con selectores cuando Livewire re-renderiza)
+    // Inicializar Quill
     const editor = new Quill(el, config);
-    // Asegurar que el editor esté habilitado para edición
-    try { editor.enable(true); editor.root.setAttribute('contenteditable','true'); } catch (e) {}
     this.editors[selector] = editor;
 
-    // Registrar listener idempotente para sincronizar hidden input
+    // Lógica de Sincronización (Editor -> Input Oculto)
     const hiddenId = this._hiddenMap[selector];
-    const syncHidden = () => {
-      try {
+    
+    const syncToInput = () => {
         const hid = document.getElementById(hiddenId);
-        if (hid && editor && editor.root) {
-          hid.value = editor.root.innerHTML;
-          hid.dispatchEvent(new Event('input', { bubbles: true })); // para que Livewire detecte cambios
+        if (hid && editor.root.innerHTML !== hid.value) {
+            hid.value = editor.root.innerHTML;
+            // Disparar eventos para que Livewire/JS detecten el cambio
+            hid.dispatchEvent(new Event('input', { bubbles: true }));
+            hid.dispatchEvent(new Event('change', { bubbles: true }));
         }
-      } catch (e) {}
     };
-    // evitar registrarlo más de una vez
-    if (!editor._hasSync) {
-      editor.on('text-change', () => {
-        syncHidden();
-      });
-      // sincronizar también al perder foco
-      editor.root.addEventListener('blur', () => syncHidden());
-      editor._hasSync = true;
-      // sincronizar la primera vez (por si ya había contenido)
-      setTimeout(syncHidden, 10);
-    }
 
-    // asegurar editable y quitar bloqueo en ancestros si aplica
-    try { this.fixEditable(selector); } catch (e) {}
+    editor.on('text-change', () => syncToInput());
+
+    // Cargar contenido inicial si el input oculto tiene datos y el editor está vacío
+    const hid = document.getElementById(hiddenId);
+    if (hid && hid.value && editor.getText().trim() === "") {
+        editor.clipboard.dangerouslyPasteHTML(hid.value);
+    }
 
     return editor;
   }
@@ -145,17 +129,15 @@ export class QuillEditorManager {
   }
 
   // Nuevo: inyectar HTML tal cual (sin normalizar)
-  setHTML(selector, html) {
+  setHTML(selector, htmlContent) {
     const editor = this.editors[selector];
     if (editor) {
-      editor.root.innerHTML = html || '';
-      try { editor.enable(true); editor.root.setAttribute('contenteditable','true'); } catch (e) {}
-      return;
-    }
-    const el = document.querySelector(selector);
-    if (el) {
-      el.innerHTML = html || '';
-      el.setAttribute('contenteditable', 'true');
+        // dangerouslyPasteHTML limpia y formatea el HTML para Quill
+        editor.clipboard.dangerouslyPasteHTML(htmlContent);
+    } else {
+        // Fallback por si el editor no cargó visualmente aún
+        const el = document.querySelector(selector);
+        if (el) el.innerHTML = htmlContent;
     }
   }
 
@@ -166,6 +148,7 @@ export class QuillEditorManager {
     const el = document.querySelector(selector);
     return el ? el.innerHTML : '';
   }
+
 
   setMarkdown(selector, markdown) {
     let editor = this.editors[selector];

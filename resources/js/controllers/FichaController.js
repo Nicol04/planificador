@@ -65,7 +65,7 @@ El Inicio debe incluir, en este orden, y usando lenguaje natural apropiado para 
 2) Actividad para recuperar saberes previos: 1–2 preguntas abiertas relacionadas con el TEMA (mención explícita del tema).
 3) Indicación de que "La docente" o "El docente" (según el género proporcionado) anotará aportes.
 4) Comunicación textual EXACTA del PROPÓSITO de la sesión (usar el texto del propósito tal cual viene en el contexto).
-5) Mostrar los CRITERIOS de evaluación tal cual aparecen en el contexto (listarlos).
+5) Listar explícitamente los CRITERIOS de evaluación proporcionados en el contexto, usando una lista HTML con <ul> y <li>, por ejemplo: <ul><li>Identifica correctamente los elementos</li><li>Explica el proceso</li></ul>. Si no hay criterios, omitir esta sección.
 6) Proponer 2 normas/acuerdos del día breves y claras.
 
 Usa el contexto de aprendizaje proporcionado a continuación para adaptar redacción y vocabulario (grado, género, evidencias, criterios, instrumentos). No incluyas instrucciones técnicas ni explicaciones sobre el JSON, responde SOLO con el JSON pedido.
@@ -106,18 +106,17 @@ Requisitos del contenido:
 - Describe las siguientes etapas pedagógicas con contenido específico y relevante al tema:
 
 1. <h3>Problematización:</h3>
-   - ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'La docente' : 'El docente') : 'La docente'} presenta una situación o texto relacionado con el tema de aprendizaje, por ejemplo sobre la conquista del Perú, incluyendo información histórica breve y precisa.
-   - Formula preguntas iniciales para análisis, y usa la frase **"Dialoguemos acerca de las respuestas"**.
-   - Ejemplo: "¿Quiénes llegaron al Perú? ¿Cómo eran los incas? ¿Qué cambios ocurrieron con la llegada de los españoles?"
+   - ${this.aprendizajes.length > 0 ? (this.aprendizajes[0].genero.toLowerCase() === 'femenino' ? 'La docente' : 'El docente') : 'La docente'} presenta una situación o texto relacionado con el tema de aprendizaje "${this.aprendizajes[0]?.tema || 'el tema'}", incluyendo información relevante y precisa.
+   - Formula preguntas iniciales para análisis relacionadas con el tema, y usa la frase **"Dialoguemos acerca de las respuestas"**.
+   - Ejemplo: Genera preguntas abiertas basadas en el tema, como "¿Qué sabes sobre ${this.aprendizajes[0]?.tema || 'el tema'}? ¿Cómo se relaciona con tu vida cotidiana?"
 
 2. <h3>Análisis de la información:</h3>
-   - Describe los contenidos de manera más detallada: eventos, personajes, lugares y conceptos históricos.
-   - Incluye preguntas guía que fomenten el pensamiento crítico.
-   - Añade un enlace a un video educativo pertinente al tema y grado. Ejemplo:
-     "Para complementar la información, se visualiza el video educativo disponible en <a href='https://www.youtube.com/ejemplo-video'>https://www.youtube.com/ejemplo-video</a>".
+   - Describe los contenidos de manera más detallada: eventos, personajes, lugares y conceptos relacionados con el tema "${this.aprendizajes[0]?.tema || 'el tema'}".
+   - Incluye preguntas guía que fomenten el pensamiento crítico, adaptadas al grado "${this.aprendizajes[0]?.grado_aula || 'el grado'}" y al contexto.
+   - Añade un enlace a un video educativo pertinente al tema y grado. Ejemplo: "Para complementar la información, se visualiza el video educativo disponible en <a href='https://www.youtube.com/results?search_query=${encodeURIComponent(this.aprendizajes[0]?.tema || 'tema educativo')}'>enlace sugerido</a>." (Genera un enlace real o sugerido basado en el tema).
 
 3. <h3>Toma de decisiones y elaboración del producto:</h3>
-   - Explica las actividades que permiten aplicar lo aprendido: dibujos, trípticos, resúmenes, esquemas.
+   - Explica las actividades que permiten aplicar lo aprendido: dibujos, trípticos, resúmenes, esquemas, adaptadas a las evidencias "${this.aprendizajes[0]?.evidencias || 'evidencias'}" y criterios "${this.aprendizajes[0]?.criterios || 'criterios'}".
    - Conecta estas actividades con los criterios de evaluación y competencias de la sesión.
    - Describe paso a paso cómo los estudiantes producen la evidencia de aprendizaje.
 

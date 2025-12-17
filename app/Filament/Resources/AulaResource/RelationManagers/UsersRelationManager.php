@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources\AulaResource\RelationManagers;
+namespace App\Filament\Resources\AulaResource\RelationManagers;
 
 use App\Models\Año;
 use App\Models\Estudiante;
