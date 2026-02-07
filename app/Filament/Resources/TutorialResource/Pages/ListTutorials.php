@@ -36,11 +36,11 @@ class ListTutorials extends ListRecords
     }
 
     /**
-     * Modifica la query de la tabla para filtrar tutoriales no públicos.
+     * Obtiene todos los tutoriales sin restricción.
      */
     protected function getTableQuery(): ?Builder
     {
-        return Tutorial::query()->where('public', false);
+        return Tutorial::query();
     }
 
     protected function getHeaderActions(): array
@@ -56,7 +56,7 @@ class ListTutorials extends ListRecords
      */
     protected function getFilteredQuery(): Builder
     {
-        $query = Tutorial::query()->where('public', false);
+        $query = Tutorial::query();
 
         $query->when($this->search, function (Builder $query) {
             $query->where(function (Builder $q) {
@@ -86,7 +86,6 @@ class ListTutorials extends ListRecords
     public function getAllCategories(): Collection
     {
         return Tutorial::query()
-            ->where('public', false)
             ->distinct()
             ->pluck('categoria')
             ->filter();

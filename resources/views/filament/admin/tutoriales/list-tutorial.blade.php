@@ -1,83 +1,138 @@
 <x-filament-panels::page>
-    <div class="container mx-auto p-6 bg-gray-50">
-        <h1 class="text-4xl font-extrabold mb-8 text-gray-800 text-center">📚 Tutoriales Administrativos</h1>
-        
-        <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-6 text-primary-700">Filtros</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {{-- Campo de búsqueda por Título/Descripción --}}
-                <x-filament::input.wrapper>
-                    <x-filament::input
-                        type="search"
-                        wire:model.live="search"
-                        placeholder="🔍 Buscar por título o descripción..."
-                        class="w-full border-gray-300 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                </x-filament::input.wrapper>
+    @vite(['resources/css/tutoriales.css', 'resources/js/tutoriales.js'])
 
-                {{-- Selector de Categoría (Usando el nuevo método) --}}
-                <x-filament::input.wrapper>
-                    <x-filament::input.select 
-                        wire:model.live="selectedCategory"
-                        class="w-full border-gray-300 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                        <option value="">-- Todas las Categorías --</option>
-                        {{-- CAMBIO AQUÍ: Usando el método de la clase Livewire --}}
-                        @foreach ($this->getAllCategories() as $category)
-                            <option value="{{ $category }}">{{ $category }}</option>
-                        @endforeach
-                    </x-filament::input.select>
-                </x-filament::input.wrapper>
-            </div>
+    <div class="tutorials-wrapper">
+        {{-- Header Premium --}}
+        <div class="tutorials-header-premium">
+            <h1>📚 Tutoriales Administrativos</h1>
+            <p>Aprende a usar todas las funcionalidades del sistema con nuestros tutoriales en video</p>
         </div>
 
-        <div id="tutorials" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {{-- Usa el método getRecords() como ya lo habíamos definido --}}
-            @forelse ($this->getRecords() as $tutorial) 
-                {{-- Tarjeta del tutorial --}}
-                <div class="bg-white shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col category-{{ Str::slug($tutorial->categoria) }}">
-                    
+        {{-- Filtros Mejorados --}}
+        <div class="tutorials-filters">
+            <h2>🔍 Buscar y Filtrar</h2>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="search">Buscar por título o descripción</label>
+                    <x-filament::input.wrapper>
+                        <x-filament::input
+                            type="search"
+                            id="search"
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="🔍 Escribe para buscar..."
+                        />
+                    </x-filament::input.wrapper>
+                </div>
+
+                <div class="filter-group">
+                    <label for="category">Filtrar por categoría</label>
+                    <x-filament::input.wrapper>
+                        <x-filament::input.select 
+                            id="category"
+                            wire:model.live="selectedCategory"
+                        >
+                            <option value="">🎯 Todas las Categorías</option>
+                            @foreach ($this->getAllCategories() as $category)
+                                <option value="{{ $category }}">{{ $category }}</option>
+                            @endforeach
+                        </x-filament::input.select>
+                    </x-filament::input.wrapper>
+                </div>
+            </div>
+
+            {{-- Contador de resultados --}}
+            <div class="results-counter" style="margin-top: 1rem; color: #667eea; font-weight: 600;">
+                Mostrando {{ $this->getRecords()->count() }} tutoriales
+            </div>
+
+            {{-- Botón limpiar filtros --}}
+            @if($search || $selectedCategory)
+                <button 
+                    wire:click="$set('search', ''); $set('selectedCategory', '')"
+                    class="clear-filters-btn"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Limpiar Filtros
+                </button>
+            @endif
+        </div>
+
+        {{-- Grid de Tutoriales --}}
+        <div class="tutorials-grid">
+            @forelse ($this->getRecords() as $tutorial)
+                <div class="tutorial-card" data-category="{{ $tutorial->categoria }}">
+                    {{-- Video --}}
                     @php
                         $isYouTube = Str::contains($tutorial->video_url, 'youtube.com') || Str::contains($tutorial->video_url, 'youtu.be');
-                        $embedUrl = $isYouTube ? str_replace(['watch?v=', 'youtu.be/'], ['embed/', 'youtube.com/embed/'], $tutorial->video_url) : $tutorial->video_url;
+                        $videoId = null;
+                        
+                        if ($isYouTube) {
+                            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $tutorial->video_url, $matches);
+                            $videoId = $matches[1] ?? null;
+                        }
+                        
+                        $embedUrl = $videoId ? "https://www.youtube.com/embed/{$videoId}" : $tutorial->video_url;
                     @endphp
 
-                    <div class="w-full" style="height: 180px;">
-                        @if ($isYouTube)
+                    <div class="tutorial-video-container">
+                        @if ($isYouTube && $videoId)
                             <iframe 
-                                class="w-full h-full" 
-                                src="{{ $embedUrl }}" 
-                                frameborder="0" 
+                                src="{{ $embedUrl }}"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                 allowfullscreen
                                 loading="lazy"
+                                title="{{ $tutorial->titulo }}"
                             ></iframe>
                         @else
-                            <div class="w-full h-full bg-gray-200 flex items-center justify-center text-center p-4">
-                                <a href="{{ $tutorial->video_url }}" class="text-blue-600 hover:text-blue-800 font-medium text-lg underline" target="_blank">
-                                    ▶️ Ver Video (URL Externa)
+                            <div class="video-placeholder">
+                                <a href="{{ $tutorial->video_url }}" target="_blank" rel="noopener noreferrer">
+                                    <span class="play-icon">▶️</span>
+                                    <span>Ver Video</span>
                                 </a>
                             </div>
                         @endif
                     </div>
 
-                    <div class="p-5 flex flex-col flex-grow">
-                        <span class="text-xs font-medium text-white px-3 py-1 bg-primary-600 rounded-full inline-block mb-3 self-start">
-                            {{ $tutorial->categoria }}
-                        </span>
-                        <h2 class="text-lg font-bold mb-2 text-gray-900">{{ $tutorial->titulo }}</h2>
-                        <p class="text-sm text-gray-600 flex-grow">{{ $tutorial->descripcion }}</p>
+                    {{-- Contenido --}}
+                    <div class="tutorial-body">
+                        <span class="category-badge">{{ $tutorial->categoria }}</span>
+                        <h2 class="tutorial-title">{{ $tutorial->titulo }}</h2>
+                        <p class="tutorial-description">{{ $tutorial->descripcion ?? 'Sin descripción' }}</p>
+
+                        {{-- Footer --}}
+                        <div class="tutorial-footer">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span>{{ $tutorial->created_at->diffForHumans() }}</span>
+                                <span style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; {{ $tutorial->public ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;' }}">
+                                    {{ $tutorial->public ? '👥 Docentes' : '🔒 Administrativo' }}
+                                </span>
+                            </div>
+                            <a href="{{ $tutorial->video_url }}" target="_blank" rel="noopener noreferrer">
+                                Ver completo →
+                            </a>
+                        </div>
                     </div>
                 </div>
             @empty
-                <div class="lg:col-span-3 text-center p-10 bg-gray-100 rounded-lg">
-                    <p class="text-xl text-gray-500">😔 No se encontraron tutoriales administrativos.</p>
+                <div class="empty-state">
+                    <div class="empty-icon">🎬</div>
+                    <h3 class="empty-title">No se encontraron tutoriales</h3>
+                    <p class="empty-text">
+                        @if($search || $selectedCategory)
+                            Ajusta los filtros de búsqueda
+                        @else
+                            Aún no hay tutoriales administrativos
+                        @endif
+                    </p>
                 </div>
             @endforelse
         </div>
-        
-        <div class="mt-8">
-            {{ $this->getRecords()->links() }} 
+
+        {{-- Paginación --}}
+        <div class="pagination-wrapper">
+            {{ $this->getRecords()->links() }}
         </div>
     </div>
 </x-filament-panels::page>
